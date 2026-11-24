@@ -86,6 +86,20 @@ public sealed class SettingsStoreTests
         Assert.True(loaded.AssistPdfText);
     }
 
+    [Fact]
+    public void AssistModel_UncommentedDearerChoice_Wins()
+    {
+        using TempFolder temp = new();
+        SettingsStore store = new(Path.Combine(temp.Path, "OmniScan.ini"));
+        store.Save(new AppSettings());
+        string text = File.ReadAllText(store.Path);
+        Assert.Matches(@"(?m)^Model = \r?$", text);
+        Assert.Contains("; Model = gpt-4.1", text);
+
+        File.WriteAllText(store.Path, text.Replace("; Model = gpt-4.1", "Model = gpt-4.1"));
+        Assert.Equal("gpt-4.1", store.Load().AssistModel);
+    }
+
     [Theory]
     [InlineData("sk-plain-text-key")]
     [InlineData("dpapi:bm90IGEgYmxvYg==")]

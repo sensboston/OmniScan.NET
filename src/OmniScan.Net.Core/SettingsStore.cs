@@ -94,8 +94,21 @@ public sealed class SettingsStore
         Key(b, "ShareScanners", s.ServerEnabled);
         Section(b, "Assist");
         Key(b, "Key", string.IsNullOrEmpty(s.AssistKey) ? "" : SecretText.Protect(s.AssistKey));
-        b.AppendLine("; Model: the model to use first (empty: chosen by the program); a busy model gives way to the next.");
+        // The tested models, so that the line can be filled in without looking anything up. The dearer choice
+        // goes after the line, commented out: uncommented, it is the last "Model" and wins.
+        b.AppendLine("; Model: the model to use first; empty = chosen by the program for the key's service.");
+        b.AppendLine("; A busy or closed model gives way to the next one. Tested, chosen by default:");
+        b.AppendLine(";   OpenAI     gpt-4.1-mini");
+        b.AppendLine(";   Google     gemini-3.5-flash-lite   (works with a free key)");
+        b.AppendLine(";   DeepSeek   deepseek-flash");
+        b.AppendLine("; Not tested yet: Anthropic, xAI, OpenRouter.");
         Key(b, "Model", s.AssistModel ?? "");
+        if (!string.Equals(s.AssistModel, "gpt-4.1", StringComparison.OrdinalIgnoreCase))
+        {
+            b.AppendLine("; OpenAI: turns more photos right (also those where only a sign shows which way is up),");
+            b.AppendLine("; at several times the price:");
+            b.AppendLine("; Model = gpt-4.1");
+        }
         Key(b, "TurnPhotos", s.AssistOrient);
         Key(b, "DescribePhotos", s.AssistDescribe);
         Key(b, "PdfText", s.AssistPdfText);
