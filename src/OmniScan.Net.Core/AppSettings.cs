@@ -18,7 +18,7 @@ public sealed class AppSettings
     public ColorMode ColorMode { get; set; } = ColorMode.Color;
     public OutputFormat Format { get; set; } = OutputFormat.Jpeg;
     public const int MinJpegQuality = 50;
-    public const int DefaultJpegQuality = 90;
+    public const int DefaultJpegQuality = 75;
 
     /// <summary>JPEG quality for JPEG files and for the gray and color images inside PDFs.</summary>
     public int JpegQuality { get; set; } = DefaultJpegQuality;

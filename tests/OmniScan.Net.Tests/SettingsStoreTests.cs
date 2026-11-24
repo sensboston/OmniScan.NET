@@ -131,7 +131,7 @@ public sealed class SettingsStoreTests
         AppSettings settings = new SettingsStore(path).Load();
 
         Assert.Equal(300, settings.Dpi);
-        Assert.Equal(90, settings.JpegQuality);
+        Assert.Equal(75, settings.JpegQuality);
         Assert.Equal(AppSettings.DefaultRootFolder, settings.RootFolder);
         Assert.Null(settings.Window);
         Assert.Equal(180, settings.GetRotation("usb"));
@@ -152,10 +152,10 @@ public sealed class SettingsStoreTests
     }
 
     [Theory]
-    [InlineData(49, 90)]
+    [InlineData(49, 75)]
     [InlineData(50, 50)]
     [InlineData(100, 100)]
-    [InlineData(101, 90)]
+    [InlineData(101, 75)]
     public void Load_JpegQuality_KeptWithinRange(int value, int expected)
     {
         using TempFolder temp = new();
