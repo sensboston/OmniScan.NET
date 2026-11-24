@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OmniScan.Net.App/OmniScan.Net.App.csproj" />
+    <Project Path="src/OmniScan.Net.Core/OmniScan.Net.Core.csproj" />
+    <Project Path="src/OmniScan.Net.Imaging/OmniScan.Net.Imaging.csproj" />
+    <Project Path="src/OmniScan.Net.Remote/OmniScan.Net.Remote.csproj" />
+    <Project Path="src/OmniScan.Net.Scanning/OmniScan.Net.Scanning.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OmniScan.Net.Tests/OmniScan.Net.Tests.csproj" />
+  </Folder>
+</Solution>

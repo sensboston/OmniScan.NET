@@ -1,0 +1,53 @@
+<Window x:Class="OmniScan.Net.App.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:OmniScan.Net.App"
+        Title="{x:Static local:Strings.SettingsTitle}"
+        Icon="pack://application:,,,/OmniScan;component/Assets/OmniScan.ico"
+        Width="520" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+
+  <Window.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    <Style x:Key="Caption" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,16,0,4" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style x:Key="Hint" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,0,0,6" />
+      <Setter Property="Opacity" Value="0.7" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+  </Window.Resources>
+
+  <StackPanel Margin="20,4,20,20">
+
+    <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Language}" />
+    <ComboBox ItemsSource="{Binding Languages}" SelectedValue="{Binding Language}"
+              SelectedValuePath="Value" DisplayMemberPath="Label" />
+
+    <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Theme}" />
+    <ComboBox ItemsSource="{Binding Themes}" SelectedValue="{Binding Theme}"
+              SelectedValuePath="Value" DisplayMemberPath="Label" HorizontalAlignment="Left" MinWidth="200" />
+
+    <CheckBox Margin="0,18,0,0" IsChecked="{Binding Flip}" IsEnabled="{Binding HasDevice}">
+      <TextBlock Text="{x:Static local:Strings.FlipScans}" TextWrapping="Wrap" />
+    </CheckBox>
+
+    <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.AutoContinue}" TextWrapping="Wrap" />
+    <ComboBox ItemsSource="{Binding AutoContinueChoices}" SelectedValue="{Binding AutoContinueSeconds}"
+              SelectedValuePath="Value" DisplayMemberPath="Label" HorizontalAlignment="Left" MinWidth="140" />
+
+    <CheckBox Margin="0,20,0,4" IsChecked="{Binding ServerEnabled}">
+      <TextBlock FontWeight="SemiBold" Text="{x:Static local:Strings.ServerMode}" TextWrapping="Wrap" />
+    </CheckBox>
+    <TextBlock Style="{StaticResource Hint}" Margin="28,0,0,0" Text="{x:Static local:Strings.ServerModeHint}" />
+
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+      <Button MinWidth="96" Padding="12,6" IsDefault="True" Style="{DynamicResource AccentButtonStyle}"
+              Content="{x:Static local:Strings.Ok}" Click="OnOk" />
+      <Button MinWidth="96" Padding="12,6" Margin="8,0,0,0" IsCancel="True"
+              Content="{x:Static local:Strings.Cancel}" />
+    </StackPanel>
+  </StackPanel>
+</Window>

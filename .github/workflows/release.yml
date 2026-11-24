@@ -1,0 +1,26 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet test tests/OmniScan.Net.Tests -c Release
+      - run: dotnet publish src/OmniScan.Net.App -c Release -r win-x64 -o publish
+      - name: Create release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" publish/OmniScan.exe \
+            --title "OmniScan ${GITHUB_REF_NAME#v}" --notes-file docs/release-notes.md

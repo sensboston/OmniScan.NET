@@ -1,0 +1,168 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Leptonica;
+using OmniScan.Net.Core;
+
+namespace OmniScan.Net.Imaging;
+
+/// <summary>
+/// One page of a PDF being scanned. Kept losslessly compressed (PNG) so that it can still be turned,
+/// with a small thumbnail and a tiny gray signature for telling whether two scans show the same sheet.
+/// </summary>
+public sealed class PdfPage
+{
+    internal PdfPage(byte[] png, int dpi, byte[] thumbnailBmp, double[] signature)
+    {
+        Png = png;
+        Dpi = dpi;
+        ThumbnailBmp = thumbnailBmp;
+        Signature = signature;
+    }
+
+    public byte[] Png { get; }
+    public int Dpi { get; }
+    public byte[] ThumbnailBmp { get; }
+    internal double[] Signature { get; }
+}
+
+/// <summary>What came off the glass for a PDF page.</summary>
+public enum PageCheck
+{
+    /// <summary>A new page.</summary>
+    Page,
+
+    /// <summary>Nothing on the glass.</summary>
+    Empty,
+
+    /// <summary>The same sheet as the previous page (it was not changed in time).</summary>
+    Unchanged,
+}
+
+/// <summary>Scanning into a multi-page PDF: whole pages, deskewed, of the same size, assembled at the end.</summary>
+public static class PdfPages
+{
+    public const int ThumbnailSide = 240;
+
+    /// <summary>Pages whose signatures correlate at least this much are the same sheet scanned twice.</summary>
+    public const double SameSheetCorrelation = 0.97;
+
+    /// <summary>Width of the band along the edges of the glass that is painted white (its dark strips), inches.</summary>
+    private const double EdgeBand = 0.08;
+
+    private const int SignatureWidth = 48;
+    private const int SignatureHeight = 64;
+
+    /// <summary>
+    /// Makes a page from a whole-bed frame: rotated as the scanner is mounted, edge strips whitened,
+    /// straightened and turned upright by its text if enabled. Never cropped, so all pages have the bed's size.
+    /// </summary>
+    public static (PdfPage? Page, PageCheck Check) Make(ScannedFrame frame, int rotation, bool deskew, bool autoOrient,
+        PdfPage? previous, bool allowBlank = false)
+    {
+        Pix page = ScanSaver.Prepare(frame, rotation);
+        if (!allowBlank && BedAnalyzer.Analyze(page).Objects.Count == 0)
+            return (null, PageCheck.Empty);
+
+        page = PageTools.WhitenBorder(page, EdgeBand);
+        PipelineResult result = ScanPipeline.Cut(page, [], new PipelineOptions(false, false, deskew, autoOrient));
+        Pix done = result.Images[0];
+
+        double[] signature = Signature(done);
+        if (previous is not null && Correlation(signature, previous.Signature) >= SameSheetCorrelation)
+            return (null, PageCheck.Unchanged);
+
+        int dpi = done.XRes > 0 ? done.XRes : frame.Dpi;
+        return (new PdfPage(Pix.WriteMemPng(done, 0), dpi, FrameCodec.PreviewBmp(done, ThumbnailSide), signature), PageCheck.Page);
+    }
+
+    /// <summary>The page turned by a multiple of 90 degrees (lossless).</summary>
+    public static PdfPage Rotate(PdfPage page, int degrees)
+    {
+        Pix pix = Decode(page);
+        Pix turned = FrameCodec.Rotate(pix, ((degrees % 360) + 360) % 360);
+        return new PdfPage(Pix.WriteMemPng(turned, 0), page.Dpi, FrameCodec.PreviewBmp(turned, ThumbnailSide), Signature(turned));
+    }
+
+    /// <summary>A larger view of a page for the preview pane.</summary>
+    public static byte[] PreviewBmp(PdfPage page) => FrameCodec.PreviewBmp(Decode(page), ScanSaver.PreviewMaxSide);
+
+    /// <summary>Writes the pages as one new PDF into the day folder; returns its path.</summary>
+    public static string Save(IReadOnlyList<PdfPage> pages, string rootFolder, DateTime date)
+    {
+        byte[] pdf = Build(pages);
+        string folder = ScanOutput.DayFolder(rootFolder, date);
+        using FileStream file = ScanOutput.CreateNext(folder, ".pdf");
+        file.Write(pdf);
+        return file.Name;
+    }
+
+    /// <summary>Writes the pages over an existing PDF made by this program (adding pages to it later).</summary>
+    public static void SaveTo(IReadOnlyList<PdfPage> pages, string path)
+    {
+        byte[] pdf = Build(pages);
+        string temp = path + ".tmp";
+        File.WriteAllBytes(temp, pdf);
+        File.Move(temp, path, overwrite: true);
+    }
+
+    private static byte[] Build(IReadOnlyList<PdfPage> pages)
+    {
+        if (pages.Count == 0)
+            throw new ArgumentException("No pages.", nameof(pages));
+
+        // One page decoded at a time: a 300 dpi color page is ~27 MB unpacked.
+        L_Ptra<L_Bytea> parts = L_Ptra<L_Bytea>.Create(pages.Count);
+        foreach (PdfPage page in pages)
+            parts.Add(L_Bytea.InitFromMem(Pix.WriteMemPdf(Decode(page), page.Dpi, null)));
+        return PdfIo.PtraConcatenateToData(parts, null);
+    }
+
+    private static Pix Decode(PdfPage page)
+    {
+        Pix pix = Pix.ReadMemPng(page.Png);
+        pix.SetResolution(page.Dpi, page.Dpi);
+        return pix;
+    }
+
+    /// <summary>A coarse gray thumbnail as numbers: enough to tell two sheets apart, blind to scanner noise.</summary>
+    internal static double[] Signature(Pix page)
+    {
+        Pix small = page.ScaleToSize(SignatureWidth, SignatureHeight);
+        byte[] gray = new byte[SignatureWidth * SignatureHeight];
+        byte[] sat = new byte[SignatureWidth * SignatureHeight];
+        PixelAccess.ReadGrayAndSaturation(small.Depth == 1 ? small.ConvertTo8(false) : small, gray, sat);
+        double[] s = new double[gray.Length];
+        for (int i = 0; i < s.Length; i++)
+            s[i] = gray[i];
+        return s;
+    }
+
+    /// <summary>Pearson correlation of two signatures; two blank pages count as the same.</summary>
+    internal static double Correlation(double[] a, double[] b)
+    {
+        if (a.Length != b.Length)
+            return 0;
+        double ma = 0, mb = 0;
+        for (int i = 0; i < a.Length; i++)
+        {
+            ma += a[i];
+            mb += b[i];
+        }
+
+        ma /= a.Length;
+        mb /= b.Length;
+        double sab = 0, saa = 0, sbb = 0;
+        for (int i = 0; i < a.Length; i++)
+        {
+            double da = a[i] - ma, db = b[i] - mb;
+            sab += da * db;
+            saa += da * da;
+            sbb += db * db;
+        }
+
+        if (saa < 1e-6 || sbb < 1e-6)
+            return Math.Abs(ma - mb) < 8 ? 1 : 0;
+        return sab / Math.Sqrt(saa * sbb);
+    }
+}

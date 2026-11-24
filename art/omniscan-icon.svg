@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+<!-- OmniScan icon: white flatbed glyph on a blue tile. -->
+<rect x="8" y="8" width="240" height="240" rx="44" fill="#266FEB"/>
+<g transform="rotate(50 204 158)"><rect x="76" y="146" width="128" height="12" rx="6.0" fill="#ffffff"/></g>
+<rect x="50" y="160" width="160" height="26" rx="6" fill="#ffffff"/>
+<rect x="66" y="149" width="112" height="5" rx="2.5" fill="#ffffff"/>
+<circle cx="66" cy="173" r="5" fill="#266FEB"/>
+</svg>

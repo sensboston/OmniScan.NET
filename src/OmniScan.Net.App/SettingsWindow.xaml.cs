@@ -1,0 +1,104 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows;
+using OmniScan.Net.Core;
+
+namespace OmniScan.Net.App;
+
+/// <summary>Rarely changed settings; edits apply only on OK.</summary>
+public sealed class SettingsModel
+{
+    /// <param name="device">The scanner selected in the main window; the 180 degree option applies to it.</param>
+    /// <param name="rotation">Its current rotation (for a shared scanner, as reported by its computer).</param>
+    public SettingsModel(AppSettings settings, ScannerDevice? device, int rotation)
+    {
+        Device = device;
+        Flip = rotation == 180;
+        _originalFlip = Flip;
+        Language = settings.Language ?? "";
+        ServerEnabled = settings.ServerEnabled;
+        AutoContinueSeconds = settings.AutoContinueSeconds;
+        Theme = settings.Theme;
+        int[] seconds = [0, 5, 10, 15, 20, 30, 45, 60];
+        if (!seconds.Contains(AutoContinueSeconds))
+            seconds = [.. seconds.Append(AutoContinueSeconds).Order()];
+        AutoContinueChoices = seconds
+            .Select(n => new Option<int>(n, n == 0 ? Strings.AutoContinueOff : string.Format(Strings.SecondsFormat, n)))
+            .ToList();
+        // English and Russian first for convenience, then the rest alphabetically.
+        string[] pinned = ["en", "ru"];
+        Languages =
+        [
+            new Option<string>("", Strings.LanguageSystem),
+            .. pinned.Select(code => Localization.Available.FirstOrDefault(l => l.Code == code))
+                .OfType<LanguageInfo>()
+                .Select(l => new Option<string>(l.Code, l.NativeName)),
+            .. Localization.Available.Where(l => !pinned.Contains(l.Code)).Select(l => new Option<string>(l.Code, l.NativeName)),
+        ];
+    }
+
+    public IReadOnlyList<Option<string>> Languages { get; }
+
+    public IReadOnlyList<Option<UiTheme>> Themes { get; } =
+    [
+        new(UiTheme.Light, Strings.ThemeLight),
+        new(UiTheme.Dark, Strings.ThemeDark),
+        new(UiTheme.System, Strings.ThemeSystem),
+    ];
+
+    public UiTheme Theme { get; set; }
+    public string Language { get; set; }
+    public bool ServerEnabled { get; set; }
+
+    private readonly bool _originalFlip;
+
+    /// <summary>The scanner the 180 degree option is about.</summary>
+    public ScannerDevice? Device { get; }
+
+    public bool HasDevice => Device is not null;
+
+    /// <summary>Turn this scanner's scans by 180 degrees.</summary>
+    public bool Flip { get; set; }
+
+    /// <summary>Seconds before the next PDF page is scanned by itself; 0 = off.</summary>
+    public int AutoContinueSeconds { get; set; }
+
+    public IReadOnlyList<Option<int>> AutoContinueChoices { get; }
+
+
+    /// <summary>
+    /// Copies the edits into the settings; returns what changed. A shared scanner's rotation is not
+    /// stored here: <paramref name="setRemote"/> sends it to the computer it is attached to.
+    /// </summary>
+    public (bool LanguageChanged, bool ServerChanged) ApplyTo(AppSettings settings, string remoteBackend, System.Action<string, int> setRemote)
+    {
+        string? language = string.IsNullOrEmpty(Language) ? null : Language;
+        bool languageChanged = language != settings.Language;
+        bool serverChanged = ServerEnabled != settings.ServerEnabled;
+        settings.Language = language;
+        settings.ServerEnabled = ServerEnabled;
+        settings.AutoContinueSeconds = AutoContinueSeconds;
+        settings.Theme = Theme;
+        if (Device is { } d)
+        {
+            int rotation = Flip ? 180 : 0;
+            if (d.Backend != remoteBackend)
+                settings.SetRotation(d.Id, rotation);
+            else if (Flip != _originalFlip)
+                setRemote(d.Id, rotation);
+        }
+
+        return (languageChanged, serverChanged);
+    }
+}
+
+public partial class SettingsWindow : Window
+{
+    public SettingsWindow(SettingsModel model)
+    {
+        DataContext = model;
+        InitializeComponent();
+    }
+
+    private void OnOk(object sender, RoutedEventArgs e) => DialogResult = true;
+}

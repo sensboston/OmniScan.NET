@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>OmniScan</AssemblyName>
+    <RootNamespace>OmniScan.Net.App</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\OmniScan.ico</ApplicationIcon>
+    <!-- Fluent theme (Application.ThemeMode) is marked experimental. -->
+    <NoWarn>$(NoWarn);WPF0001</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    Published for a runtime (dotnet publish -r win-x64): one portable OmniScan.exe with the .NET
+    runtime inside, compressed (about 68 MB instead of 148 MB; costs ~0.15 s at start).
+  -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+  </PropertyGroup>
+
+  <!-- Build time for the window title (local time of the machine that builds). -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>BuildTime</_Parameter1>
+      <_Parameter2>$([System.DateTime]::Now.ToString("yyyy-MM-dd HH:mm"))</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\OmniScan.ico" />
+    <EmbeddedResource Include="Localization\*.json" LogicalName="OmniScan.Localization.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="H.NotifyIcon.Wpf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OmniScan.Net.Core\OmniScan.Net.Core.csproj" />
+    <ProjectReference Include="..\OmniScan.Net.Imaging\OmniScan.Net.Imaging.csproj" />
+    <ProjectReference Include="..\OmniScan.Net.Remote\OmniScan.Net.Remote.csproj" />
+    <ProjectReference Include="..\OmniScan.Net.Scanning\OmniScan.Net.Scanning.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,10 @@
+OmniScan uses the following third-party packages. Their license texts are included in the
+packages themselves (NuGet) and at the project addresses below.
+
+- Leptonica.Managed: BSD-2-Clause
+  https://github.com/sensboston/Leptonica.Managed
+- H.NotifyIcon.Wpf: MIT
+  https://github.com/HavenDV/H.NotifyIcon
+
+The application icon (art/omniscan-icon.svg) and the alternative icon (art/omniscan-scanner-a3.svg)
+are part of OmniScan.

@@ -1,0 +1,349 @@
+<Window x:Class="OmniScan.Net.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:OmniScan.Net.App"
+        Title="{x:Static local:AppInfo.Title}"
+        Icon="pack://application:,,,/OmniScan;component/Assets/OmniScan.ico"
+        Width="1000" Height="700" MinWidth="720" MinHeight="480"
+        WindowStartupLocation="CenterScreen">
+
+  <Window.Resources>
+    <BooleanToVisibilityConverter x:Key="Bool" />
+    <local:InverseBoolToVisibility x:Key="InverseBool" />
+    <Style x:Key="Caption" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,12,0,4" />
+      <Setter Property="Opacity" Value="0.75" />
+    </Style>
+    <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+      <Setter Property="Margin" Value="0,2,0,2" />
+      <!-- Some translations are long: wrap instead of clipping. -->
+      <Setter Property="ContentTemplate">
+        <Setter.Value>
+          <DataTemplate>
+            <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+          </DataTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </Window.Resources>
+
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="320" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- Settings -->
+    <ScrollViewer Grid.Column="0" Grid.Row="0" VerticalScrollBarVisibility="Auto">
+      <StackPanel Margin="16,4,16,16">
+
+        <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Device}" />
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="6" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <ComboBox ItemsSource="{Binding Devices}" SelectedItem="{Binding Device}"
+                    DisplayMemberPath="Name" HorizontalAlignment="Stretch" IsEnabled="{Binding IsIdle}" />
+          <StackPanel Grid.Column="2" Orientation="Horizontal">
+            <Button Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="14" Padding="10,7"
+                    ToolTip="{x:Static local:Strings.Refresh}" Command="{Binding RefreshCommand}" />
+            <Button Margin="6,0,0,0" Content="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="14" Padding="10,7"
+                    ToolTip="{x:Static local:Strings.Settings}" Command="{Binding SettingsCommand}" />
+          </StackPanel>
+        </Grid>
+        <TextBlock Margin="0,4,0,0" Opacity="0.6" Text="{Binding DeviceStatus}" TextWrapping="Wrap" />
+
+        <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Source}" />
+        <ComboBox ItemsSource="{Binding Sources}" SelectedValue="{Binding Source}"
+                  SelectedValuePath="Value" DisplayMemberPath="Label" />
+
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <StackPanel Grid.Column="0">
+            <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Resolution}" />
+            <ComboBox ItemsSource="{Binding DpiValues}" SelectedItem="{Binding Dpi}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Color}" />
+            <ComboBox ItemsSource="{Binding ColorModes}" SelectedValue="{Binding ColorMode}"
+                      SelectedValuePath="Value" DisplayMemberPath="Label" />
+          </StackPanel>
+        </Grid>
+
+        <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Format}" />
+        <ComboBox ItemsSource="{Binding Formats}" SelectedValue="{Binding Format}"
+                  SelectedValuePath="Value" DisplayMemberPath="Label"
+                  IsEnabled="{Binding IsFormatSelectable}" />
+
+        <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Processing}" />
+        <CheckBox Content="{x:Static local:Strings.SplitPhotos}" IsChecked="{Binding SplitPhotos}" FontWeight="SemiBold"
+                  IsEnabled="{Binding IsImageFormat}" />
+        <CheckBox Content="{x:Static local:Strings.AutoCrop}" IsChecked="{Binding AutoCrop}" IsEnabled="{Binding IsImageFormat}" />
+        <CheckBox Content="{x:Static local:Strings.Deskew}" IsChecked="{Binding Deskew}" />
+
+        <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Folder}" />
+        <TextBox Text="{Binding RootFolder, Mode=OneWay}" IsReadOnly="True" ToolTip="{Binding RootFolder}" />
+        <Grid Margin="0,6,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="8" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <Button Grid.Column="0" HorizontalAlignment="Stretch" Content="{x:Static local:Strings.OpenFolder}"
+                  Command="{Binding OpenFolderCommand}" />
+          <Button Grid.Column="2" Content="{x:Static local:Strings.Browse}" Command="{Binding BrowseFolderCommand}" />
+        </Grid>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Scan buttons stay visible whatever the window height -->
+    <Grid Grid.Column="0" Grid.Row="1" Margin="16,8,16,4">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="8" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <Button Grid.Column="0" Padding="16,8" Content="{x:Static local:Strings.Preview}"
+              Command="{Binding PreviewCommand}" />
+      <Button Grid.Column="2" Padding="16,8" HorizontalAlignment="Stretch" IsDefault="True"
+              Style="{DynamicResource AccentButtonStyle}"
+              Content="{x:Static local:Strings.Scan}" Command="{Binding ScanCommand}" />
+    </Grid>
+
+    <!-- Preview -->
+    <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Margin="0,16,16,8" CornerRadius="6" BorderThickness="1"
+            BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}">
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.5"
+                   Text="{x:Static local:Strings.PreviewPlaceholder}"
+                   Visibility="{Binding HasPreview, Converter={StaticResource InverseBool}}" />
+        <local:FrameEditor Source="{Binding PreviewImage}" Frames="{Binding PreviewFrames}"
+                           EditedCommand="{Binding FramesEditedCommand}" IsEditable="{Binding CanEditFrames}" RenderOptions.BitmapScalingMode="HighQuality" />
+        <ProgressBar IsIndeterminate="{Binding IsBusy}" VerticalAlignment="Bottom" Height="4" Margin="8"
+                     Visibility="{Binding IsBusy, Converter={StaticResource Bool}}" />
+
+        <!-- The PDF being scanned: its pages, the countdown to the next one, save / discard. -->
+        <StackPanel Grid.Row="1" Margin="8,0,8,8" Visibility="{Binding Session.HasPages, Converter={StaticResource Bool}}">
+          <WrapPanel Margin="0,0,0,6" VerticalAlignment="Center">
+            <TextBlock Text="{Binding Session.Summary}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0" />
+            <Button Content="{x:Static local:Strings.SavePdf}" Command="{Binding SavePdfCommand}" Padding="12,4"
+                    Style="{DynamicResource AccentButtonStyle}" Margin="0,0,8,0" />
+            <Button Content="{x:Static local:Strings.DiscardPages}" Command="{Binding DiscardPdfCommand}" Padding="12,4" Margin="0,0,16,0" />
+            <TextBlock Text="{Binding Session.ReplaceText}" VerticalAlignment="Center" FontStyle="Italic"
+                       Visibility="{Binding Session.HasReplaceTarget, Converter={StaticResource Bool}}" />
+          </WrapPanel>
+          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+            <StackPanel Orientation="Horizontal">
+            <ItemsControl ItemsSource="{Binding Session.Pages}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <StackPanel Orientation="Horizontal">
+                  <!-- The gap before the page: click to insert the next scan here. -->
+                  <Border Width="16" Margin="0,0,2,0" Background="Transparent" Cursor="Hand" ToolTip="{x:Static local:Strings.InsertHere}">
+                    <Border.InputBindings>
+                      <MouseBinding Gesture="LeftClick" Command="{Binding InsertBeforeCommand}" />
+                    </Border.InputBindings>
+                    <Rectangle x:Name="InsertBar" Width="4" RadiusX="2" RadiusY="2" Fill="#E0A000" Margin="0,4" Visibility="Hidden" />
+                  </Border>
+                  <Border x:Name="Card" Margin="0,0,4,0" Padding="6" CornerRadius="6" BorderThickness="1" Background="Transparent"
+                          BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}">
+                    <Border.InputBindings>
+                      <MouseBinding Gesture="LeftDoubleClick" Command="{Binding ShowCommand}" />
+                    </Border.InputBindings>
+                    <Border.ContextMenu>
+                      <ContextMenu>
+                        <MenuItem Header="{x:Static local:Strings.RotateLeft}" Command="{Binding RotateLeftCommand}" />
+                        <MenuItem Header="{x:Static local:Strings.RotateRight}" Command="{Binding RotateRightCommand}" />
+                        <Separator />
+                        <MenuItem Header="{x:Static local:Strings.MoveLeft}" Command="{Binding MoveLeftCommand}" />
+                        <MenuItem Header="{x:Static local:Strings.MoveRight}" Command="{Binding MoveRightCommand}" />
+                        <Separator />
+                        <MenuItem Header="{x:Static local:Strings.Rescan}" Command="{Binding RescanCommand}" />
+                        <MenuItem Header="{x:Static local:Strings.Delete}" Command="{Binding DeleteCommand}" />
+                      </ContextMenu>
+                    </Border.ContextMenu>
+                    <StackPanel Width="104">
+                      <Grid>
+                        <Image Source="{Binding Thumbnail}" Height="120" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
+                        <Border HorizontalAlignment="Left" VerticalAlignment="Top" Background="#CC1B2430" CornerRadius="4" Padding="6,1">
+                          <TextBlock Text="{Binding Number}" Foreground="White" FontWeight="SemiBold" FontSize="11" />
+                        </Border>
+                      </Grid>
+                      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
+                        <Button Content="&#x21BA;" FontSize="14" Padding="7,0" ToolTip="{x:Static local:Strings.RotateLeft}" Command="{Binding RotateLeftCommand}" />
+                        <Button Margin="4,0,0,0" Content="&#x21BB;" FontSize="14" Padding="7,0" ToolTip="{x:Static local:Strings.RotateRight}" Command="{Binding RotateRightCommand}" />
+                        <Button Margin="4,0,0,0" Content="&#x27F3;" FontSize="14" Padding="7,0" ToolTip="{x:Static local:Strings.Rescan}" Command="{Binding RescanCommand}" />
+                        <Button Margin="4,0,0,0" Content="&#x2715;" FontSize="12" Padding="7,0" ToolTip="{x:Static local:Strings.Delete}" Command="{Binding DeleteCommand}" />
+                      </StackPanel>
+                    </StackPanel>
+                  </Border>
+                  </StackPanel>
+                  <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding IsInsertBefore}" Value="True">
+                      <Setter TargetName="InsertBar" Property="Visibility" Value="Visible" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding IsReplaceTarget}" Value="True">
+                      <Setter TargetName="Card" Property="BorderBrush" Value="#E0A000" />
+                      <Setter TargetName="Card" Property="BorderThickness" Value="2" />
+                    </DataTrigger>
+                  </DataTemplate.Triggers>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <!-- The gap after the last page: the default place for the next scan. -->
+            <Border Width="16" Background="Transparent" Cursor="Hand" ToolTip="{x:Static local:Strings.InsertHere}">
+              <Border.InputBindings>
+                <MouseBinding Gesture="LeftClick" Command="{Binding Session.InsertAtEndCommand}" />
+              </Border.InputBindings>
+              <Rectangle Width="4" RadiusX="2" RadiusY="2" Fill="#E0A000" Margin="0,4"
+                         Visibility="{Binding Session.IsInsertAtEnd, Converter={StaticResource Bool}}" />
+            </Border>
+            </StackPanel>
+          </ScrollViewer>
+        </StackPanel>
+
+        <!-- Files of the last scan: each can be turned by 90 degrees and is saved again at once. -->
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                      Visibility="{Binding HasResults, Converter={StaticResource Bool}}">
+          <ItemsControl ItemsSource="{Binding Results}" Margin="8,0,8,8">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Margin="0,0,8,0" Padding="6" CornerRadius="6" BorderThickness="1" Background="Transparent"
+                        BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}">
+                  <Border.InputBindings>
+                    <MouseBinding Gesture="LeftDoubleClick" Command="{Binding OpenCommand}" />
+                  </Border.InputBindings>
+                  <Border.ContextMenu>
+                    <ContextMenu>
+                      <MenuItem Header="{x:Static local:Strings.RotateLeft}" Command="{Binding RotateLeftCommand}" />
+                      <MenuItem Header="{x:Static local:Strings.RotateRight}" Command="{Binding RotateRightCommand}" />
+                      <Separator />
+                      <MenuItem Header="{x:Static local:Strings.OpenFile}" Command="{Binding OpenCommand}" />
+                      <MenuItem Header="{x:Static local:Strings.ShowInFolder}" Command="{Binding ShowInFolderCommand}" />
+                      <Separator />
+                      <MenuItem Header="{x:Static local:Strings.Delete}" Command="{Binding DeleteCommand}" />
+                    </ContextMenu>
+                  </Border.ContextMenu>
+                  <StackPanel Width="132">
+                    <Image Source="{Binding Thumbnail}" Height="96" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
+                    <TextBlock Margin="0,4,0,2" HorizontalAlignment="Center" FontSize="11" Opacity="0.7"
+                               Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                      <Button Content="&#x21BA;" FontSize="16" Padding="12,0" ToolTip="{x:Static local:Strings.RotateLeft}"
+                              Command="{Binding RotateLeftCommand}" />
+                      <Button Margin="6,0,0,0" Content="&#x21BB;" FontSize="16" Padding="12,0" ToolTip="{x:Static local:Strings.RotateRight}"
+                              Command="{Binding RotateRightCommand}" />
+                    </StackPanel>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </Grid>
+    </Border>
+
+    <!-- Status -->
+    <StackPanel Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2" Margin="16,4,16,8" Orientation="Horizontal">
+      <TextBlock Opacity="0.7" Text="{Binding Status}" TextTrimming="CharacterEllipsis" />
+      <TextBlock Margin="10,0,0,0" Visibility="{Binding HasBlank, Converter={StaticResource Bool}}">
+        <Hyperlink Command="{Binding SaveAnywayCommand}"><Run Text="{x:Static local:Strings.SaveAnyway}" /></Hyperlink>
+      </TextBlock>
+      <TextBlock Margin="10,0,0,0" Visibility="{Binding CanAppendLastPdf, Converter={StaticResource Bool}}">
+        <Hyperlink Command="{Binding AppendLastPdfCommand}"><Run Text="{Binding AppendLastPdfText, Mode=OneWay}" /></Hyperlink>
+      </TextBlock>
+    </StackPanel>
+    <!-- After each PDF page: a card in the middle of the window, readable from the scanner. -->
+    <Grid Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" Grid.ColumnSpan="2" Background="#66000000"
+          Visibility="{Binding Session.IsCardVisible, Converter={StaticResource Bool}}">
+      <Border Width="440" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" CornerRadius="10"
+              Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+              BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}" BorderThickness="1">
+        <StackPanel>
+          <TextBlock Text="{Binding Session.CardTitle}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" />
+          <Image Source="{Binding Session.CardThumbnail}" Height="180" Margin="0,14,0,0" Stretch="Uniform"
+                 RenderOptions.BitmapScalingMode="HighQuality" />
+          <StackPanel Margin="0,16,0,0" Visibility="{Binding Session.IsCardCountdown, Converter={StaticResource Bool}}">
+            <ProgressBar Height="10" Minimum="0" Maximum="1" Value="{Binding Session.CountdownFraction, Mode=OneWay}" />
+            <TextBlock Margin="0,6,0,0" Text="{Binding Session.CountdownText}" Opacity="0.8" />
+          </StackPanel>
+          <Grid Margin="0,18,0,0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="8" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="8" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+              <Button HorizontalAlignment="Stretch" Padding="8,8" Style="{DynamicResource AccentButtonStyle}"
+                      Command="{Binding Session.ScanNowCommand}">
+                <TextBlock TextWrapping="Wrap" TextAlignment="Center">
+                  <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                      <Setter Property="Text" Value="{x:Static local:Strings.ScanNow}" />
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding Session.IsCardCountdown}" Value="False">
+                          <Setter Property="Text" Value="{x:Static local:Strings.ScanAgain}" />
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </TextBlock.Style>
+                </TextBlock>
+              </Button>
+              <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" Opacity="0.55" FontSize="11" Text="Enter" />
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+              <Button HorizontalAlignment="Stretch" Padding="8,8" Command="{Binding SavePdfCommand}">
+                <TextBlock TextWrapping="Wrap" TextAlignment="Center" Text="{x:Static local:Strings.SavePdf}" />
+              </Button>
+              <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" Opacity="0.55" FontSize="11" Text="Ctrl+S" />
+            </StackPanel>
+            <StackPanel Grid.Column="4">
+              <Button HorizontalAlignment="Stretch" Padding="8,8" Command="{Binding Session.StopCommand}">
+                <TextBlock TextWrapping="Wrap" TextAlignment="Center">
+                  <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                      <Setter Property="Text" Value="{x:Static local:Strings.StopAuto}" />
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding Session.IsCardCountdown}" Value="False">
+                          <Setter Property="Text" Value="{x:Static local:Strings.Close}" />
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </TextBlock.Style>
+                </TextBlock>
+              </Button>
+              <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" Opacity="0.55" FontSize="11" Text="Esc" />
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </Border>
+    </Grid>
+  </Grid>
+</Window>
