@@ -272,6 +272,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
     /// <summary>"Scan to PDF" after a preview, "Redo as PDF" when the image is already saved.</summary>
     public string DocumentHintAction => _hintFrame is null ? Strings.ScanToPdf : Strings.RedoAsPdf;
 
+    /// <summary>What happens: the sheet is scanned into a PDF, or the saved file is redone as a PDF without scanning again.</summary>
+    public string DocumentHintText => _hintFrame is null
+        ? Strings.DocumentHintDetail
+        : string.Format(Strings.DocumentHintSavedFormat, Results.Count > 0 ? Results[0].FileName : "");
+
     public RelayCommand DocumentHintCommand { get; private set; } = null!;
     public RelayCommand DismissDocumentHintCommand { get; private set; } = null!;
 
@@ -286,6 +291,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _hintRotation = rotation;
         OnPropertyChanged(nameof(HasDocumentHint));
         OnPropertyChanged(nameof(DocumentHintAction));
+        OnPropertyChanged(nameof(DocumentHintText));
         DocumentHintCommand.RaiseCanExecuteChanged();
     }
 

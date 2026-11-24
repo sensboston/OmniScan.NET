@@ -112,6 +112,8 @@ public static class Strings
     public static string SaveAnyway => T();
     public static string LooksLikeDocument => T();
     public static string DocumentHintDetail => T();
+    public static string DocumentHintSavedFormat => T();
+    public static string KeepAsIs => T();
     public static string ScanToPdf => T();
     public static string RedoAsPdf => T();
     public static string PageAddedFormat => T();

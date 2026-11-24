@@ -21,7 +21,10 @@ public partial class MainWindow : Window
     /// <summary>Stores where the window is now (before it is replaced by a window in another language).</summary>
     public void SavePlacement() => _model.SaveNow(CapturePlacement());
 
-    /// <summary>Keys of the PDF card: Enter scans now, Ctrl+S saves, Esc stops. Ctrl+S also works without the card.</summary>
+    /// <summary>
+    /// Keys of the PDF card: Enter scans now, Ctrl+S saves, Esc stops. Ctrl+S also works without the card.
+    /// On the document card Enter accepts PDF and Esc keeps the image.
+    /// </summary>
     protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
     {
         base.OnPreviewKeyDown(e);
@@ -30,6 +33,22 @@ public partial class MainWindow : Window
         {
             _model.SavePdfCommand.Execute(null);
             e.Handled = true;
+            return;
+        }
+
+        if (_model.HasDocumentHint)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter && _model.DocumentHintCommand.CanExecute(null))
+            {
+                _model.DocumentHintCommand.Execute(null);
+                e.Handled = true;
+            }
+            else if (e.Key == System.Windows.Input.Key.Escape)
+            {
+                _model.DismissDocumentHintCommand.Execute(null);
+                e.Handled = true;
+            }
+
             return;
         }
 

@@ -134,33 +134,6 @@
                    Visibility="{Binding HasPreview, Converter={StaticResource InverseBool}}" />
         <local:FrameEditor Source="{Binding PreviewImage}" Frames="{Binding PreviewFrames}"
                            EditedCommand="{Binding FramesEditedCommand}" IsEditable="{Binding CanEditFrames}" RenderOptions.BitmapScalingMode="HighQuality" />
-        <!-- "Looks like a document": a bar over the top of the preview, shown once per run. -->
-        <Border VerticalAlignment="Top" HorizontalAlignment="Center" Margin="12" Padding="16,12" CornerRadius="8"
-                MaxWidth="600" Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
-                BorderBrush="{DynamicResource AccentFillColorDefaultBrush}" BorderThickness="2"
-                Visibility="{Binding HasDocumentHint, Converter={StaticResource Bool}}">
-          <Border.Effect>
-            <DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.35" />
-          </Border.Effect>
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
-              <TextBlock FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"
-                         Text="{x:Static local:Strings.LooksLikeDocument}" />
-              <TextBlock Margin="0,2,0,0" TextWrapping="Wrap" Opacity="0.75"
-                         Text="{x:Static local:Strings.DocumentHintDetail}" />
-            </StackPanel>
-            <Button Grid.Column="1" VerticalAlignment="Center" Padding="14,6" Style="{DynamicResource AccentButtonStyle}"
-                    Content="{Binding DocumentHintAction}" Command="{Binding DocumentHintCommand}" />
-            <Button Grid.Column="2" VerticalAlignment="Center" Margin="8,0,0,0" Padding="10,6" Content="&#x2715;"
-                    ToolTip="{x:Static local:Strings.Close}" Command="{Binding DismissDocumentHintCommand}" />
-          </Grid>
-        </Border>
-
         <ProgressBar IsIndeterminate="{Binding IsBusy}" VerticalAlignment="Bottom" Height="4" Margin="8"
                      Visibility="{Binding IsBusy, Converter={StaticResource Bool}}" />
 
@@ -365,6 +338,38 @@
                     </Style>
                   </TextBlock.Style>
                 </TextBlock>
+              </Button>
+              <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" Opacity="0.55" FontSize="11" Text="Esc" />
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </Border>
+    </Grid>
+    <!-- "Looks like a document": the same kind of card, once per run, when a document goes to an image file. -->
+    <Grid Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" Grid.ColumnSpan="2" Background="#66000000"
+          Visibility="{Binding HasDocumentHint, Converter={StaticResource Bool}}">
+      <Border Width="460" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" CornerRadius="10"
+              Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+              BorderBrush="{DynamicResource AccentFillColorDefaultBrush}" BorderThickness="2">
+        <StackPanel>
+          <TextBlock Text="{x:Static local:Strings.LooksLikeDocument}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" />
+          <TextBlock Margin="0,10,0,0" Text="{Binding DocumentHintText}" TextWrapping="Wrap" Opacity="0.85" />
+          <Grid Margin="0,20,0,0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="8" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+              <Button HorizontalAlignment="Stretch" Padding="8,8" Style="{DynamicResource AccentButtonStyle}"
+                      Command="{Binding DocumentHintCommand}">
+                <TextBlock TextWrapping="Wrap" TextAlignment="Center" Text="{Binding DocumentHintAction}" />
+              </Button>
+              <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" Opacity="0.55" FontSize="11" Text="Enter" />
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+              <Button HorizontalAlignment="Stretch" Padding="8,8" Command="{Binding DismissDocumentHintCommand}">
+                <TextBlock TextWrapping="Wrap" TextAlignment="Center" Text="{x:Static local:Strings.KeepAsIs}" />
               </Button>
               <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" Opacity="0.55" FontSize="11" Text="Esc" />
             </StackPanel>
