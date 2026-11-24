@@ -41,15 +41,64 @@ public sealed class ScanOutputTests
     }
 
     [Fact]
-    public void CreateNext_CountsPerExtension()
+    public void CreateNext_NumbersRunThroughAllFormats()
     {
         using TempFolder temp = new();
         temp.Touch("scan_001.png");
-        temp.Touch("scan_002.png");
+        temp.Touch("scan_002.jpg");
+        temp.Touch("scan_003.PDF");
 
         using FileStream pdf = ScanOutput.CreateNext(temp.Path, "pdf");
+        using FileStream jpg = ScanOutput.CreateNext(temp.Path, ".jpg");
 
-        Assert.Equal("scan_001.pdf", Path.GetFileName(pdf.Name));
+        Assert.Equal("scan_004.pdf", Path.GetFileName(pdf.Name));
+        Assert.Equal("scan_005.jpg", Path.GetFileName(jpg.Name));
+    }
+
+    [Fact]
+    public void CreateNext_OldFolderWithSharedNumbers_ContinuesAfterHighest()
+    {
+        using TempFolder temp = new();
+        temp.Touch("scan_001.jpg");
+        temp.Touch("scan_001.pdf");
+        temp.Touch("scan_002.jpg");
+
+        using FileStream file = ScanOutput.CreateNext(temp.Path, ".pdf");
+
+        Assert.Equal("scan_003.pdf", Path.GetFileName(file.Name));
+    }
+
+    [Theory]
+    [InlineData("scan_007.tif")]
+    [InlineData("scan_007.jpg.bak")]
+    public void CreateNext_OtherFilesDoNotCount(string foreign)
+    {
+        using TempFolder temp = new();
+        temp.Touch("scan_002.pdf");
+        temp.Touch(foreign);
+
+        using FileStream file = ScanOutput.CreateNext(temp.Path, ".jpg");
+
+        Assert.Equal("scan_003.jpg", Path.GetFileName(file.Name));
+    }
+
+    [Fact]
+    public void CreateNext_MixedConcurrentWriters_GetDistinctNumbers()
+    {
+        using TempFolder temp = new();
+        const int writers = 24;
+        FileStream[] created = new FileStream[writers];
+        try
+        {
+            Parallel.For(0, writers, i => created[i] = ScanOutput.CreateNext(temp.Path, i % 2 == 0 ? ".jpg" : ".pdf"));
+            string[] numbers = created.Select(f => Path.GetFileNameWithoutExtension(f.Name)).ToArray();
+            Assert.Equal(writers, numbers.Distinct().Count());
+        }
+        finally
+        {
+            foreach (FileStream f in created)
+                f?.Dispose();
+        }
     }
 
     [Theory]

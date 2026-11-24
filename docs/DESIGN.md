@@ -55,8 +55,9 @@ color mode (Color / Grayscale / Black & White), scan area, preview scan.
 
 - The user chooses a root folder (default `Pictures\Scans`).
 - Each save goes into a per-day subfolder `YYYY-MM-DD`, created on demand.
-- File names are `scan_001.png`, `scan_002.jpg`, `scan_001.pdf` … The counter is the next
-  free number in that folder; existing files are never overwritten. The check and the file
+- File names are `scan_001.png`, `scan_002.jpg`, `scan_003.pdf` … One counter runs through all
+  formats (one number is one scan, and sorting by name follows the order of scanning); it continues
+  after the highest number in that folder, and existing files are never overwritten. The check and the file
   creation are atomic (`FileMode.CreateNew` with retry), so several photos cut from one
   scan, or a local and a remote scan finishing at once, never collide.
 - The date of the folder is taken when the scan (or a multi-page session) starts.

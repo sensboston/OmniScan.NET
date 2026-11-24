@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 
 namespace OmniScan.Net.Core;
 
@@ -13,8 +15,9 @@ public static class ScanOutput
         Path.Combine(root, date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
 
     /// <summary>
-    /// Creates the folder if needed and opens a new file named <c>{prefix}_{NNN}{extension}</c>,
-    /// numbered after the highest existing number for this prefix and extension.
+    /// Creates the folder if needed and opens a new file named <c>{prefix}_{NNN}{extension}</c>.
+    /// Numbering runs through all output formats: <c>scan_003.jpg</c> is followed by <c>scan_004.pdf</c>,
+    /// so one number is one scan and sorting by name follows the order of scanning.
     /// Creation is atomic: a name taken meanwhile by another writer is skipped, nothing is overwritten.
     /// The caller owns the returned stream; its <see cref="FileStream.Name"/> is the full path.
     /// </summary>
@@ -27,33 +30,55 @@ public static class ScanOutput
             extension = "." + extension;
 
         Directory.CreateDirectory(folder);
-        for (int number = NextNumber(folder, prefix, extension); ; number++)
+        string[] extensions = Extensions(extension);
+
+        // All saves of this program (local and remote scans alike) go through here: choosing the number
+        // under one lock keeps a JPEG and a PDF saved at the same moment from sharing a number.
+        // CreateNew still guards the exact name against any other writer.
+        lock (Gate)
         {
-            string path = Path.Combine(folder, FileName(prefix, number, extension));
-            try
+            for (int number = NextNumber(folder, prefix, extensions); ; number++)
             {
-                return new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-            }
-            catch (IOException) when (File.Exists(path))
-            {
-                // Taken between the scan and the create; try the next number.
+                if (extensions.Any(e => File.Exists(Path.Combine(folder, FileName(prefix, number, e)))))
+                    continue;
+                string path = Path.Combine(folder, FileName(prefix, number, extension));
+                try
+                {
+                    return new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+                }
+                catch (IOException) when (File.Exists(path))
+                {
+                    // Taken between the check and the create by another process; try the next number.
+                }
             }
         }
     }
 
+    private static readonly object Gate = new();
+
     internal static string FileName(string prefix, int number, string extension) =>
         string.Create(CultureInfo.InvariantCulture, $"{prefix}_{number:D3}{extension}");
 
-    /// <summary>One past the highest <c>{prefix}_{digits}{extension}</c> in the folder; gaps are not reused.</summary>
-    internal static int NextNumber(string folder, string prefix, string extension)
+    /// <summary>The extensions that share one numbering: every output format, plus the one asked for.</summary>
+    private static string[] Extensions(string extension) =>
+        Enum.GetValues<OutputFormat>().Select(OutputFormats.Extension)
+            .Append(extension)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+    /// <summary>
+    /// One past the highest <c>{prefix}_{digits}{ext}</c> in the folder over the given extensions;
+    /// gaps are not reused.
+    /// </summary>
+    internal static int NextNumber(string folder, string prefix, IReadOnlyList<string> extensions)
     {
         int max = 0;
         string head = prefix + "_";
-        foreach (string path in Directory.EnumerateFiles(folder, head + "*" + extension))
+        foreach (string path in Directory.EnumerateFiles(folder, head + "*"))
         {
             string name = Path.GetFileName(path);
-            if (!name.EndsWith(extension, StringComparison.OrdinalIgnoreCase)
-                || !name.StartsWith(head, StringComparison.OrdinalIgnoreCase))
+            string? extension = extensions.FirstOrDefault(e => name.EndsWith(e, StringComparison.OrdinalIgnoreCase));
+            if (extension is null || !name.StartsWith(head, StringComparison.OrdinalIgnoreCase))
                 continue;
 
             ReadOnlySpan<char> digits = name.AsSpan(head.Length, name.Length - head.Length - extension.Length);
