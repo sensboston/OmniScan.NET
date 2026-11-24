@@ -98,16 +98,16 @@ public sealed class SettingsStore
         // goes after the line, commented out: uncommented, it is the last "Model" and wins.
         b.AppendLine("; Model: the model to use first; empty = chosen by the program for the key's service.");
         b.AppendLine("; A busy or closed model gives way to the next one. Tested, chosen by default:");
-        b.AppendLine(";   OpenAI     gpt-4.1-mini");
+        b.AppendLine(";   OpenAI     gpt-6-luna");
         b.AppendLine(";   Google     gemini-3.5-flash-lite   (works with a free key)");
         b.AppendLine(";   DeepSeek   deepseek-flash");
         b.AppendLine("; Not tested yet: Anthropic, xAI, OpenRouter.");
         Key(b, "Model", s.AssistModel ?? "");
-        if (!string.Equals(s.AssistModel, "gpt-4.1", StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(s.AssistModel, "gpt-6.1-terra", StringComparison.OrdinalIgnoreCase))
         {
             b.AppendLine("; OpenAI: turns more photos right (also those where only a sign shows which way is up),");
-            b.AppendLine("; at several times the price:");
-            b.AppendLine("; Model = gpt-4.1");
+            b.AppendLine("; at ten times the price:");
+            b.AppendLine("; Model = gpt-6.1-terra");
         }
         Key(b, "TurnPhotos", s.AssistOrient);
         Key(b, "DescribePhotos", s.AssistDescribe);

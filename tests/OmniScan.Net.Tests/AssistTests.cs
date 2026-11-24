@@ -45,6 +45,7 @@ public sealed class AssistTests
     {
         List<string> openai = ["gpt-9-mini-realtime", "gpt-9-mini-tts", "gpt-9-mini", "text-embedding-3-small"];
         Assert.Equal("gpt-9-mini", AssistProviders.ChooseModel(AssistProvider.OpenAI, openai));
+        Assert.Equal("gpt-7-luna", AssistProviders.ChooseModel(AssistProvider.OpenAI, ["gpt-9-mini", "gpt-7-luna-tts", "gpt-7-luna"]));
 
         List<string> google = ["gemini-9-pro", "gemini-9-flash-lite-preview"];
         Assert.Equal("gemini-9-flash-lite-preview", AssistProviders.ChooseModel(AssistProvider.Google, google));
@@ -53,9 +54,9 @@ public sealed class AssistTests
     [Fact]
     public void Candidates_PutTheModelSetByHandFirst_ThenThePreferred_WithoutRepeats()
     {
-        List<string> openai = ["gpt-4o", "gpt-4.1", "gpt-4o-mini", "gpt-4.1-mini", "whisper-1"];
-        Assert.Equal(["gpt-4.1", "gpt-4.1-mini", "gpt-4o-mini", "gpt-4o"], AssistProviders.Candidates(AssistProvider.OpenAI, openai, " GPT-4.1 "));
-        Assert.Equal(["gpt-4.1-mini", "gpt-4o-mini", "gpt-4.1", "gpt-4o"], AssistProviders.Candidates(AssistProvider.OpenAI, openai, "gpt-unknown"));
+        List<string> openai = ["gpt-6.1-terra", "gpt-4o-mini", "gpt-6-luna", "gpt-4.1-mini", "whisper-1"];
+        Assert.Equal(["gpt-6.1-terra", "gpt-6-luna", "gpt-4.1-mini", "gpt-4o-mini"], AssistProviders.Candidates(AssistProvider.OpenAI, openai, " GPT-6.1-TERRA "));
+        Assert.Equal(["gpt-6-luna", "gpt-4.1-mini", "gpt-4o-mini"], AssistProviders.Candidates(AssistProvider.OpenAI, openai, "gpt-unknown"));
     }
 
     /// <summary>Answers by model: busy for the ones listed, a normal answer naming the model for the rest.</summary>

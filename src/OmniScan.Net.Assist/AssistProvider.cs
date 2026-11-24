@@ -68,14 +68,15 @@ public static class AssistProviders
     });
 
     /// <summary>
-    /// Models to use, best first: cheap ones that read images well. (The full gpt-4.1 also gets the photos where
-    /// only a sign tells which way is up, at several times the price: it can be set by hand, [Assist] Model.) For Google the newest light
+    /// Models to use, best first: cheap ones that read images well. For OpenAI gpt-6-luna, the replacement of the
+    /// 4.1 and 4o models (closed in January 2027); the larger gpt-6.1-terra also gets the photos where only a sign
+    /// tells which way is up, at ten times the price: it can be set by hand, [Assist] Model. For Google the newest light
     /// model comes first: it reads turned photos best (and a listed older model may be closed to new keys). The first one the key can use is taken; when none is listed,
     /// <see cref="Fallback"/> picks from the list by name.
     /// </summary>
     internal static IReadOnlyList<string> Preferred(AssistProvider p) => p switch
     {
-        AssistProvider.OpenAI => ["gpt-4.1-mini", "gpt-4o-mini", "gpt-4.1", "gpt-4o"],
+        AssistProvider.OpenAI => ["gpt-6-luna", "gpt-4.1-mini", "gpt-4o-mini"],
         AssistProvider.Google => ["gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"],
         AssistProvider.Anthropic => ["claude-haiku-5-5", "claude-haiku-4-5"],
         AssistProvider.XAi => ["grok-4-fast", "grok-2-vision-1212", "grok-2-vision"],
@@ -94,7 +95,7 @@ public static class AssistProviders
 
         return p switch
         {
-            AssistProvider.OpenAI => Matching("gpt-", "mini").FirstOrDefault(),
+            AssistProvider.OpenAI => Matching("gpt-", "luna").FirstOrDefault() ?? Matching("gpt-", "mini").FirstOrDefault(),
             AssistProvider.Google => Matching("gemini", "flash-lite").FirstOrDefault() ?? Matching("gemini", "flash").FirstOrDefault(),
             AssistProvider.Anthropic => Matching("haiku").FirstOrDefault() ?? Matching("sonnet").FirstOrDefault(),
             AssistProvider.XAi => Matching("grok", "vision").FirstOrDefault() ?? Matching("grok").FirstOrDefault(),

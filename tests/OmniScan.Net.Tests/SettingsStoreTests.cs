@@ -94,10 +94,10 @@ public sealed class SettingsStoreTests
         store.Save(new AppSettings());
         string text = File.ReadAllText(store.Path);
         Assert.Matches(@"(?m)^Model = \r?$", text);
-        Assert.Contains("; Model = gpt-4.1", text);
+        Assert.Contains("; Model = gpt-6.1-terra", text);
 
-        File.WriteAllText(store.Path, text.Replace("; Model = gpt-4.1", "Model = gpt-4.1"));
-        Assert.Equal("gpt-4.1", store.Load().AssistModel);
+        File.WriteAllText(store.Path, text.Replace("; Model = gpt-6.1-terra", "Model = gpt-6.1-terra"));
+        Assert.Equal("gpt-6.1-terra", store.Load().AssistModel);
     }
 
     [Theory]
