@@ -17,10 +17,12 @@ jobs:
           global-json-file: global.json
       - run: dotnet test tests/OmniScan.Net.Tests -c Release
       - run: dotnet publish src/OmniScan.Net.App -c Release -r win-x64 -o publish
+      - run: dotnet publish src/OmniScan.Net.App -c Release -r win-x64 -p:Lite=true -o publish-lite
+      - run: Copy-Item publish-lite/OmniScan.exe publish/OmniScan-lite.exe
       - name: Create release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" publish/OmniScan.exe \
+          gh release create "$GITHUB_REF_NAME" publish/OmniScan.exe publish/OmniScan-lite.exe \
             --title "OmniScan ${GITHUB_REF_NAME#v}" --notes-file docs/release-notes.md

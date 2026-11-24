@@ -13,6 +13,10 @@ and cuts several photos lying on the glass into separate files.
 
 One portable file: nothing to install, no runtime to download. Put it in any folder and run it.
 
+Already have the [.NET 10 Desktop Runtime](https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe) installed? Take the
+[lite build](https://github.com/sensboston/OmniScan.NET/releases/latest/download/OmniScan-lite.exe)
+instead: the same program, about 9 MB instead of 68 MB.
+
 ### What it does
 
 - **Photos:** several photos on the glass become several neatly cropped, straightened files.

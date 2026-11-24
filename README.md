@@ -3,12 +3,17 @@
 [![build](https://github.com/sensboston/OmniScan.NET/actions/workflows/build.yml/badge.svg)](https://github.com/sensboston/OmniScan.NET/actions/workflows/build.yml)
 [![release](https://img.shields.io/github/v/release/sensboston/OmniScan.NET)](https://github.com/sensboston/OmniScan.NET/releases/latest)
 [![license](https://img.shields.io/github/license/sensboston/OmniScan.NET)](LICENSE)
+[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)](https://dotnet.microsoft.com/download/dotnet/10.0)
 
 A small, fast Windows app for scanning documents and photos — and for sharing a USB scanner
 with the other PCs on your home network.
 
 **[Download OmniScan.exe](https://github.com/sensboston/OmniScan.NET/releases/latest/download/OmniScan.exe)**
-— one portable file, nothing to install, no .NET runtime needed. Windows 10/11, 64-bit.
+(~68 MB) — one portable file, nothing to install, no .NET runtime needed. Windows 10/11, 64-bit.
+
+Already have the [.NET 10 Desktop Runtime](https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe)? Then the
+**[lite build](https://github.com/sensboston/OmniScan.NET/releases/latest/download/OmniScan-lite.exe)**
+(~9 MB) is the same program without the runtime inside.
 
 <!-- Screenshots go here. -->
 
@@ -54,8 +59,11 @@ Requires the .NET 10 SDK on Windows.
 dotnet build OmniScan.Net.slnx -c Release
 dotnet test tests/OmniScan.Net.Tests -c Release
 
-# The single portable OmniScan.exe:
+# The single portable OmniScan.exe (runtime inside):
 dotnet publish src/OmniScan.Net.App -c Release -r win-x64 -o publish
+
+# The lite OmniScan.exe (uses the installed .NET 10 Desktop Runtime):
+dotnet publish src/OmniScan.Net.App -c Release -r win-x64 -p:Lite=true -o publish-lite
 ```
 
 ## License
