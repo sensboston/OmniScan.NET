@@ -17,10 +17,16 @@
     runtime inside, compressed (about 68 MB instead of 148 MB; costs ~0.15 s at start).
   -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
-    <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != '' And '$(Lite)' != 'true'">
+    <SelfContained>true</SelfContained>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+  </PropertyGroup>
+  <!-- -p:Lite=true: a small OmniScan.exe that uses the installed .NET 10 Desktop Runtime. -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != '' And '$(Lite)' == 'true'">
+    <SelfContained>false</SelfContained>
   </PropertyGroup>
 
   <!-- Build time for the window title (local time of the machine that builds). -->
