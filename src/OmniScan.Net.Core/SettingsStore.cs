@@ -94,8 +94,8 @@ public sealed class SettingsStore
         Key(b, "ShareScanners", s.ServerEnabled);
         Section(b, "Assist");
         Key(b, "Key", string.IsNullOrEmpty(s.AssistKey) ? "" : SecretText.Protect(s.AssistKey));
-        if (!string.IsNullOrEmpty(s.AssistModel))
-            Key(b, "Model", s.AssistModel);
+        b.AppendLine("; Model: the model to use first (empty: chosen by the program); a busy model gives way to the next.");
+        Key(b, "Model", s.AssistModel ?? "");
         Key(b, "TurnPhotos", s.AssistOrient);
         Key(b, "DescribePhotos", s.AssistDescribe);
         Key(b, "PdfText", s.AssistPdfText);

@@ -109,14 +109,27 @@ public static class AssistProviders
             .Any(x => model.Contains(x, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>Picks the model to use from the ones the key can see.</summary>
-    public static string? ChooseModel(AssistProvider p, IReadOnlyList<string> available)
+    public static string? ChooseModel(AssistProvider p, IReadOnlyList<string> available) =>
+        Candidates(p, available, null).FirstOrDefault();
+
+    /// <summary>
+    /// The models to use, in order, from the ones the key can see: the one set by hand (when the key can
+    /// use it), then the preferred ones, then one picked by name. A busy model gives way to the next.
+    /// </summary>
+    public static IReadOnlyList<string> Candidates(AssistProvider p, IReadOnlyList<string> available, string? wanted)
     {
-        foreach (string want in Preferred(p))
+        List<string> list = [];
+        void Add(string? model)
         {
-            if (available.Contains(want, StringComparer.OrdinalIgnoreCase))
-                return want;
+            string? known = model is null ? null : available.FirstOrDefault(m => string.Equals(m, model, StringComparison.OrdinalIgnoreCase));
+            if (known is not null && !list.Contains(known, StringComparer.OrdinalIgnoreCase))
+                list.Add(known);
         }
 
-        return Fallback(p, available);
+        Add(wanted?.Trim());
+        foreach (string model in Preferred(p))
+            Add(model);
+        Add(Fallback(p, available));
+        return list;
     }
 }
