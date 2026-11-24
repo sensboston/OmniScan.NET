@@ -82,6 +82,12 @@ Each acquired frame goes through a configurable chain of stages
 6. **Encode** — PNG / JPEG / PDF. Every result can still be rotated or deleted in the strip
    below the preview.
 
+**Document hint.** When an image format is chosen and a preview or scan is clearly a document
+(a sheet with many lines of text, whatever its colors), a hint in the status line offers to switch
+to PDF; after a saved scan it redoes that scan as the first page of a PDF instead of the image.
+Photos standing apart on the glass never count as a document, and an unclear case gets no hint.
+The hint is shown at most once per run.
+
 The pipeline always runs on the machine where the user sits (the client), including for
 remote scanners: the server only acquires and returns the raw frame (lossless).
 This keeps a single place for processing settings and keeps the server trivial.

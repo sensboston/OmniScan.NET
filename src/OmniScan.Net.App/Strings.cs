@@ -110,6 +110,9 @@ public static class Strings
     public static string FlipScans => T();
     public static string BlankNotSaved => T();
     public static string SaveAnyway => T();
+    public static string LooksLikeDocument => T();
+    public static string SwitchToPdf => T();
+    public static string RedoAsPdf => T();
     public static string PageAddedFormat => T();
     public static string ScanAgain => T();
     public static string Close => T();

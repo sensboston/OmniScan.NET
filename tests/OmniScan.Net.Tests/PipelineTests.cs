@@ -268,4 +268,39 @@ public sealed class PipelineTests
         byte[] bmp = ScanSaver.PreviewWithOutlines(bed, [new RotatedRect(600, 450, 900, 600, 3)]);
         Assert.True(Pix.ReadMemBmp(bmp).Depth >= 24);
     }
+
+    [Fact]
+    public void TextSheet_IsDocument()
+    {
+        Pix bed = Bed();
+        TextBlock(bed, 1.0, 1.0, 6.5, 9.0);
+        Assert.Equal(ContentKind.Document, ContentGuess.Classify(bed));
+    }
+
+    [Fact]
+    public void ColoredBannerAboveText_IsStillDocument()
+    {
+        Pix bed = Bed();
+        Photo(bed, 4.25, 1.4, 6.5, 1.2, 0);   // a solid colored header, like on a bill
+        TextBlock(bed, 1.0, 2.3, 6.5, 7.5);
+        Assert.Equal(ContentKind.Document, ContentGuess.Classify(bed));
+    }
+
+    [Fact]
+    public void Photos_AreNotDocument()
+    {
+        Pix bed = Bed();
+        Photo(bed, 2.5, 2.5, 4.0, 3.0, 3.0);
+        Photo(bed, 4.5, 8.0, 5.0, 3.5, -2.0, seed: 2);
+        Assert.Equal(ContentKind.Photos, ContentGuess.Classify(bed));
+    }
+
+    [Fact]
+    public void FewLinesOrEmptyBed_GiveNoGuess()
+    {
+        Pix caption = Bed();
+        TextBlock(caption, 1.0, 5.0, 5.0, 0.5);
+        Assert.Equal(ContentKind.Unknown, ContentGuess.Classify(caption));
+        Assert.Equal(ContentKind.Unknown, ContentGuess.Classify(Bed()));
+    }
 }

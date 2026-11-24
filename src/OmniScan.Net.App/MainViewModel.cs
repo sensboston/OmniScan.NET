@@ -65,6 +65,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private SaveOptions? _blankOptions;
     private int _blankRotation;
 
+    // "Looks like a document": offered once per run when a sheet of text is scanned into an image file.
+    private bool _documentHintUsed;
+    private bool _hasDocumentHint;
+    private ScannedFrame? _hintFrame;   // set when the image is already saved: it is redone as a PDF page
+    private int _hintRotation;
+
     // The last PDF saved in this run, kept so that pages can still be added to it.
     private (string Path, PdfPage[] Pages, DateTime Started)? _lastPdf;
     private int _previewRotation;
@@ -90,6 +96,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         SaveAnywayCommand = new RelayCommand(() => _ = SaveAnywayAsync(), () => HasBlank && !IsBusy);
         AppendLastPdfCommand = new RelayCommand(() => _ = AppendLastPdfAsync(), () => CanAppendLastPdf && !IsBusy);
         DiscardPdfCommand = new RelayCommand(DiscardPdf, () => Session.HasPages && !IsBusy);
+        DocumentHintCommand = new RelayCommand(() => _ = AcceptDocumentHintAsync(), () => HasDocumentHint && !IsBusy);
         Session.ScanRequested += automatic =>
         {
             if (CanScan())
@@ -253,7 +260,85 @@ public sealed class MainViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(CanAppendLastPdf));
             AppendLastPdfCommand.RaiseCanExecuteChanged();
             Session.HideCard();
+            HideDocumentHint();
             _ = RedrawPreviewAsync();
+        }
+    }
+
+    /// <summary>The scan looks like a document while an image format is chosen.</summary>
+    public bool HasDocumentHint => _hasDocumentHint;
+
+    /// <summary>"Switch to PDF" after a preview, "Redo as PDF" when the image is already saved.</summary>
+    public string DocumentHintAction => _hintFrame is null ? Strings.SwitchToPdf : Strings.RedoAsPdf;
+
+    public RelayCommand DocumentHintCommand { get; private set; } = null!;
+
+    /// <summary>Whether to look at the content of the next scan (image formats, until the hint was shown once).</summary>
+    private bool WantContentGuess => IsImageFormat && !_documentHintUsed;
+
+    private void ShowDocumentHint(ScannedFrame? savedFrame, int rotation)
+    {
+        _documentHintUsed = true;
+        _hasDocumentHint = true;
+        _hintFrame = savedFrame;
+        _hintRotation = rotation;
+        OnPropertyChanged(nameof(HasDocumentHint));
+        OnPropertyChanged(nameof(DocumentHintAction));
+        DocumentHintCommand.RaiseCanExecuteChanged();
+    }
+
+    private void HideDocumentHint()
+    {
+        if (!_hasDocumentHint)
+            return;
+        _hasDocumentHint = false;
+        _hintFrame = null;
+        OnPropertyChanged(nameof(HasDocumentHint));
+        DocumentHintCommand.RaiseCanExecuteChanged();
+    }
+
+    /// <summary>
+    /// Switches to PDF. When the scan was already saved as an image, that file is removed and the
+    /// same scan becomes the first page of a PDF, so more pages can follow.
+    /// </summary>
+    private async Task AcceptDocumentHintAsync()
+    {
+        ScannedFrame? frame = _hintFrame;
+        int rotation = _hintRotation;
+        string[] saved = Results.Select(r => r.Path).ToArray();
+        Format = OutputFormat.Pdf;   // also hides the hint
+        if (frame is null)
+            return;
+
+        BeginBusy(Strings.ProcessingBusy);
+        try
+        {
+            bool deskew = Deskew, orient = Deskew;
+            (PdfPage page, BitmapSource thumb, BitmapSource full) = await Task.Run(() =>
+            {
+                PdfPage p = PdfPages.Make(frame, rotation, deskew, orient, null, allowBlank: true).Page!;
+                return (p, LoadBitmap(p.ThumbnailBmp), LoadBitmap(PdfPages.PreviewBmp(p)));
+            });
+
+            foreach (string path in saved)
+                File.Delete(path);
+            if (saved.Contains(_lastSavedFile))
+                _lastSavedFile = null;
+            ClearResults();
+
+            int number = Session.NextNumber;
+            Session.Put(page, thumb);
+            PreviewImage = full;
+            Status = Session.Summary;
+            Session.ShowPageCard(number, thumb, _settings.AutoContinueSeconds);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            Status = Strings.SaveFailed + " " + e.Message;
+        }
+        finally
+        {
+            EndBusy();
         }
     }
 
@@ -452,6 +537,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         if (Device is not { } device)
             return;
         SetBlank(null, null, 0);
+        HideDocumentHint();
 
         if (!preview && IsPdf)
         {
@@ -466,7 +552,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             ? PreviewFrames.Select(f => f.ToCutFrame()).ToList()
             : null;
         SaveOptions options = new(RootFolder, DateTime.Now, Format,
-            _settings.JpegQuality, Rotation, processing, frames);
+            _settings.JpegQuality, Rotation, processing, frames, GuessContent: WantContentGuess);
 
         BeginBusy(preview ? Strings.Previewing : Strings.Scanning);
         try
@@ -512,6 +598,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     : $"{Path.GetFileName(result.Files[0])} … {Path.GetFileName(result.Files[^1])}";
                 string found = result.Kind == PageKind.Photos ? string.Format(Strings.PhotosFoundFormat, result.Files.Count) + " " : "";
                 Status = found + string.Format(Strings.SavedFormat, files, _busyClock.Elapsed.TotalSeconds);
+                if (result.Content == ContentKind.Document && result.Files.Count == 1 && WantContentGuess)
+                    ShowDocumentHint(frame, options.Rotation);
             }
         }
         catch (ScannerException e)
@@ -718,9 +806,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
     /// <summary>Shows the bed and the planned frames; a newer request wins over an older one.</summary>
     private async Task ShowPreviewAsync(ScannedFrame frame, int rotation, PipelineOptions processing, int version)
     {
+        bool guess = WantContentGuess;
         (BitmapSource image, PreviewResult result) = await Task.Run(() =>
         {
-            PreviewResult r = ScanSaver.Preview(frame, rotation, processing);
+            PreviewResult r = ScanSaver.Preview(frame, rotation, processing, guess);
             return (LoadBitmap(r.PageBmp), r);
         });
         if (version != _previewVersion || _previewFrame != frame)
@@ -732,6 +821,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         foreach (CutFrame f in result.Frames)
             PreviewFrames.Add(new EditableFrame(f.Rect, f.Kind));
         _framesEdited = false;
+        if (result.Content == ContentKind.Document && WantContentGuess)
+            ShowDocumentHint(null, rotation);
     }
 
     private async Task ShowResultsAsync(SaveResult result, SaveOptions options)
@@ -818,6 +909,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         SettingsCommand.RaiseCanExecuteChanged();
         SavePdfCommand?.RaiseCanExecuteChanged();
         SaveAnywayCommand?.RaiseCanExecuteChanged();
+        DocumentHintCommand?.RaiseCanExecuteChanged();
         AppendLastPdfCommand?.RaiseCanExecuteChanged();
         DiscardPdfCommand?.RaiseCanExecuteChanged();
         OnPropertyChanged(nameof(IsFormatSelectable));

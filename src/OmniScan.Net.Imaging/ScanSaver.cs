@@ -10,6 +10,7 @@ namespace OmniScan.Net.Imaging;
 /// <summary>What to do with an acquired frame, captured from the settings when the scan starts.</summary>
 /// <param name="Frames">Frames adjusted by the user on the preview, in page-width units; null: detect automatically.</param>
 /// <param name="SaveBlank">Save even when nothing is on the glass (the "save anyway" after a blank scan).</param>
+/// <param name="GuessContent">Also tell whether the scan is a document or photos (<see cref="SaveResult.Content"/>).</param>
 public sealed record SaveOptions(
     string RootFolder,
     DateTime Date,
@@ -18,16 +19,18 @@ public sealed record SaveOptions(
     int Rotation,
     PipelineOptions Processing,
     IReadOnlyList<CutFrame>? Frames = null,
-    bool SaveBlank = false);
+    bool SaveBlank = false,
+    bool GuessContent = false);
 
 /// <summary>A preview: the whole bed as an image and the frames that would be cut, in page-width units.</summary>
-public sealed record PreviewResult(byte[] PageBmp, IReadOnlyList<CutFrame> Frames);
+public sealed record PreviewResult(byte[] PageBmp, IReadOnlyList<CutFrame> Frames, ContentKind Content = ContentKind.Unknown);
 
 /// <summary>
 /// The files written for one scan, the images they were encoded from (kept for lossless
 /// re-saving after a manual rotation) and a small preview of the result.
 /// </summary>
-public sealed record SaveResult(PageKind Kind, IReadOnlyList<string> Files, IReadOnlyList<Pix> Images, byte[] PreviewBmp);
+public sealed record SaveResult(PageKind Kind, IReadOnlyList<string> Files, IReadOnlyList<Pix> Images, byte[] PreviewBmp,
+    ContentKind Content = ContentKind.Unknown);
 
 /// <summary>Turns an acquired frame into saved files: rotate, process, encode, write to the day folder.</summary>
 public static class ScanSaver
@@ -67,7 +70,8 @@ public static class ScanSaver
         byte[] preview = processed.Images.Count == 1
             ? FrameCodec.PreviewBmp(processed.Images[0], PreviewMaxSide)
             : PreviewWithOutlines(page, processed.Outlines);
-        return new SaveResult(processed.Kind, files, processed.Images, preview);
+        ContentKind content = options.GuessContent ? ContentGuess.Classify(page) : ContentKind.Unknown;
+        return new SaveResult(processed.Kind, files, processed.Images, preview, content);
     }
 
     /// <summary>
@@ -88,11 +92,12 @@ public static class ScanSaver
     public static byte[] Thumbnail(Pix image, int maxSide) => FrameCodec.PreviewBmp(image, maxSide);
 
     /// <summary>A preview scan is shown, never saved: the bed and the frames that would be cut.</summary>
-    public static PreviewResult Preview(ScannedFrame frame, int rotation, PipelineOptions processing)
+    public static PreviewResult Preview(ScannedFrame frame, int rotation, PipelineOptions processing, bool guessContent = false)
     {
         Pix page = Prepare(frame, rotation);
         IReadOnlyList<CutFrame> frames = ScanPipeline.Plan(page, processing);
-        return new PreviewResult(PreviewWithOutlines(page, []), frames.Select(f => f.Normalize(page.Width)).ToList());
+        ContentKind content = guessContent ? ContentGuess.Classify(page) : ContentKind.Unknown;
+        return new PreviewResult(PreviewWithOutlines(page, []), frames.Select(f => f.Normalize(page.Width)).ToList(), content);
     }
 
     internal static byte[] PreviewWithOutlines(Pix page, IReadOnlyList<RotatedRect> outlines)

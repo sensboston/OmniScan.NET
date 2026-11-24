@@ -274,6 +274,10 @@
       <TextBlock Margin="10,0,0,0" Visibility="{Binding HasBlank, Converter={StaticResource Bool}}">
         <Hyperlink Command="{Binding SaveAnywayCommand}"><Run Text="{x:Static local:Strings.SaveAnyway}" /></Hyperlink>
       </TextBlock>
+      <TextBlock Margin="10,0,0,0" Visibility="{Binding HasDocumentHint, Converter={StaticResource Bool}}">
+        <Run FontWeight="SemiBold" Text="{x:Static local:Strings.LooksLikeDocument}" />
+        <Hyperlink Command="{Binding DocumentHintCommand}"><Run Text="{Binding DocumentHintAction, Mode=OneWay}" /></Hyperlink>
+      </TextBlock>
       <TextBlock Margin="10,0,0,0" Visibility="{Binding CanAppendLastPdf, Converter={StaticResource Bool}}">
         <Hyperlink Command="{Binding AppendLastPdfCommand}"><Run Text="{Binding AppendLastPdfText, Mode=OneWay}" /></Hyperlink>
       </TextBlock>
