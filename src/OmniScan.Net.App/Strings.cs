@@ -107,7 +107,11 @@ public static class Strings
     public static string SecondsFormat => T();
     public static string PdfSavedFormat => T();
 
-    public static string FlipScans => T();
+    public static string ScannerTop => T();
+    public static string TopWord => T();
+    public static string TopLeft => T();
+    public static string TopRight => T();
+    public static string ScannerTopHint => T();
     public static string BlankNotSaved => T();
     public static string SaveAnyway => T();
     public static string LooksLikeDocument => T();
