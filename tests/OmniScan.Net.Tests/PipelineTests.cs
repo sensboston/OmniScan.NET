@@ -116,6 +116,38 @@ public sealed class PipelineTests
     }
 
     [Fact]
+    public void SparseTestPage_StaysOnePage()
+    {
+        // A test sheet: a header line, problems with room for the answers, a footer far below.
+        Pix bed = Bed();
+        TextBlock(bed, 0.6, 0.5, 7.2, 0.2);
+        TextBlock(bed, 0.8, 2.5, 6.4, 0.5);
+        TextBlock(bed, 0.8, 4.5, 2.6, 0.3);
+        TextBlock(bed, 0.6, 10.8, 7.2, 0.2);
+
+        PipelineResult result = ScanPipeline.Process(bed, PipelineOptions.All);
+
+        Assert.Equal(PageKind.Document, result.Kind);
+        Pix page = Assert.Single(result.Images);
+        Assert.InRange(page.Height, 10.5 * Dpi, 11.2 * Dpi);
+    }
+
+    [Fact]
+    public void NarrowSlips_StaySeparate()
+    {
+        // Receipts side by side, and two more one under the other: none is page-wide.
+        Pix bed = Bed();
+        TextBlock(bed, 0.5, 0.5, 2.6, 4.0);
+        TextBlock(bed, 4.5, 0.5, 2.6, 4.0);
+        TextBlock(bed, 0.5, 6.0, 3.0, 2.0);
+        TextBlock(bed, 0.5, 9.0, 3.0, 2.0);
+
+        PipelineResult result = ScanPipeline.Process(bed, PipelineOptions.All);
+
+        Assert.Equal(4, result.Images.Count);
+    }
+
+    [Fact]
     public void PrintWithWhiteBorder_IsTrimmedToThePicture()
     {
         // A photo printed with a white border: the cut follows the paper, the trim removes the border.
