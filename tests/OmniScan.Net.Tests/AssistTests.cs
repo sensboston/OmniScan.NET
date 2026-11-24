@@ -12,6 +12,8 @@ public sealed class AssistTests
     [InlineData("sk-proj-abcdef", AssistProvider.OpenAI)]
     [InlineData("sk-abcdef", AssistProvider.OpenAI)]
     [InlineData("xai-abcdef", AssistProvider.XAi)]
+    [InlineData("sk-0123456789abcdef0123456789abcdef", AssistProvider.DeepSeek)]
+    [InlineData("sk-0123456789ABCDEF0123456789abcdef", AssistProvider.OpenAI)]
     [InlineData("  AIzaSyA12345678901234567890123456789012  ", AssistProvider.Google)]
     public void Detect_ByPrefix(string key, AssistProvider expected) =>
         Assert.Equal(expected, AssistProviders.Detect(key));

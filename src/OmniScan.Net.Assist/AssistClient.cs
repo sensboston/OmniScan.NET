@@ -251,6 +251,10 @@ public sealed class AssistClient : IDisposable
 
         // OpenAI's newer models take only max_completion_tokens; the compatible services take max_tokens.
         body[Provider == AssistProvider.OpenAI ? "max_completion_tokens" : "max_tokens"] = maxTokens;
+        // DeepSeek thinks before answering by default, and the thinking counts against max_tokens:
+        // a short answer then never comes. These questions need no thinking.
+        if (Provider == AssistProvider.DeepSeek)
+            body["thinking"] = new JsonObject { ["type"] = "disabled" };
 
         HttpRequestMessage request = new(HttpMethod.Post, "chat/completions")
         {

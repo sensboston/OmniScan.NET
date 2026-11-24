@@ -12,6 +12,7 @@ public enum AssistProvider
     Anthropic,
     XAi,
     OpenRouter,
+    DeepSeek,
 }
 
 /// <summary>What is known about each service: how its keys look, where it lives, which models to prefer.</summary>
@@ -34,6 +35,9 @@ public static class AssistProviders
             return AssistProvider.XAi;
         if (key.StartsWith("AIza", StringComparison.Ordinal) && key.Length == 39)
             return AssistProvider.Google;
+        // DeepSeek keys are "sk-" and 32 lowercase hex digits; OpenAI keys are longer and mixed-case.
+        if (key.StartsWith("sk-", StringComparison.Ordinal) && key.Length == 35 && key.Skip(3).All(char.IsAsciiHexDigitLower))
+            return AssistProvider.DeepSeek;
         if (key.StartsWith("sk-", StringComparison.Ordinal))
             return AssistProvider.OpenAI;
         return null;
@@ -46,6 +50,7 @@ public static class AssistProviders
         AssistProvider.Anthropic => "Anthropic",
         AssistProvider.XAi => "xAI",
         AssistProvider.OpenRouter => "OpenRouter",
+        AssistProvider.DeepSeek => "DeepSeek",
         _ => p.ToString(),
     };
 
@@ -57,6 +62,7 @@ public static class AssistProviders
         AssistProvider.Anthropic => "https://api.anthropic.com/v1/",
         AssistProvider.XAi => "https://api.x.ai/v1/",
         AssistProvider.OpenRouter => "https://openrouter.ai/api/v1/",
+        AssistProvider.DeepSeek => "https://api.deepseek.com/",
         _ => throw new ArgumentOutOfRangeException(nameof(p)),
     });
 
@@ -72,6 +78,7 @@ public static class AssistProviders
         AssistProvider.Google => ["gemini-2.5-flash-lite", "gemini-2.0-flash-lite", "gemini-2.0-flash", "gemini-2.5-flash", "gemini-flash-lite-latest"],
         AssistProvider.Anthropic => ["claude-haiku-5-5", "claude-haiku-4-5"],
         AssistProvider.XAi => ["grok-4-fast", "grok-2-vision-1212", "grok-2-vision"],
+        AssistProvider.DeepSeek => ["deepseek-flash"],
         AssistProvider.OpenRouter => ["google/gemini-2.5-flash-lite", "openai/gpt-4.1-mini", "openai/gpt-4o-mini", "anthropic/claude-haiku-4.5"],
         _ => [],
     };
@@ -90,6 +97,8 @@ public static class AssistProviders
             AssistProvider.Google => Matching("gemini", "flash-lite").FirstOrDefault() ?? Matching("gemini", "flash").FirstOrDefault(),
             AssistProvider.Anthropic => Matching("haiku").FirstOrDefault() ?? Matching("sonnet").FirstOrDefault(),
             AssistProvider.XAi => Matching("grok", "vision").FirstOrDefault() ?? Matching("grok").FirstOrDefault(),
+            // Only the Flash models read images; Pro does not.
+            AssistProvider.DeepSeek => Matching("deepseek", "flash").FirstOrDefault(),
             _ => null,
         };
     }

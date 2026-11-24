@@ -68,6 +68,38 @@ public sealed class SettingsStoreTests
     }
 
     [Fact]
+    public void AssistKey_IsStoredEncrypted_AndReadBack()
+    {
+        using TempFolder temp = new();
+        SettingsStore store = new(Path.Combine(temp.Path, "OmniScan.ini"));
+        const string key = "sk-0123456789abcdef0123456789abcdef";
+
+        store.Save(new AppSettings { AssistKey = key, AssistOrient = true, AssistPdfText = true });
+        string text = File.ReadAllText(store.Path);
+        AppSettings loaded = store.Load();
+
+        Assert.DoesNotContain(key, text);
+        Assert.Contains("Key = dpapi:", text);
+        Assert.Equal(key, loaded.AssistKey);
+        Assert.True(loaded.AssistOrient);
+        Assert.False(loaded.AssistDescribe);
+        Assert.True(loaded.AssistPdfText);
+    }
+
+    [Theory]
+    [InlineData("sk-plain-text-key")]
+    [InlineData("dpapi:bm90IGEgYmxvYg==")]
+    [InlineData("dpapi:%%%")]
+    public void AssistKey_NotReadable_IsDropped(string value)
+    {
+        using TempFolder temp = new();
+        string path = Path.Combine(temp.Path, "OmniScan.ini");
+        File.WriteAllLines(path, ["[Assist]", "Key = " + value]);
+
+        Assert.Null(new SettingsStore(path).Load().AssistKey);
+    }
+
+    [Fact]
     public void File_IsPlainIni()
     {
         using TempFolder temp = new();

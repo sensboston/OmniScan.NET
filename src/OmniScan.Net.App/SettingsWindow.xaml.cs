@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -20,6 +21,7 @@ public sealed class SettingsModel
         AutoContinueSeconds = settings.AutoContinueSeconds;
         Theme = settings.Theme;
         JpegQuality = settings.JpegQuality;
+        Assist = new AssistSettingsModel(settings);
         int[] seconds = [0, 5, 10, 15, 20, 30, 45, 60];
         if (!seconds.Contains(AutoContinueSeconds))
             seconds = [.. seconds.Append(AutoContinueSeconds).Order()];
@@ -39,6 +41,8 @@ public sealed class SettingsModel
     }
 
     public IReadOnlyList<Option<string>> Languages { get; }
+
+    public AssistSettingsModel Assist { get; }
 
     public IReadOnlyList<Option<UiTheme>> Themes { get; } =
     [
@@ -96,6 +100,7 @@ public sealed class SettingsModel
         settings.AutoContinueSeconds = AutoContinueSeconds;
         settings.Theme = Theme;
         settings.JpegQuality = JpegQuality;
+        Assist.ApplyTo(settings);
         if (Device is { } d)
         {
             int rotation = Flip ? 180 : 0;
@@ -111,11 +116,47 @@ public sealed class SettingsModel
 
 public partial class SettingsWindow : Window
 {
+    private readonly SettingsModel _model;
+
     public SettingsWindow(SettingsModel model)
     {
+        _model = model;
         DataContext = model;
         InitializeComponent();
+        // A PasswordBox does not bind: the key goes in here and comes out in OnKeyChanged.
+        KeyBox.Password = model.Assist.Key;
+        Loaded += (_, _) =>
+        {
+            EvenOutTabs();
+            _ = model.Assist.CheckNowAsync();
+        };
+        Closed += (_, _) => model.Assist.Cancel();
     }
+
+    /// <summary>
+    /// Gives every tab the height of the tallest one (it depends on the language), so the window does not
+    /// jump when switching tabs. Each tab is shown once before the window first appears, to be measured.
+    /// </summary>
+    private void EvenOutTabs()
+    {
+        FrameworkElement[] pages = [GeneralPage, ScanningPage, AssistPage];
+        int selected = Tabs.SelectedIndex;
+        double tallest = 0;
+        for (int i = 0; i < pages.Length; i++)
+        {
+            Tabs.SelectedIndex = i;
+            Tabs.UpdateLayout();
+            tallest = Math.Max(tallest, pages[i].ActualHeight);
+        }
+
+        Tabs.SelectedIndex = selected;
+        foreach (FrameworkElement page in pages)
+            page.MinHeight = tallest;
+    }
+
+    private void OnKeyChanged(object sender, RoutedEventArgs e) => _model.Assist.Key = KeyBox.Password;
+
+    private void OnCheckKey(object sender, RoutedEventArgs e) => _ = _model.Assist.CheckNowAsync();
 
     private void OnOk(object sender, RoutedEventArgs e) => DialogResult = true;
 }

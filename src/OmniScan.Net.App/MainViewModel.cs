@@ -6,10 +6,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using OmniScan.Net.Assist;
 using OmniScan.Net.Core;
 using OmniScan.Net.Imaging;
 
@@ -46,6 +48,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly DispatcherTimer _saveTimer;
     private readonly DispatcherTimer _busyTimer;
     private readonly Stopwatch _busyClock = new();
+    private AssistClient? _assist;
+    private string? _assistFor;
+    private CancellationTokenSource? _assistRun;
     private string _busyText = "";
     private ScannerDevice? _device;
     private string _deviceStatus = "";
@@ -334,7 +339,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
             });
 
             foreach (string path in saved)
+            {
                 File.Delete(path);
+                Descriptions.Set(path, null);
+            }
+
             if (saved.Contains(_lastSavedFile))
                 _lastSavedFile = null;
             ClearResults();
@@ -863,10 +872,88 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         OnPropertyChanged(nameof(HasResults));
+        if (result.Kind is PageKind.Photo or PageKind.Photos && WantAssist)
+            _ = LookAtPhotosAsync(Results.ToList(), result.Images);
+    }
+
+    /// <summary>A key is set and at least one use of it for photos is on.</summary>
+    private bool WantAssist => _settings.AssistKey is not null && (_settings.AssistOrient || _settings.AssistDescribe);
+
+    /// <summary>
+    /// After the photos are saved and shown, asks the online service about each one in turn and applies
+    /// the answers as they come: the turn and the caption. A new scan stops what is left.
+    /// </summary>
+    private async Task LookAtPhotosAsync(IReadOnlyList<ResultItem> items, IReadOnlyList<Leptonica.Pix> images)
+    {
+        _assistRun?.Cancel();
+        CancellationTokenSource run = new();
+        _assistRun = run;
+        bool orient = _settings.AssistOrient, describe = _settings.AssistDescribe;
+        string language = Localization.Resolve(_settings.Language);
+        try
+        {
+            AssistClient client = await ConnectAssistAsync(run.Token);
+            for (int i = 0; i < items.Count && i < images.Count; i++)
+            {
+                if (items[i].IsDeleted)
+                    continue;
+                Leptonica.Pix image = images[i];
+                PhotoReport report = await Task.Run(() => PhotoAssist.LookAsync(client, image, orient, describe, language, run.Token));
+                if (run.IsCancellationRequested)
+                    return;
+                await items[i].ApplyAssistAsync(report.Rotation, report.Description);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // A new scan started.
+        }
+        catch (AssistException e)
+        {
+            if (e.Failure is AssistFailure.BadKey or AssistFailure.UnknownKey or AssistFailure.NoModel)
+                DropAssist();
+            if (!run.IsCancellationRequested)
+                Status = e.Failure switch
+                {
+                    AssistFailure.UnknownKey => Strings.AssistUnknownKey,
+                    AssistFailure.BadKey => Strings.AssistBadKey,
+                    AssistFailure.NoModel => Strings.AssistNoModel,
+                    AssistFailure.Unavailable => Strings.AssistUnavailable,
+                    _ => Strings.AssistBadAnswer,
+                };
+        }
+        finally
+        {
+            if (ReferenceEquals(_assistRun, run))
+                _assistRun = null;
+            run.Dispose();
+        }
+    }
+
+    /// <summary>The connection for the current key, made once (it checks the key and picks the model).</summary>
+    private async Task<AssistClient> ConnectAssistAsync(CancellationToken cancellationToken)
+    {
+        string key = _settings.AssistKey!, model = _settings.AssistModel ?? "";
+        string target = key + "|" + model;
+        if (_assist is not null && _assistFor == target)
+            return _assist;
+        DropAssist();
+        AssistClient client = await AssistClient.ConnectAsync(key, _settings.AssistModel, cancellationToken);
+        _assist = client;
+        _assistFor = target;
+        return client;
+    }
+
+    private void DropAssist()
+    {
+        _assist?.Dispose();
+        _assist = null;
+        _assistFor = null;
     }
 
     private void ClearResults()
     {
+        _assistRun?.Cancel();
         Results.Clear();
         OnPropertyChanged(nameof(HasResults));
     }

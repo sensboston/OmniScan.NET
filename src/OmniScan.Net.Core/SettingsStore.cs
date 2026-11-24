@@ -92,6 +92,13 @@ public sealed class SettingsStore
         Key(b, "Language", s.Language ?? "");
         Key(b, "Theme", s.Theme.ToString());
         Key(b, "ShareScanners", s.ServerEnabled);
+        Section(b, "Assist");
+        Key(b, "Key", string.IsNullOrEmpty(s.AssistKey) ? "" : SecretText.Protect(s.AssistKey));
+        if (!string.IsNullOrEmpty(s.AssistModel))
+            Key(b, "Model", s.AssistModel);
+        Key(b, "TurnPhotos", s.AssistOrient);
+        Key(b, "DescribePhotos", s.AssistDescribe);
+        Key(b, "PdfText", s.AssistPdfText);
         if (s.Window is { } w)
         {
             Section(b, "Window");
@@ -152,6 +159,11 @@ public sealed class SettingsStore
                 case ("app", "language"): s.Language = value.Length == 0 ? null : value; break;
                 case ("app", "theme"): s.Theme = Enum<UiTheme>(value, s.Theme); break;
                 case ("app", "sharescanners"): s.ServerEnabled = Bool(value, s.ServerEnabled); break;
+                case ("assist", "key"): s.AssistKey = value.Length == 0 ? null : SecretText.Unprotect(value); break;
+                case ("assist", "model"): s.AssistModel = value.Length == 0 ? null : value; break;
+                case ("assist", "turnphotos"): s.AssistOrient = Bool(value, s.AssistOrient); break;
+                case ("assist", "describephotos"): s.AssistDescribe = Bool(value, s.AssistDescribe); break;
+                case ("assist", "pdftext"): s.AssistPdfText = Bool(value, s.AssistPdfText); break;
                 case ("window", "left"): (s.Window ??= new WindowPlacement()).Left = Double(value); break;
                 case ("window", "top"): (s.Window ??= new WindowPlacement()).Top = Double(value); break;
                 case ("window", "width"): (s.Window ??= new WindowPlacement()).Width = Double(value); break;

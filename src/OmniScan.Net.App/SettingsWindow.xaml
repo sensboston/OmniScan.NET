@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:OmniScan.Net.App"
         Title="{x:Static local:Strings.SettingsTitle}"
         Icon="pack://application:,,,/OmniScan;component/Assets/OmniScan.ico"
-        Width="540" Height="640" ResizeMode="NoResize"
+        Width="600" SizeToContent="Height" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
 
   <Window.Resources>
@@ -18,6 +18,24 @@
       <Setter Property="Opacity" Value="0.7" />
       <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
+    <Style x:Key="KeyStatus" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,6,0,0" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding Assist.State}" Value="Checking">
+          <Setter Property="Opacity" Value="0.7" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding Assist.State}" Value="Good">
+          <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding Assist.State}" Value="Bad">
+          <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding Assist.Status}" Value="">
+          <Setter Property="Visibility" Value="Hidden" />
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
   </Window.Resources>
 
   <DockPanel Margin="16,12,16,16">
@@ -29,21 +47,33 @@
     </StackPanel>
     <TabControl x:Name="Tabs">
       <TabItem Header="{x:Static local:Strings.TabGeneral}">
-        <StackPanel Margin="4,0,4,8">
+        <StackPanel x:Name="GeneralPage" Margin="4,0,4,8">
+          <!-- Short tabs: the window is as tall as the longest one, so these get more air. -->
+          <StackPanel.Resources>
+            <Style x:Key="Caption" TargetType="TextBlock" BasedOn="{StaticResource Caption}">
+              <Setter Property="Margin" Value="0,26,0,8" />
+            </Style>
+          </StackPanel.Resources>
           <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Language}" />
           <ComboBox ItemsSource="{Binding Languages}" SelectedValue="{Binding Language}"
                     SelectedValuePath="Value" DisplayMemberPath="Label" />
           <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Theme}" />
           <ComboBox ItemsSource="{Binding Themes}" SelectedValue="{Binding Theme}"
                     SelectedValuePath="Value" DisplayMemberPath="Label" HorizontalAlignment="Left" MinWidth="200" />
-          <CheckBox Margin="0,22,0,4" IsChecked="{Binding ServerEnabled}">
+          <CheckBox Margin="0,34,0,6" IsChecked="{Binding ServerEnabled}">
             <TextBlock FontWeight="SemiBold" Text="{x:Static local:Strings.ServerMode}" TextWrapping="Wrap" />
           </CheckBox>
           <TextBlock Style="{StaticResource Hint}" Margin="28,0,0,0" Text="{x:Static local:Strings.ServerModeHint}" />
         </StackPanel>
       </TabItem>
       <TabItem Header="{x:Static local:Strings.TabScanning}">
-        <StackPanel Margin="4,0,4,8">
+        <StackPanel x:Name="ScanningPage" Margin="4,0,4,8">
+          <!-- Short tabs: the window is as tall as the longest one, so these get more air. -->
+          <StackPanel.Resources>
+            <Style x:Key="Caption" TargetType="TextBlock" BasedOn="{StaticResource Caption}">
+              <Setter Property="Margin" Value="0,26,0,8" />
+            </Style>
+          </StackPanel.Resources>
           <!-- Where this scanner has the top of the page: two pictures to choose from. -->
           <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.ScannerTop}" TextWrapping="Wrap" />
           <StackPanel Orientation="Horizontal" IsEnabled="{Binding HasDevice}">
@@ -60,7 +90,7 @@
               </StackPanel>
             </RadioButton>
           </StackPanel>
-          <TextBlock Style="{StaticResource Hint}" Margin="0,6,0,0" Text="{x:Static local:Strings.ScannerTopHint}" />
+          <TextBlock Style="{StaticResource Hint}" Margin="0,10,0,0" Text="{x:Static local:Strings.ScannerTopHint}" />
           <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.JpegQuality}" />
           <DockPanel>
             <TextBlock DockPanel.Dock="Right" MinWidth="36" Margin="12,0,0,0" VerticalAlignment="Center"
@@ -69,10 +99,44 @@
                     IsSnapToTickEnabled="True" TickPlacement="BottomRight" VerticalAlignment="Center"
                     Value="{Binding JpegQuality}" />
           </DockPanel>
-          <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0" Text="{x:Static local:Strings.JpegQualityHint}" />
+          <TextBlock Style="{StaticResource Hint}" Margin="0,8,0,0" Text="{x:Static local:Strings.JpegQualityHint}" />
           <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.AutoContinue}" TextWrapping="Wrap" />
           <ComboBox ItemsSource="{Binding AutoContinueChoices}" SelectedValue="{Binding AutoContinueSeconds}"
                     SelectedValuePath="Value" DisplayMemberPath="Label" HorizontalAlignment="Left" MinWidth="140" />
+        </StackPanel>
+      </TabItem>
+      <TabItem Header="{x:Static local:Strings.TabAssist}">
+        <StackPanel x:Name="AssistPage" Margin="4,0,4,8">
+          <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.AssistKey}" />
+          <DockPanel>
+            <Button DockPanel.Dock="Right" Margin="8,0,0,0" Padding="12,5" MinWidth="96"
+                    Content="{x:Static local:Strings.AssistCheck}" IsEnabled="{Binding Assist.CanCheck}" Click="OnCheckKey" />
+            <PasswordBox x:Name="KeyBox" VerticalAlignment="Center" PasswordChanged="OnKeyChanged" />
+          </DockPanel>
+          <TextBlock Style="{StaticResource KeyStatus}" Text="{Binding Assist.Status}" />
+          <TextBlock Style="{StaticResource Hint}" Margin="0,6,0,0" Text="{x:Static local:Strings.AssistKeyHint}" />
+
+          <!-- What leaves the computer, and to whom: always in view, not in a tooltip. -->
+          <Border Margin="0,10,0,0" Padding="12,8" CornerRadius="4" BorderThickness="1"
+                  Background="{DynamicResource SystemFillColorCautionBackgroundBrush}"
+                  BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}">
+            <TextBlock TextWrapping="Wrap" Text="{Binding Assist.Warning}" />
+          </Border>
+
+          <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.AssistUse}" />
+          <StackPanel IsEnabled="{Binding Assist.Ready}">
+            <CheckBox IsChecked="{Binding Assist.Orient}">
+              <TextBlock Text="{x:Static local:Strings.AssistOrient}" TextWrapping="Wrap" />
+            </CheckBox>
+            <CheckBox Margin="0,6,0,0" IsChecked="{Binding Assist.Describe}">
+              <TextBlock Text="{x:Static local:Strings.AssistDescribe}" TextWrapping="Wrap" />
+            </CheckBox>
+            <TextBlock Style="{StaticResource Hint}" Margin="28,0,0,0" Text="{x:Static local:Strings.AssistDescribeHint}" />
+            <CheckBox Margin="0,6,0,0" IsChecked="{Binding Assist.PdfText}">
+              <TextBlock Text="{x:Static local:Strings.AssistPdfText}" TextWrapping="Wrap" />
+            </CheckBox>
+            <TextBlock Style="{StaticResource Hint}" Margin="28,0,0,0" Text="{x:Static local:Strings.AssistPdfTextHint}" />
+          </StackPanel>
         </StackPanel>
       </TabItem>
     </TabControl>

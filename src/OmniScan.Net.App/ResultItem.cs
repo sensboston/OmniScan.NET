@@ -19,6 +19,8 @@ public sealed class ResultItem : INotifyPropertyChanged
     private Pix _image;
     private BitmapSource _thumbnail;
     private bool _busy;
+    private bool _turnedByHand;
+    private string? _description;
 
     public ResultItem(string path, Pix image, BitmapSource thumbnail, OutputFormat format, int jpegQuality)
     {
@@ -27,8 +29,8 @@ public sealed class ResultItem : INotifyPropertyChanged
         _thumbnail = thumbnail;
         _format = format;
         _jpegQuality = jpegQuality;
-        RotateLeftCommand = new RelayCommand(() => _ = RotateAsync(270), () => !_busy);
-        RotateRightCommand = new RelayCommand(() => _ = RotateAsync(90), () => !_busy);
+        RotateLeftCommand = new RelayCommand(() => _ = RotateByHandAsync(270), () => !_busy);
+        RotateRightCommand = new RelayCommand(() => _ = RotateByHandAsync(90), () => !_busy);
         DeleteCommand = new RelayCommand(Delete, () => !_busy);
         ShowInFolderCommand = new RelayCommand(() => Shell("explorer.exe", $"/select,\"{Path}\""));
         OpenCommand = new RelayCommand(() => Shell(Path, null));
@@ -46,6 +48,20 @@ public sealed class ResultItem : INotifyPropertyChanged
     public event Action<ResultItem>? Deleted;
 
     public string Path { get; }
+
+    /// <summary>The file is gone (deleted here); late answers about it are dropped.</summary>
+    public bool IsDeleted { get; private set; }
+
+    /// <summary>A short caption, kept in descript.ion and (for JPEG) inside the file; shown as a tooltip.</summary>
+    public string? Description
+    {
+        get => _description;
+        private set
+        {
+            _description = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Description)));
+        }
+    }
     public string FileName => System.IO.Path.GetFileName(Path);
     public RelayCommand RotateLeftCommand { get; }
     public RelayCommand RotateRightCommand { get; }
@@ -75,9 +91,63 @@ public sealed class ResultItem : INotifyPropertyChanged
         return image;
     }
 
+    /// <summary>
+    /// Applies what the online service found: the turn (unless the photo was already turned by hand)
+    /// and the caption. Runs while the user may be looking at the results.
+    /// </summary>
+    public async Task ApplyAssistAsync(int? rotation, string? description)
+    {
+        if (IsDeleted)
+            return;
+        if (!string.IsNullOrWhiteSpace(description))
+        {
+            Description = description;
+            try
+            {
+                string path = Path;
+                await Task.Run(() => Descriptions.Set(path, description));
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                Failed?.Invoke(this, e.Message);
+            }
+        }
+
+        if (rotation is int turn and not 0 && !_turnedByHand)
+            await RotateAsync(turn);
+        else if (Description is not null && _format == OutputFormat.Jpeg)
+            await WriteCommentAsync();
+    }
+
+    private Task RotateByHandAsync(int degrees)
+    {
+        _turnedByHand = true;
+        return RotateAsync(degrees);
+    }
+
+    private async Task WriteCommentAsync()
+    {
+        if (_busy || IsDeleted)
+            return;
+        SetBusy(true);
+        try
+        {
+            string path = Path, comment = Description!;
+            await Task.Run(() => ScanSaver.Comment(path, comment));
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            Failed?.Invoke(this, e.Message);
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
     private async Task RotateAsync(int degrees)
     {
-        if (_busy)
+        if (_busy || IsDeleted)
             return;
         SetBusy(true);
         try
@@ -85,7 +155,7 @@ public sealed class ResultItem : INotifyPropertyChanged
             Pix source = _image;
             (Pix rotated, BitmapSource thumb, BitmapSource full) = await Task.Run(() =>
             {
-                Pix r = ScanSaver.Resave(Path, source, degrees, _format, _jpegQuality);
+                Pix r = ScanSaver.Resave(Path, source, degrees, _format, _jpegQuality, Description);
                 return (r, LoadBitmap(ScanSaver.Thumbnail(r, ThumbnailSide)), LoadBitmap(ScanSaver.Thumbnail(r, ScanSaver.PreviewMaxSide)));
             });
             _image = rotated;
@@ -107,6 +177,9 @@ public sealed class ResultItem : INotifyPropertyChanged
         try
         {
             File.Delete(Path);
+            IsDeleted = true;
+            if (Description is not null)
+                Descriptions.Set(Path, null);
             Deleted?.Invoke(this);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

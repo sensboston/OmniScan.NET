@@ -109,6 +109,27 @@ public static class Strings
 
     public static string TabGeneral => T();
     public static string TabScanning => T();
+    public static string TabAssist => T();
+    public static string AssistKey => T();
+    public static string AssistCheck => T();
+    public static string AssistChecking => T();
+    public static string AssistConnected => T();
+    public static string AssistUnknownKey => T();
+    public static string AssistBadKey => T();
+    public static string AssistNoModel => T();
+    public static string AssistUnavailable => T();
+    public static string AssistBadAnswer => T();
+    public static string AssistKeyHint => T();
+    public static string AssistWarning => T();
+    public static string AssistOnline => T();
+    public static string AssistGoogleNotice => T();
+    public static string AssistOpenRouterNotice => T();
+    public static string AssistUse => T();
+    public static string AssistOrient => T();
+    public static string AssistDescribe => T();
+    public static string AssistDescribeHint => T();
+    public static string AssistPdfText => T();
+    public static string AssistPdfTextHint => T();
     public static string ScannerTop => T();
     public static string TopWord => T();
     public static string TopLeft => T();

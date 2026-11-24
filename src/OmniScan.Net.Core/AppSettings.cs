@@ -68,6 +68,24 @@ public sealed class AppSettings
 
     public static bool IsValidRotation(int degrees) => degrees is 0 or 90 or 180 or 270;
 
+    /// <summary>
+    /// Access key of the online service that looks at the scans; null when none is entered.
+    /// Kept encrypted for this Windows user in the file (<see cref="SecretText"/>).
+    /// </summary>
+    public string? AssistKey { get; set; }
+
+    /// <summary>A model to use instead of the one chosen by the program (hand-edited only); null = choose.</summary>
+    public string? AssistModel { get; set; }
+
+    /// <summary>Turn saved photos upright.</summary>
+    public bool AssistOrient { get; set; }
+
+    /// <summary>Write a short description of each saved photo next to it (descript.ion and the file's comment).</summary>
+    public bool AssistDescribe { get; set; }
+
+    /// <summary>Recognize the text of PDF pages, so the PDF can be searched.</summary>
+    public bool AssistPdfText { get; set; }
+
     public WindowPlacement? Window { get; set; }
 
     public static string DefaultRootFolder =>

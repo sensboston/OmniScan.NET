@@ -76,16 +76,28 @@ public static class ScanSaver
 
     /// <summary>
     /// Turns a saved image by a multiple of 90 degrees and writes the file again from the in-memory
-    /// image (no second JPEG generation). Returns the rotated image.
+    /// image (no second JPEG generation), with <paramref name="comment"/> inside a JPEG. Returns the rotated image.
     /// </summary>
-    public static Pix Resave(string path, Pix image, int degrees, OutputFormat format, int jpegQuality)
+    public static Pix Resave(string path, Pix image, int degrees, OutputFormat format, int jpegQuality, string? comment = null)
     {
         Pix rotated = FrameCodec.Rotate(image, ((degrees % 360) + 360) % 360);
         byte[] data = FrameCodec.Encode(rotated, format, jpegQuality);
+        if (format == OutputFormat.Jpeg && !string.IsNullOrEmpty(comment))
+            data = JpegComment.Set(data, comment);
+        Replace(path, data);
+        return rotated;
+    }
+
+    /// <summary>Puts a comment into a saved JPEG file (the image data is kept as it is).</summary>
+    public static void Comment(string path, string? comment) =>
+        Replace(path, JpegComment.Set(File.ReadAllBytes(path), comment));
+
+    /// <summary>Writes a file through a temporary one, so a failure never leaves half a file.</summary>
+    private static void Replace(string path, byte[] data)
+    {
         string temp = path + ".tmp";
         File.WriteAllBytes(temp, data);
         File.Move(temp, path, overwrite: true);
-        return rotated;
     }
 
     /// <summary>A small BMP of an image for a thumbnail.</summary>
