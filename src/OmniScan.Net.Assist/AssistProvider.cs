@@ -33,7 +33,8 @@ public static class AssistProviders
             return AssistProvider.OpenRouter;
         if (key.StartsWith("xai-", StringComparison.Ordinal))
             return AssistProvider.XAi;
-        if (key.StartsWith("AIza", StringComparison.Ordinal) && key.Length == 39)
+        // Google AI Studio: the older "AIza" keys (39 characters) and the newer "AQ." ones.
+        if ((key.StartsWith("AIza", StringComparison.Ordinal) && key.Length == 39) || key.StartsWith("AQ.", StringComparison.Ordinal))
             return AssistProvider.Google;
         // DeepSeek keys are "sk-" and 32 lowercase hex digits; OpenAI keys are longer and mixed-case.
         if (key.StartsWith("sk-", StringComparison.Ordinal) && key.Length == 35 && key.Skip(3).All(char.IsAsciiHexDigitLower))
@@ -68,15 +69,14 @@ public static class AssistProviders
 
     /// <summary>
     /// Models to use, best first: cheap ones that read images well. (The full gpt-4.1 also gets the photos where
-    /// only a sign tells which way is up, at several times the price: it can be set by hand, [Assist] Model.) For the free Google tier
-    /// the previous-generation light model comes first: it is the least crowded, so the least often
-    /// refused for load. The first one the key can use is taken; when none is listed,
+    /// only a sign tells which way is up, at several times the price: it can be set by hand, [Assist] Model.) For Google the newest light
+    /// model comes first: it reads turned photos best (and a listed older model may be closed to new keys). The first one the key can use is taken; when none is listed,
     /// <see cref="Fallback"/> picks from the list by name.
     /// </summary>
     internal static IReadOnlyList<string> Preferred(AssistProvider p) => p switch
     {
         AssistProvider.OpenAI => ["gpt-4.1-mini", "gpt-4o-mini", "gpt-4.1", "gpt-4o"],
-        AssistProvider.Google => ["gemini-2.5-flash-lite", "gemini-2.0-flash-lite", "gemini-2.0-flash", "gemini-2.5-flash", "gemini-flash-lite-latest"],
+        AssistProvider.Google => ["gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"],
         AssistProvider.Anthropic => ["claude-haiku-5-5", "claude-haiku-4-5"],
         AssistProvider.XAi => ["grok-4-fast", "grok-2-vision-1212", "grok-2-vision"],
         AssistProvider.DeepSeek => ["deepseek-flash"],

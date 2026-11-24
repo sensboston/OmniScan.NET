@@ -19,6 +19,7 @@ public sealed class AssistTests
     [InlineData("sk-0123456789abcdef0123456789abcdef", AssistProvider.DeepSeek)]
     [InlineData("sk-0123456789ABCDEF0123456789abcdef", AssistProvider.OpenAI)]
     [InlineData("  AIzaSyA12345678901234567890123456789012  ", AssistProvider.Google)]
+    [InlineData("AQ.Ab8RN6Jabcdefghijklmnopqrstuvwxyz0123456789ABCDEF", AssistProvider.Google)]
     public void Detect_ByPrefix(string key, AssistProvider expected) =>
         Assert.Equal(expected, AssistProviders.Detect(key));
 
@@ -32,8 +33,8 @@ public sealed class AssistTests
     [Fact]
     public void ChooseModel_TakesTheFirstPreferredThatIsAvailable()
     {
-        List<string> google = ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.0-flash-lite", "embedding-001"];
-        Assert.Equal("gemini-2.0-flash-lite", AssistProviders.ChooseModel(AssistProvider.Google, google));
+        List<string> google = ["gemini-2.5-pro", "gemini-2.5-flash-lite", "gemini-3.1-flash-lite", "embedding-001"];
+        Assert.Equal("gemini-3.1-flash-lite", AssistProviders.ChooseModel(AssistProvider.Google, google));
 
         List<string> anthropic = ["claude-opus-5-5", "claude-haiku-5-5", "claude-sonnet-5-5"];
         Assert.Equal("claude-haiku-5-5", AssistProviders.ChooseModel(AssistProvider.Anthropic, anthropic));
@@ -60,6 +61,8 @@ public sealed class AssistTests
     /// <summary>Answers by model: busy for the ones listed, a normal answer naming the model for the rest.</summary>
     private sealed class FakeService(params string[] busy) : HttpMessageHandler
     {
+        public string[] Gone { get; init; } = [];
+
         public List<string> Asked { get; } = [];
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -67,6 +70,8 @@ public sealed class AssistTests
             string body = await request.Content!.ReadAsStringAsync(cancellationToken);
             string model = System.Text.Json.Nodes.JsonNode.Parse(body)!["model"]!.GetValue<string>();
             Asked.Add(model);
+            if (System.Array.IndexOf(Gone, model) >= 0)
+                return new HttpResponseMessage(HttpStatusCode.NotFound) { Content = new StringContent("no longer available") };
             if (System.Array.IndexOf(busy, model) >= 0)
                 return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable) { Content = new StringContent("overloaded") };
             return new HttpResponseMessage(HttpStatusCode.OK)
@@ -87,6 +92,21 @@ public sealed class AssistTests
 
         Assert.Equal(["gemini-2.5-flash-lite", "gemini-2.0-flash-lite", "gemini-2.0-flash-lite"], service.Asked);
         Assert.Equal("gemini-2.0-flash-lite", client.Model);
+    }
+
+    [Fact]
+    public async Task ClosedModel_IsSkipped_AndTheLastOneClosed_MeansNoModel()
+    {
+        FakeService service = new() { Gone = ["gemini-2.5-flash-lite"] };
+        using AssistClient client = AssistClient.Create(AssistProvider.Google, ["gemini-2.5-flash-lite", "gemini-3.5-flash-lite"], service);
+
+        Assert.Equal("from gemini-3.5-flash-lite", await client.AskAsync("q", []));
+        Assert.Equal("gemini-3.5-flash-lite", client.Model);
+
+        FakeService none = new() { Gone = ["gemini-2.5-flash-lite"] };
+        using AssistClient only = AssistClient.Create(AssistProvider.Google, ["gemini-2.5-flash-lite"], none);
+        AssistException e = await Assert.ThrowsAsync<AssistException>(() => only.AskAsync("q", []));
+        Assert.Equal(AssistFailure.NoModel, e.Failure);
     }
 
     [Fact]

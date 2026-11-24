@@ -47,6 +47,7 @@ public sealed class AssistClient : IDisposable
     private const string AnthropicVersion = "2026-10-21";
     private static readonly TimeSpan[] RetryDelays = [TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(6)];
     private static readonly TimeSpan BusyPause = TimeSpan.FromMinutes(2);
+    private static readonly TimeSpan ClosedPause = TimeSpan.FromMinutes(30);
 
     private readonly HttpClient _http;
     private readonly string _key;
@@ -150,6 +151,21 @@ public sealed class AssistClient : IDisposable
                     string body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                         return Provider == AssistProvider.Anthropic ? AnthropicText(body) : ChatText(body);
+
+                    // A listed model may still be closed to this key ("no longer available to new users"),
+                    // and Google sometimes answers 404 for a while: the model is left alone for long, the next one asked.
+                    if (response.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        lock (_busyUntil)
+                            _busyUntil[model] = DateTime.UtcNow + ClosedPause;
+                        if (Model != model)
+                        {
+                            attempt--;
+                            continue;
+                        }
+
+                        throw new AssistException(AssistFailure.NoModel, $"The model {model} is not available to this key.");
+                    }
 
                     if (IsBusy(response.StatusCode))
                     {
