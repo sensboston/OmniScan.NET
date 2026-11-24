@@ -62,6 +62,7 @@ public sealed class AssistTests
     [Theory]
     [InlineData("""{"upright": 3, "caption": "Two children on a beach."}""", 180, "Two children on a beach")]
     [InlineData("```json\n{\"upright\": \"2\", \"caption\": \"Кот на диване\"}\n```", 90, "Кот на диване")]
+    [InlineData("""{"upright": 1, "caption": "космический шаттл в музее."}""", 0, "Космический шаттл в музее")]
     [InlineData("""Sure! {"upright": null, "caption": ""}""", null, null)]
     [InlineData("""{"upright": 7}""", null, null)]
     [InlineData("no json here", null, null)]

@@ -97,10 +97,12 @@ public static class PhotoAssist
 
         string? caption = null;
         if (describe && json["caption"] is JsonValue c && c.TryGetValue(out string? t) && !string.IsNullOrWhiteSpace(t))
-            caption = t.Trim().TrimEnd('.');
+            caption = Capitalize(t.Trim().TrimEnd('.'));
 
         return new PhotoReport(rotation, caption);
     }
+
+    private static string Capitalize(string s) => s.Length == 0 ? s : char.ToUpper(s[0], CultureInfo.CurrentCulture) + s[1..];
 
     /// <summary>The JSON object in an answer, tolerating code fences and words around it.</summary>
     internal static JsonObject? FindJson(string? answer)
