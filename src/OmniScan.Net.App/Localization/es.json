@@ -72,6 +72,8 @@
   "AutoContinueOff": "Desactivado",
   "SecondsFormat": "{0} s",
   "PdfSavedFormat": "Guardado {0} ({1} páginas)",
+  "TabGeneral": "General",
+  "TabScanning": "Escaneo",
   "ScannerTop": "Parte superior de la página en este escáner",
   "TopWord": "ARRIBA",
   "TopLeft": "Izquierda (la mayoría)",

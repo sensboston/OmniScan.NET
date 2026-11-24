@@ -72,6 +72,8 @@
   "AutoContinueOff": "オフ",
   "SecondsFormat": "{0} 秒",
   "PdfSavedFormat": "{0} を保存しました ({1} ページ)",
+  "TabGeneral": "全般",
+  "TabScanning": "スキャン",
   "ScannerTop": "このスキャナーでのページの上側",
   "TopWord": "上",
   "TopLeft": "左（ほとんどの機種）",

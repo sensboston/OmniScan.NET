@@ -72,6 +72,8 @@
   "AutoContinueOff": "Uit",
   "SecondsFormat": "{0} s",
   "PdfSavedFormat": "{0} opgeslagen ({1} pagina's)",
+  "TabGeneral": "Algemeen",
+  "TabScanning": "Scannen",
   "ScannerTop": "Bovenkant van de pagina op deze scanner",
   "TopWord": "BOVEN",
   "TopLeft": "Links (meestal)",

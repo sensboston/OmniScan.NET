@@ -72,6 +72,8 @@
   "AutoContinueOff": "Выкл.",
   "SecondsFormat": "{0} с",
   "PdfSavedFormat": "Сохранено: {0} ({1} стр.)",
+  "TabGeneral": "Общие",
+  "TabScanning": "Сканирование",
   "ScannerTop": "Верх страницы у этого сканера",
   "TopWord": "ВЕРХ",
   "TopLeft": "Слева (у большинства)",

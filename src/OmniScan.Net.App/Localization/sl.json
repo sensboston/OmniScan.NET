@@ -72,6 +72,8 @@
   "AutoContinueOff": "Izklop",
   "SecondsFormat": "{0} s",
   "PdfSavedFormat": "Shranjeno {0} ({1} str.)",
+  "TabGeneral": "Splošno",
+  "TabScanning": "Optično branje",
   "ScannerTop": "Vrh strani pri tem optičnem čitalniku",
   "TopWord": "VRH",
   "TopLeft": "Levo (pri večini)",

@@ -72,6 +72,8 @@
   "AutoContinueOff": "Kapalı",
   "SecondsFormat": "{0} sn",
   "PdfSavedFormat": "{0} kaydedildi ({1} sayfa)",
+  "TabGeneral": "Genel",
+  "TabScanning": "Tarama",
   "ScannerTop": "Bu tarayıcıda sayfanın üstü",
   "TopWord": "ÜST",
   "TopLeft": "Solda (çoğunda)",

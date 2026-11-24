@@ -72,6 +72,8 @@
   "AutoContinueOff": "Väljas",
   "SecondsFormat": "{0} s",
   "PdfSavedFormat": "Salvestatud {0} ({1} lehte)",
+  "TabGeneral": "Üldine",
+  "TabScanning": "Skannimine",
   "ScannerTop": "Lehe ülaserv selle skanneri puhul",
   "TopWord": "ÜLES",
   "TopLeft": "Vasakul (enamikul)",

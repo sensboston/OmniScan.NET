@@ -72,6 +72,8 @@
   "AutoContinueOff": "Wył.",
   "SecondsFormat": "{0} s",
   "PdfSavedFormat": "Zapisano {0} ({1} str.)",
+  "TabGeneral": "Ogólne",
+  "TabScanning": "Skanowanie",
   "ScannerTop": "Góra strony w tym skanerze",
   "TopWord": "GÓRA",
   "TopLeft": "Po lewej (w większości)",

@@ -72,6 +72,8 @@
   "AutoContinueOff": "Ki",
   "SecondsFormat": "{0} mp",
   "PdfSavedFormat": "Mentve: {0} ({1} oldal)",
+  "TabGeneral": "Általános",
+  "TabScanning": "Beolvasás",
   "ScannerTop": "A lap teteje ennél a szkennernél",
   "TopWord": "FENT",
   "TopLeft": "Bal oldalt (a legtöbbnél)",

@@ -72,6 +72,8 @@
   "AutoContinueOff": "Fra",
   "SecondsFormat": "{0} s",
   "PdfSavedFormat": "Gemte {0} ({1} sider)",
+  "TabGeneral": "Generelt",
+  "TabScanning": "Scanning",
   "ScannerTop": "Sidens top på denne scanner",
   "TopWord": "TOP",
   "TopLeft": "Venstre (de fleste)",

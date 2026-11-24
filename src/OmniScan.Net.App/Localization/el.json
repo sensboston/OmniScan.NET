@@ -72,6 +72,8 @@
   "AutoContinueOff": "Ανενεργό",
   "SecondsFormat": "{0} δ.",
   "PdfSavedFormat": "Αποθηκεύτηκε {0} ({1} σελίδες)",
+  "TabGeneral": "Γενικά",
+  "TabScanning": "Σάρωση",
   "ScannerTop": "Πάνω μέρος της σελίδας σε αυτόν τον σαρωτή",
   "TopWord": "ΠΑΝΩ",
   "TopLeft": "Αριστερά (στους περισσότερους)",

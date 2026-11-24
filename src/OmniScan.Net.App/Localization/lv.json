@@ -72,6 +72,8 @@
   "AutoContinueOff": "Izsl.",
   "SecondsFormat": "{0} s",
   "PdfSavedFormat": "Saglabāts {0} ({1} lapas)",
+  "TabGeneral": "Vispārīgi",
+  "TabScanning": "Skenēšana",
   "ScannerTop": "Lapas augšmala šim skenerim",
   "TopWord": "AUGŠA",
   "TopLeft": "Pa kreisi (lielākajai daļai)",

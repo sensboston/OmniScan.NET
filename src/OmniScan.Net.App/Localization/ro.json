@@ -72,6 +72,8 @@
   "AutoContinueOff": "Dezactivat",
   "SecondsFormat": "{0} s",
   "PdfSavedFormat": "Salvat {0} ({1} pagini)",
+  "TabGeneral": "General",
+  "TabScanning": "Scanare",
   "ScannerTop": "Partea de sus a paginii la acest scaner",
   "TopWord": "SUS",
   "TopLeft": "În stânga (la majoritatea)",

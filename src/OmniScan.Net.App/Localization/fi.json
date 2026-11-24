@@ -72,6 +72,8 @@
   "AutoContinueOff": "Pois",
   "SecondsFormat": "{0} s",
   "PdfSavedFormat": "Tallennettu {0} ({1} sivua)",
+  "TabGeneral": "Yleiset",
+  "TabScanning": "Skannaus",
   "ScannerTop": "Sivun yläreuna tässä skannerissa",
   "TopWord": "YLÄ",
   "TopLeft": "Vasemmalla (useimmissa)",
