@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RootNamespace>OmniScan.Net.Assist</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OmniScan.Net.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OmniScan.Net.Core\OmniScan.Net.Core.csproj" />
+    <ProjectReference Include="..\OmniScan.Net.Imaging\OmniScan.Net.Imaging.csproj" />
+  </ItemGroup>
+
+</Project>

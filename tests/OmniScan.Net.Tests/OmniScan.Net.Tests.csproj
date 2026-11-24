@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\OmniScan.Net.Assist\OmniScan.Net.Assist.csproj" />
     <ProjectReference Include="..\..\src\OmniScan.Net.Core\OmniScan.Net.Core.csproj" />
     <ProjectReference Include="..\..\src\OmniScan.Net.Imaging\OmniScan.Net.Imaging.csproj" />
     <ProjectReference Include="..\..\src\OmniScan.Net.Scanning\OmniScan.Net.Scanning.csproj" />
