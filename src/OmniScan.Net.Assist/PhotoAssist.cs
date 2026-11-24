@@ -33,12 +33,12 @@ public static class PhotoAssist
     private static readonly int[] ConfirmTurns = [180, 270, 0, 90];
 
     public static async Task<PhotoReport> LookAsync(AssistClient client, Pix photo, bool orient, bool describe,
-        string? languageCode, CancellationToken cancellationToken = default)
+        string? languageCode, CancellationToken cancellationToken = default, int imageSide = ImageSide)
     {
         if (!orient && !describe)
             return new PhotoReport(null, null);
 
-        Pix small = Shrink(photo, ImageSide);
+        Pix small = Shrink(photo, imageSide);
         string prompt = Prompt(orient, describe, LanguageName(languageCode));
         List<byte[]> images = orient ? Copies(small, Turns) : [Jpeg(small)];
         string? answer = await client.AskAsync(prompt, images, 400, cancellationToken).ConfigureAwait(false);
@@ -61,8 +61,13 @@ public static class PhotoAssist
         if (orient)
         {
             rules += "The 4 images are the same scanned photo turned 4 different ways (numbered 1 to 4 in the order given). " +
-                     "Decide which one is upright, the way it was meant to be seen: people and buildings standing, " +
-                     "sky and ceilings on top, text readable. If you cannot tell, use null. ";
+                     "Decide which one is upright, the way the photographer held the camera. " +
+                     "First look for any text: signs, labels, screens, a single word, even part of a word or a few letters cut off at the edge. " +
+                     "Text is the strongest clue: " +
+                     "in the upright copy it reads normally, left to right, not sideways or upside down. " +
+                     "Without text, use people and buildings standing, sky and ceilings on top, the floor and ground below. " +
+                     "Objects such as vehicles, rockets or furniture may lie in any direction; do not judge by them. " +
+                     "If you cannot tell, use null. ";
         }
 
         if (describe)
