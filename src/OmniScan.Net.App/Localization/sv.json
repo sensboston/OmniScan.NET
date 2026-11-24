@@ -93,8 +93,6 @@
   "AssistOrient": "Rätta till fotonas rotation",
   "AssistDescribe": "Beskriv foton",
   "AssistDescribeHint": "En kort bildtext för varje foto: i filens egenskaper och i descript.ion (visas av Total Commander och Far).",
-  "AssistPdfText": "Känn igen text i PDF",
-  "AssistPdfTextHint": "Texten i PDF:en kan då sökas och kopieras.",
   "ScannerTop": "Sidans överkant på den här skannern",
   "TopWord": "UPP",
   "TopLeft": "Vänster (de flesta)",

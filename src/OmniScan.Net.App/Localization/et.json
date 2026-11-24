@@ -93,8 +93,6 @@
   "AssistOrient": "Paranda fotode pööret",
   "AssistDescribe": "Kirjelda fotosid",
   "AssistDescribeHint": "Lühike kirjeldus iga foto kohta: faili atribuutides ja failis descript.ion (näitavad Total Commander ja Far).",
-  "AssistPdfText": "Tuvasta PDF-is tekst",
-  "AssistPdfTextHint": "PDF-is saab siis teksti otsida ja kopeerida.",
   "ScannerTop": "Lehe ülaserv selle skanneri puhul",
   "TopWord": "ÜLES",
   "TopLeft": "Vasakul (enamikul)",

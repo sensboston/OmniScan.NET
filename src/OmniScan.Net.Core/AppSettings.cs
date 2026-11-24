@@ -83,9 +83,6 @@ public sealed class AppSettings
     /// <summary>Write a short description of each saved photo next to it (descript.ion and the file's comment).</summary>
     public bool AssistDescribe { get; set; }
 
-    /// <summary>Recognize the text of PDF pages, so the PDF can be searched.</summary>
-    public bool AssistPdfText { get; set; }
-
     public WindowPlacement? Window { get; set; }
 
     public static string DefaultRootFolder =>

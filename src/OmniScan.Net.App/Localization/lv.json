@@ -93,8 +93,6 @@
   "AssistOrient": "Labot fotoattēlu pagriezienu",
   "AssistDescribe": "Aprakstīt fotoattēlus",
   "AssistDescribeHint": "Īss apraksts katram fotoattēlam: faila rekvizītos un descript.ion (to rāda Total Commander un Far).",
-  "AssistPdfText": "Atpazīt tekstu PDF",
-  "AssistPdfTextHint": "PDF tekstu varēs meklēt un kopēt.",
   "ScannerTop": "Lapas augšmala šim skenerim",
   "TopWord": "AUGŠA",
   "TopLeft": "Pa kreisi (lielākajai daļai)",

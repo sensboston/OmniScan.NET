@@ -93,8 +93,6 @@
   "AssistOrient": "Fényképek elforgatásának javítása",
   "AssistDescribe": "Fényképek leírása",
   "AssistDescribeHint": "Rövid leírás minden fényképhez: a fájl tulajdonságaiban és a descript.ion fájlban (a Total Commander és a Far mutatja).",
-  "AssistPdfText": "Szöveg felismerése PDF-ben",
-  "AssistPdfTextHint": "A PDF szövege így kereshető és másolható lesz.",
   "ScannerTop": "A lap teteje ennél a szkennernél",
   "TopWord": "FENT",
   "TopLeft": "Bal oldalt (a legtöbbnél)",

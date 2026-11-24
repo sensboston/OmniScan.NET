@@ -111,7 +111,6 @@ public sealed class SettingsStore
         }
         Key(b, "TurnPhotos", s.AssistOrient);
         Key(b, "DescribePhotos", s.AssistDescribe);
-        Key(b, "PdfText", s.AssistPdfText);
         if (s.Window is { } w)
         {
             Section(b, "Window");
@@ -176,7 +175,6 @@ public sealed class SettingsStore
                 case ("assist", "model"): s.AssistModel = value.Length == 0 ? null : value; break;
                 case ("assist", "turnphotos"): s.AssistOrient = Bool(value, s.AssistOrient); break;
                 case ("assist", "describephotos"): s.AssistDescribe = Bool(value, s.AssistDescribe); break;
-                case ("assist", "pdftext"): s.AssistPdfText = Bool(value, s.AssistPdfText); break;
                 case ("window", "left"): (s.Window ??= new WindowPlacement()).Left = Double(value); break;
                 case ("window", "top"): (s.Window ??= new WindowPlacement()).Top = Double(value); break;
                 case ("window", "width"): (s.Window ??= new WindowPlacement()).Width = Double(value); break;

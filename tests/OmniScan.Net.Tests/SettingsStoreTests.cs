@@ -74,7 +74,7 @@ public sealed class SettingsStoreTests
         SettingsStore store = new(Path.Combine(temp.Path, "OmniScan.ini"));
         const string key = "sk-0123456789abcdef0123456789abcdef";
 
-        store.Save(new AppSettings { AssistKey = key, AssistOrient = true, AssistPdfText = true });
+        store.Save(new AppSettings { AssistKey = key, AssistOrient = true });
         string text = File.ReadAllText(store.Path);
         AppSettings loaded = store.Load();
 
@@ -83,7 +83,6 @@ public sealed class SettingsStoreTests
         Assert.Equal(key, loaded.AssistKey);
         Assert.True(loaded.AssistOrient);
         Assert.False(loaded.AssistDescribe);
-        Assert.True(loaded.AssistPdfText);
     }
 
     [Fact]

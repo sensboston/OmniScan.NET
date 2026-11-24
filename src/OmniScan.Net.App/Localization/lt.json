@@ -93,8 +93,6 @@
   "AssistOrient": "Taisyti nuotraukų pasukimą",
   "AssistDescribe": "Aprašyti nuotraukas",
   "AssistDescribeHint": "Trumpas kiekvienos nuotraukos aprašas: failo ypatybėse ir descript.ion (jį rodo Total Commander ir Far).",
-  "AssistPdfText": "Atpažinti tekstą PDF",
-  "AssistPdfTextHint": "PDF tekstą bus galima ieškoti ir kopijuoti.",
   "ScannerTop": "Puslapio viršus šiame skeneryje",
   "TopWord": "VIRŠUS",
   "TopLeft": "Kairėje (daugumoje)",

@@ -93,8 +93,6 @@
   "AssistOrient": "Corectează rotirea fotografiilor",
   "AssistDescribe": "Descrie fotografiile",
   "AssistDescribeHint": "O scurtă descriere a fiecărei fotografii: în proprietățile fișierului și în descript.ion (afișat de Total Commander și Far).",
-  "AssistPdfText": "Recunoaște textul din PDF",
-  "AssistPdfTextHint": "Textul din PDF va putea fi căutat și copiat.",
   "ScannerTop": "Partea de sus a paginii la acest scaner",
   "TopWord": "SUS",
   "TopLeft": "În stânga (la majoritatea)",

@@ -93,8 +93,6 @@
   "AssistOrient": "Opravovat otočení fotografií",
   "AssistDescribe": "Popisovat fotografie",
   "AssistDescribeHint": "Krátký popis každé fotografie: ve vlastnostech souboru a v descript.ion (zobrazují ho Total Commander a Far).",
-  "AssistPdfText": "Rozpoznávat text v PDF",
-  "AssistPdfTextHint": "V PDF pak půjde text vyhledávat a kopírovat.",
   "ScannerTop": "Horní okraj stránky u tohoto skeneru",
   "TopWord": "NAHOŘE",
   "TopLeft": "Vlevo (u většiny)",

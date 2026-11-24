@@ -40,7 +40,6 @@ public sealed class AssistSettingsModel : INotifyPropertyChanged
         _ready = _key.Length > 0;
         Orient = settings.AssistOrient;
         Describe = settings.AssistDescribe;
-        PdfText = settings.AssistPdfText;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -109,7 +108,6 @@ public sealed class AssistSettingsModel : INotifyPropertyChanged
 
     public bool Describe { get; set; }
 
-    public bool PdfText { get; set; }
 
     /// <summary>Checks the key now (the button, and the window opening with a saved key).</summary>
     public Task CheckNowAsync() => _key.Length == 0 ? Task.CompletedTask : CheckAsync(TimeSpan.Zero);
@@ -120,7 +118,6 @@ public sealed class AssistSettingsModel : INotifyPropertyChanged
         settings.AssistKey = _key.Length == 0 ? null : _key;
         settings.AssistOrient = Orient;
         settings.AssistDescribe = Describe;
-        settings.AssistPdfText = PdfText;
     }
 
     /// <summary>Stops a check in progress (the window closes).</summary>

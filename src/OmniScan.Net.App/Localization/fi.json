@@ -93,8 +93,6 @@
   "AssistOrient": "Korjaa valokuvien kierto",
   "AssistDescribe": "Kuvaile valokuvat",
   "AssistDescribeHint": "Lyhyt kuvaus jokaisesta valokuvasta: tiedoston ominaisuuksissa ja descript.ion-tiedostossa (Total Commander ja Far näyttävät sen).",
-  "AssistPdfText": "Tunnista teksti PDF:ssä",
-  "AssistPdfTextHint": "PDF:n tekstiä voi silloin hakea ja kopioida.",
   "ScannerTop": "Sivun yläreuna tässä skannerissa",
   "TopWord": "YLÄ",
   "TopLeft": "Vasemmalla (useimmissa)",

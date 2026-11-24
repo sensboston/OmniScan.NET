@@ -132,10 +132,6 @@
               <TextBlock Text="{x:Static local:Strings.AssistDescribe}" TextWrapping="Wrap" />
             </CheckBox>
             <TextBlock Style="{StaticResource Hint}" Margin="28,0,0,0" Text="{x:Static local:Strings.AssistDescribeHint}" />
-            <CheckBox Margin="0,6,0,0" IsChecked="{Binding Assist.PdfText}">
-              <TextBlock Text="{x:Static local:Strings.AssistPdfText}" TextWrapping="Wrap" />
-            </CheckBox>
-            <TextBlock Style="{StaticResource Hint}" Margin="28,0,0,0" Text="{x:Static local:Strings.AssistPdfTextHint}" />
           </StackPanel>
         </StackPanel>
       </TabItem>

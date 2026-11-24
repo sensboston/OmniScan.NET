@@ -93,8 +93,6 @@
   "AssistOrient": "Rett opp rotasjonen av bilder",
   "AssistDescribe": "Beskriv bilder",
   "AssistDescribeHint": "En kort bildetekst for hvert bilde: i filegenskapene og i descript.ion (vises av Total Commander og Far).",
-  "AssistPdfText": "Gjenkjenn tekst i PDF",
-  "AssistPdfTextHint": "Teksten i PDF-en kan da søkes i og kopieres.",
   "ScannerTop": "Toppen av siden på denne skanneren",
   "TopWord": "TOPP",
   "TopLeft": "Venstre (de fleste)",

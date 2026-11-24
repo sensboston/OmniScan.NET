@@ -93,8 +93,6 @@
   "AssistOrient": "Corrigir a rotação das fotos",
   "AssistDescribe": "Descrever as fotos",
   "AssistDescribeHint": "Uma breve legenda para cada foto: nas propriedades do ficheiro e em descript.ion (mostrado pelo Total Commander e Far).",
-  "AssistPdfText": "Reconhecer texto em PDF",
-  "AssistPdfTextHint": "Será possível pesquisar e copiar o texto do PDF.",
   "ScannerTop": "Topo da página neste scanner",
   "TopWord": "TOPO",
   "TopLeft": "À esquerda (a maioria)",

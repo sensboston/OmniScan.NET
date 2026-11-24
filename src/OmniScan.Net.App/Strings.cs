@@ -128,8 +128,6 @@ public static class Strings
     public static string AssistOrient => T();
     public static string AssistDescribe => T();
     public static string AssistDescribeHint => T();
-    public static string AssistPdfText => T();
-    public static string AssistPdfTextHint => T();
     public static string ScannerTop => T();
     public static string TopWord => T();
     public static string TopLeft => T();

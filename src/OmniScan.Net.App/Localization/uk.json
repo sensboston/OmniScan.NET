@@ -93,8 +93,6 @@
   "AssistOrient": "Виправляти поворот фотографій",
   "AssistDescribe": "Підписувати фотографії",
   "AssistDescribeHint": "Короткий опис кожної фотографії: у властивостях файлу та в descript.ion (його показують Total Commander і Far).",
-  "AssistPdfText": "Розпізнавати текст у PDF",
-  "AssistPdfTextHint": "У PDF можна буде шукати й копіювати текст.",
   "ScannerTop": "Верх сторінки в цього сканера",
   "TopWord": "ВЕРХ",
   "TopLeft": "Ліворуч (у більшості)",

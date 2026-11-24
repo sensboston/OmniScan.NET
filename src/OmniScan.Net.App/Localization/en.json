@@ -93,8 +93,6 @@
   "AssistOrient": "Fix the rotation of photos",
   "AssistDescribe": "Describe photos",
   "AssistDescribeHint": "A short caption for each photo: in the file properties and in descript.ion (shown by Total Commander and Far).",
-  "AssistPdfText": "Recognize text in PDF",
-  "AssistPdfTextHint": "The text of the PDF can then be searched and copied.",
   "ScannerTop": "Top of the page on this scanner",
   "TopWord": "TOP",
   "TopLeft": "Left (most scanners)",

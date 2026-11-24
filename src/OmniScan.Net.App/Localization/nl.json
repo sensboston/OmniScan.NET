@@ -93,8 +93,6 @@
   "AssistOrient": "Draaiing van foto's corrigeren",
   "AssistDescribe": "Foto's beschrijven",
   "AssistDescribeHint": "Een kort onderschrift bij elke foto: in de bestandseigenschappen en in descript.ion (getoond door Total Commander en Far).",
-  "AssistPdfText": "Tekst in pdf herkennen",
-  "AssistPdfTextHint": "In de pdf kan dan tekst worden gezocht en gekopieerd.",
   "ScannerTop": "Bovenkant van de pagina op deze scanner",
   "TopWord": "BOVEN",
   "TopLeft": "Links (meestal)",

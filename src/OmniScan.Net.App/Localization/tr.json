@@ -93,8 +93,6 @@
   "AssistOrient": "Fotoğrafların dönüşünü düzelt",
   "AssistDescribe": "Fotoğrafları açıkla",
   "AssistDescribeHint": "Her fotoğraf için kısa bir açıklama: dosya özelliklerinde ve descript.ion içinde (Total Commander ve Far gösterir).",
-  "AssistPdfText": "PDF'deki metni tanı",
-  "AssistPdfTextHint": "PDF'deki metin aranabilir ve kopyalanabilir olur.",
   "ScannerTop": "Bu tarayıcıda sayfanın üstü",
   "TopWord": "ÜST",
   "TopLeft": "Solda (çoğunda)",
