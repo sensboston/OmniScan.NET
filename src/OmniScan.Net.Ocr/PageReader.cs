@@ -82,8 +82,9 @@ public static class PageReader
         IReadOnlyList<ReadLine>? second = native is null ? null : await ReadLinesAsync(native, bitmap, cancellationToken).ConfigureAwait(false);
         IReadOnlyList<ReadLine> lines = english is null ? second ?? [] : second is null ? first : Merge(first, second);
 
-        return lines.SelectMany(l => l.Words)
-            .Select(w => scale < 1.0 ? new TextWord(w.Text, w.X / scale, w.Y / scale, w.Width / scale, w.Height / scale) : w)
+        return lines.SelectMany((l, line) => l.Words.Select(w => scale < 1.0
+                ? new TextWord(w.Text, w.X / scale, w.Y / scale, w.Width / scale, w.Height / scale, line)
+                : w with { Line = line }))
             .ToList();
     }
 

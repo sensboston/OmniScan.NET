@@ -83,7 +83,7 @@ public sealed class TextLayerTests
         // The words themselves are in a compressed content stream: look for them there.
         string contents = string.Join("\n", Streams(pdf));
         Assert.Contains("3 Tr", contents);
-        Assert.Contains("<041F04400438043204350442> Tj", contents);   // "Привет" as Unicode values
+        Assert.Contains("<041F044004380432043504420020> Tj", contents);   // "Привет " as Unicode values, with a space to the next word
         Assert.Contains("<0077006F0072006C0064> Tj", contents);       // "world"
     }
 
