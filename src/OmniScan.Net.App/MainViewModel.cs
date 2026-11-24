@@ -46,6 +46,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly DispatcherTimer _saveTimer;
     private readonly DispatcherTimer _busyTimer;
     private readonly Stopwatch _busyClock = new();
+    private readonly PageTexts _texts = new();
     private string _busyText = "";
     private ScannerDevice? _device;
     private string _deviceStatus = "";
@@ -341,6 +342,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
             int number = Session.NextNumber;
             Session.Put(page, thumb);
+            ReadText(page);
             PreviewImage = full;
             Status = Session.Summary;
             Session.ShowPageCard(number, thumb, _settings.AutoContinueSeconds);
@@ -680,6 +682,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
             int number = Session.NextNumber;
             bool replaced = Session.Put(page, thumb!);
+            ReadText(page);
             PreviewImage = full;
             ClearResults();
             Status = Session.Summary;
@@ -708,14 +711,24 @@ public sealed class MainViewModel : INotifyPropertyChanged
         try
         {
             PdfPage[] pages = Session.Pages.Select(p => p.Page).ToArray();
+            IReadOnlyList<TextWord>?[]? text = null;
+            if (_settings.PdfText)
+            {
+                // Usually read already, while the next pages were scanned.
+                BeginBusy(Strings.ReadingText);
+                string language = Localization.Resolve(_settings.Language);
+                text = await Task.WhenAll(pages.Select(p => _texts.Get(p, language)));
+                BeginBusy(Strings.ProcessingBusy);
+            }
+
             string root = RootFolder;
             DateTime date = Session.Started;
             string? target = Session.TargetPath;
             string path = target ?? "";
             if (target is null)
-                path = await Task.Run(() => PdfPages.Save(pages, root, date, _settings.JpegQuality));
+                path = await Task.Run(() => PdfPages.Save(pages, root, date, _settings.JpegQuality, text));
             else
-                await Task.Run(() => PdfPages.SaveTo(pages, target, _settings.JpegQuality));
+                await Task.Run(() => PdfPages.SaveTo(pages, target, _settings.JpegQuality, text));
             _lastSavedFile = path;
             _lastPdf = (path, pages, date);
             Session.Clear();
@@ -765,6 +778,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     return (p, LoadBitmap(p.ThumbnailBmp), LoadBitmap(PdfPages.PreviewBmp(p)));
                 });
                 Session.Put(page, thumb);
+                ReadText(page);
                 PreviewImage = full;
                 Status = Session.Summary;
             }
@@ -863,6 +877,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         OnPropertyChanged(nameof(HasResults));
+    }
+
+    /// <summary>Starts reading the text of a PDF page in the background (when that is on).</summary>
+    private void ReadText(PdfPage page)
+    {
+        if (_settings.PdfText)
+            _texts.Start(page, Localization.Resolve(_settings.Language));
     }
 
     private void ClearResults()

@@ -68,6 +68,18 @@ public sealed class SettingsStoreTests
     }
 
     [Fact]
+    public void PdfText_IsOnByDefault_AndCanBeTurnedOff()
+    {
+        using TempFolder temp = new();
+        SettingsStore store = new(Path.Combine(temp.Path, "OmniScan.ini"));
+        Assert.True(store.Load().PdfText);
+
+        store.Save(new AppSettings { PdfText = false });
+        Assert.Contains("RecognizeText = false", File.ReadAllText(store.Path));
+        Assert.False(store.Load().PdfText);
+    }
+
+    [Fact]
     public void File_IsPlainIni()
     {
         using TempFolder temp = new();

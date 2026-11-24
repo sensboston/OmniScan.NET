@@ -34,6 +34,9 @@ public sealed class AppSettings
 
     public bool ServerEnabled { get; set; }
 
+    /// <summary>Put an invisible layer of the recognized text into PDFs (read on this computer by Windows).</summary>
+    public bool PdfText { get; set; } = true;
+
     public UiTheme Theme { get; set; } = UiTheme.Light;
 
     /// <summary>UI language code ("de", "uk", ...); null follows the Windows display language.</summary>

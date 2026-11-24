@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -20,6 +21,7 @@ public sealed class SettingsModel
         AutoContinueSeconds = settings.AutoContinueSeconds;
         Theme = settings.Theme;
         JpegQuality = settings.JpegQuality;
+        PdfText = settings.PdfText;
         int[] seconds = [0, 5, 10, 15, 20, 30, 45, 60];
         if (!seconds.Contains(AutoContinueSeconds))
             seconds = [.. seconds.Append(AutoContinueSeconds).Order()];
@@ -49,6 +51,9 @@ public sealed class SettingsModel
     public UiTheme Theme { get; set; }
 
     public int JpegQuality { get; set; }
+
+    /// <summary>Recognize the text of PDF pages (on this computer).</summary>
+    public bool PdfText { get; set; }
     public string Language { get; set; }
     public bool ServerEnabled { get; set; }
 
@@ -96,6 +101,7 @@ public sealed class SettingsModel
         settings.AutoContinueSeconds = AutoContinueSeconds;
         settings.Theme = Theme;
         settings.JpegQuality = JpegQuality;
+        settings.PdfText = PdfText;
         if (Device is { } d)
         {
             int rotation = Flip ? 180 : 0;
@@ -115,6 +121,29 @@ public partial class SettingsWindow : Window
     {
         DataContext = model;
         InitializeComponent();
+        Loaded += (_, _) => EvenOutTabs();
+    }
+
+    /// <summary>
+    /// Gives every tab the height of the tallest one (it depends on the language), so the window does not
+    /// jump when switching tabs. Each tab is shown once before the window first appears, to be measured.
+    /// </summary>
+    private void EvenOutTabs()
+    {
+        FrameworkElement[] pages = Tabs.Items.OfType<System.Windows.Controls.TabItem>()
+            .Select(t => t.Content).OfType<FrameworkElement>().ToArray();
+        int selected = Tabs.SelectedIndex;
+        double tallest = 0;
+        for (int i = 0; i < pages.Length; i++)
+        {
+            Tabs.SelectedIndex = i;
+            Tabs.UpdateLayout();
+            tallest = Math.Max(tallest, pages[i].ActualHeight);
+        }
+
+        Tabs.SelectedIndex = selected;
+        foreach (FrameworkElement page in pages)
+            page.MinHeight = tallest;
     }
 
     private void OnOk(object sender, RoutedEventArgs e) => DialogResult = true;

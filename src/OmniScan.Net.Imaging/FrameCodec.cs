@@ -53,12 +53,8 @@ public static class FrameCodec
     }
 
     /// <summary>A one-page PDF: G4 for black &amp; white, JPEG of the given quality for gray and color.</summary>
-    public static byte[] Pdf(Pix pix, int dpi, int jpegQuality, string? title = null)
-    {
-        Pixa one = Pixa.Create(1);
-        one.AddPix(pix, L.L_CLONE);
-        return one.ConvertToPdfData(dpi, 1.0f, L.L_DEFAULT_ENCODE, jpegQuality, title);
-    }
+    public static byte[] Pdf(Pix pix, int dpi, int jpegQuality, string? title = null) =>
+        PdfWriter.Write([new PdfSheet(pix, dpi)], jpegQuality, title);
 
     /// <summary>A small BMP for the preview pane (BMP is the cheapest format for WPF to load).</summary>
     public static byte[] PreviewBmp(Pix pix, int maxSide)

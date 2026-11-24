@@ -106,6 +106,26 @@ This keeps a single place for processing settings and keeps the server trivial.
 - A page that is nearly blank is skipped (the user can keep it).
 - The session can also be appended to the last saved PDF.
 
+### Text layer
+
+Each page is read by the text recognition built into Windows (`Windows.Media.Ocr`, on the computer,
+nothing is sent anywhere) as soon as it is added, in the background, so the text is usually ready when
+the PDF is saved. The recognized words go into the PDF as an invisible layer over the page image: the
+text can be searched, selected and copied where it is on the page.
+
+- **Languages.** A recognizer reads one language, and Windows has those of its installed language packs.
+  A language written in Latin letters (German, French) is read by its own recognizer alone. For another
+  script (Russian, Greek) the page is read twice, in that language and in English: on a page mostly in
+  that script each line is taken from the reading that has mostly such letters, otherwise from the
+  English one (a Russian letter with an English address); a page mostly in Latin letters is English, and
+  the few look-alike letters of the other reading (Cyrillic "Раде" for "Page") are ignored. Without a
+  recognizer for the language, the page is saved without text, as before.
+- **PDF writer.** Pages are written by our own small writer: the image compressed as Leptonica does for
+  its PDFs (G4 for black and white, JPEG for gray and color), and each word drawn in invisible mode with a
+  generated TrueType font that has no visible glyphs, stretched to the width of its box. Characters are
+  written as their Unicode values (Identity-H with a ToUnicode map), so every language works the same way.
+- The option is on by default (Settings → Scanning).
+
 ---
 
 ## 6. Settings dialog
@@ -118,6 +138,7 @@ Rarely changed options live in a separate dialog (gear button next to the scanne
 - JPEG quality (50–100, default 75), also used for gray and color images inside PDFs;
 - turn scans upside down, per scanner;
 - auto-continue delay for multi-page PDF;
+- recognizing the text of PDF pages (on by default);
 - sharing scanners on the network (server role, below).
 
 ---
@@ -159,7 +180,8 @@ Windows asks once to allow the app through the firewall.
 OmniScan.Net.slnx
 ├── src/
 │   ├── OmniScan.Net.Core/       # settings (INI), naming/folders, IScannerBackend
-│   ├── OmniScan.Net.Imaging/    # bed analysis, photo splitting, deskew, orientation, encoding (Leptonica.Managed)
+│   ├── OmniScan.Net.Imaging/    # bed analysis, photo splitting, deskew, orientation, encoding, PDF writer (Leptonica.Managed)
+│   ├── OmniScan.Net.Ocr/        # page text with the recognition built into Windows (Windows.Media.Ocr)
 │   ├── OmniScan.Net.Scanning/   # WIA backend
 │   ├── OmniScan.Net.Remote/     # discovery, HTTP server, remote backend (client side)
 │   └── OmniScan.Net.App/        # WPF windows, tray, single instance, translations (AssemblyName: OmniScan)
@@ -173,5 +195,4 @@ OmniScan.Net.slnx
 
 - **v1.0:** everything above except eSCL.
 - **Later:** eSCL backend for network scanners; photo orientation.
-- **v2.0:** OCR with a fully managed engine and an invisible, selectable text layer in PDFs
-  (searchable PDF) on top of the processed page image.
+- **Done:** searchable PDFs, with the text recognition built into Windows (section 5).

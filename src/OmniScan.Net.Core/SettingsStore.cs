@@ -88,6 +88,7 @@ public sealed class SettingsStore
         Key(b, "Straighten", s.Deskew);
         Section(b, "Pdf");
         Key(b, "AutoContinueSeconds", s.AutoContinueSeconds);
+        Key(b, "RecognizeText", s.PdfText);
         Section(b, "App");
         Key(b, "Language", s.Language ?? "");
         Key(b, "Theme", s.Theme.ToString());
@@ -149,6 +150,7 @@ public sealed class SettingsStore
                 case ("processing", "cropmargins"): s.AutoCrop = Bool(value, s.AutoCrop); break;
                 case ("processing", "straighten"): s.Deskew = Bool(value, s.Deskew); break;
                 case ("pdf", "autocontinueseconds"): s.AutoContinueSeconds = Int(value, s.AutoContinueSeconds); break;
+                case ("pdf", "recognizetext"): s.PdfText = Bool(value, s.PdfText); break;
                 case ("app", "language"): s.Language = value.Length == 0 ? null : value; break;
                 case ("app", "theme"): s.Theme = Enum<UiTheme>(value, s.Theme); break;
                 case ("app", "sharescanners"): s.ServerEnabled = Bool(value, s.ServerEnabled); break;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Leptonica;
 using OmniScan.Net.Core;
 
@@ -87,10 +88,14 @@ public static class PdfPages
     /// <summary>A larger view of a page for the preview pane.</summary>
     public static byte[] PreviewBmp(PdfPage page) => FrameCodec.PreviewBmp(Decode(page), ScanSaver.PreviewMaxSide);
 
-    /// <summary>Writes the pages as one new PDF into the day folder; returns its path.</summary>
-    public static string Save(IReadOnlyList<PdfPage> pages, string rootFolder, DateTime date, int jpegQuality)
+    /// <summary>
+    /// Writes the pages as one new PDF into the day folder; returns its path. <paramref name="text"/> holds
+    /// the recognized words of each page (null for a page without them): an invisible text layer.
+    /// </summary>
+    public static string Save(IReadOnlyList<PdfPage> pages, string rootFolder, DateTime date, int jpegQuality,
+        IReadOnlyList<IReadOnlyList<TextWord>?>? text = null)
     {
-        byte[] pdf = Build(pages, jpegQuality);
+        byte[] pdf = Build(pages, jpegQuality, text);
         string folder = ScanOutput.DayFolder(rootFolder, date);
         using FileStream file = ScanOutput.CreateNext(folder, ".pdf");
         file.Write(pdf);
@@ -98,27 +103,28 @@ public static class PdfPages
     }
 
     /// <summary>Writes the pages over an existing PDF made by this program (adding pages to it later).</summary>
-    public static void SaveTo(IReadOnlyList<PdfPage> pages, string path, int jpegQuality)
+    public static void SaveTo(IReadOnlyList<PdfPage> pages, string path, int jpegQuality,
+        IReadOnlyList<IReadOnlyList<TextWord>?>? text = null)
     {
-        byte[] pdf = Build(pages, jpegQuality);
+        byte[] pdf = Build(pages, jpegQuality, text);
         string temp = path + ".tmp";
         File.WriteAllBytes(temp, pdf);
         File.Move(temp, path, overwrite: true);
     }
 
-    private static byte[] Build(IReadOnlyList<PdfPage> pages, int jpegQuality)
+    private static byte[] Build(IReadOnlyList<PdfPage> pages, int jpegQuality, IReadOnlyList<IReadOnlyList<TextWord>?>? text)
     {
         if (pages.Count == 0)
             throw new ArgumentException("No pages.", nameof(pages));
 
-        // One page decoded at a time: a 300 dpi color page is ~27 MB unpacked.
-        L_Ptra<L_Bytea> parts = L_Ptra<L_Bytea>.Create(pages.Count);
-        foreach (PdfPage page in pages)
-            parts.Add(L_Bytea.InitFromMem(FrameCodec.Pdf(Decode(page), page.Dpi, jpegQuality)));
-        return PdfIo.PtraConcatenateToData(parts, null);
+        // Pages are decoded one at a time, as the writer comes to them: a 300 dpi color page is ~27 MB unpacked.
+        IEnumerable<PdfSheet> sheets = pages
+            .Select((page, i) => new PdfSheet(Decode(page), page.Dpi, text is not null && i < text.Count ? text[i] : null));
+        return PdfWriter.Write(sheets, jpegQuality);
     }
 
-    private static Pix Decode(PdfPage page)
+    /// <summary>The page image as it goes into the PDF (and to the text recognition).</summary>
+    public static Pix Decode(PdfPage page)
     {
         Pix pix = Pix.ReadMemPng(page.Png);
         pix.SetResolution(page.Dpi, page.Dpi);
