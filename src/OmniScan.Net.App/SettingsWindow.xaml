@@ -40,9 +40,23 @@
     </DockPanel>
     <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0" Text="{x:Static local:Strings.JpegQualityHint}" />
 
-    <CheckBox Margin="0,18,0,0" IsChecked="{Binding Flip}" IsEnabled="{Binding HasDevice}">
-      <TextBlock Text="{x:Static local:Strings.FlipScans}" TextWrapping="Wrap" />
-    </CheckBox>
+    <!-- Where this scanner has the top of the page: two pictures to choose from. -->
+    <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.ScannerTop}" TextWrapping="Wrap" />
+    <StackPanel Orientation="Horizontal" IsEnabled="{Binding HasDevice}">
+      <RadioButton GroupName="ScannerTop" IsChecked="{Binding TopOnLeft}" VerticalContentAlignment="Top">
+        <StackPanel>
+          <local:ScannerPicture TopOnRight="False" TopText="{x:Static local:Strings.TopWord}" />
+          <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" Text="{x:Static local:Strings.TopLeft}" />
+        </StackPanel>
+      </RadioButton>
+      <RadioButton GroupName="ScannerTop" Margin="24,0,0,0" IsChecked="{Binding Flip}" VerticalContentAlignment="Top">
+        <StackPanel>
+          <local:ScannerPicture TopOnRight="True" TopText="{x:Static local:Strings.TopWord}" />
+          <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" Text="{x:Static local:Strings.TopRight}" />
+        </StackPanel>
+      </RadioButton>
+    </StackPanel>
+    <TextBlock Style="{StaticResource Hint}" Margin="0,6,0,0" Text="{x:Static local:Strings.ScannerTopHint}" />
 
     <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.AutoContinue}" TextWrapping="Wrap" />
     <ComboBox ItemsSource="{Binding AutoContinueChoices}" SelectedValue="{Binding AutoContinueSeconds}"

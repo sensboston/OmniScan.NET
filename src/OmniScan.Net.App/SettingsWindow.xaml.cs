@@ -59,8 +59,22 @@ public sealed class SettingsModel
 
     public bool HasDevice => Device is not null;
 
-    /// <summary>Turn this scanner's scans by 180 degrees.</summary>
+    /// <summary>
+    /// The top of the page is on the right of this scanner (not on the left, as on most): its scans are
+    /// turned by 180 degrees.
+    /// </summary>
     public bool Flip { get; set; }
+
+    /// <summary>The other radio button of the pair; only its "checked" matters.</summary>
+    public bool TopOnLeft
+    {
+        get => !Flip;
+        set
+        {
+            if (value)
+                Flip = false;
+        }
+    }
 
     /// <summary>Seconds before the next PDF page is scanned by itself; 0 = off.</summary>
     public int AutoContinueSeconds { get; set; }
