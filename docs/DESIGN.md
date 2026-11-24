@@ -83,8 +83,9 @@ Each acquired frame goes through a configurable chain of stages
    below the preview.
 
 **Document hint.** When an image format is chosen and a preview or scan is clearly a document
-(a sheet with many lines of text, whatever its colors), a hint in the status line offers to switch
-to PDF; after a saved scan it redoes that scan as the first page of a PDF instead of the image.
+(a sheet with many lines of text, whatever its colors), a bar over the preview offers PDF. Accepting
+it continues as a multi-page PDF: after a preview the sheet is scanned as page 1, after a saved scan
+that scan becomes page 1 instead of the image file.
 Photos standing apart on the glass never count as a document, and an unclear case gets no hint.
 The hint is shown at most once per run.
 

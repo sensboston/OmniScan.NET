@@ -97,6 +97,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         AppendLastPdfCommand = new RelayCommand(() => _ = AppendLastPdfAsync(), () => CanAppendLastPdf && !IsBusy);
         DiscardPdfCommand = new RelayCommand(DiscardPdf, () => Session.HasPages && !IsBusy);
         DocumentHintCommand = new RelayCommand(() => _ = AcceptDocumentHintAsync(), () => HasDocumentHint && !IsBusy);
+        DismissDocumentHintCommand = new RelayCommand(HideDocumentHint);
         Session.ScanRequested += automatic =>
         {
             if (CanScan())
@@ -268,10 +269,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
     /// <summary>The scan looks like a document while an image format is chosen.</summary>
     public bool HasDocumentHint => _hasDocumentHint;
 
-    /// <summary>"Switch to PDF" after a preview, "Redo as PDF" when the image is already saved.</summary>
-    public string DocumentHintAction => _hintFrame is null ? Strings.SwitchToPdf : Strings.RedoAsPdf;
+    /// <summary>"Scan to PDF" after a preview, "Redo as PDF" when the image is already saved.</summary>
+    public string DocumentHintAction => _hintFrame is null ? Strings.ScanToPdf : Strings.RedoAsPdf;
 
     public RelayCommand DocumentHintCommand { get; private set; } = null!;
+    public RelayCommand DismissDocumentHintCommand { get; private set; } = null!;
 
     /// <summary>Whether to look at the content of the next scan (image formats, until the hint was shown once).</summary>
     private bool WantContentGuess => IsImageFormat && !_documentHintUsed;
@@ -298,8 +300,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Switches to PDF. When the scan was already saved as an image, that file is removed and the
-    /// same scan becomes the first page of a PDF, so more pages can follow.
+    /// Switches to PDF and goes on as a PDF session: after a preview the sheet is scanned as page 1;
+    /// when the scan was already saved as an image, that file is removed and the same scan becomes
+    /// page 1. Either way the page card follows, with the countdown to the next page.
     /// </summary>
     private async Task AcceptDocumentHintAsync()
     {
@@ -308,7 +311,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
         string[] saved = Results.Select(r => r.Path).ToArray();
         Format = OutputFormat.Pdf;   // also hides the hint
         if (frame is null)
+        {
+            if (CanScan())
+                await ScanAsync(preview: false);
             return;
+        }
 
         BeginBusy(Strings.ProcessingBusy);
         try

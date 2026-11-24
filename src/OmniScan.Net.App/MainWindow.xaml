@@ -134,6 +134,33 @@
                    Visibility="{Binding HasPreview, Converter={StaticResource InverseBool}}" />
         <local:FrameEditor Source="{Binding PreviewImage}" Frames="{Binding PreviewFrames}"
                            EditedCommand="{Binding FramesEditedCommand}" IsEditable="{Binding CanEditFrames}" RenderOptions.BitmapScalingMode="HighQuality" />
+        <!-- "Looks like a document": a bar over the top of the preview, shown once per run. -->
+        <Border VerticalAlignment="Top" HorizontalAlignment="Center" Margin="12" Padding="16,12" CornerRadius="8"
+                MaxWidth="600" Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+                BorderBrush="{DynamicResource AccentFillColorDefaultBrush}" BorderThickness="2"
+                Visibility="{Binding HasDocumentHint, Converter={StaticResource Bool}}">
+          <Border.Effect>
+            <DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.35" />
+          </Border.Effect>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
+              <TextBlock FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"
+                         Text="{x:Static local:Strings.LooksLikeDocument}" />
+              <TextBlock Margin="0,2,0,0" TextWrapping="Wrap" Opacity="0.75"
+                         Text="{x:Static local:Strings.DocumentHintDetail}" />
+            </StackPanel>
+            <Button Grid.Column="1" VerticalAlignment="Center" Padding="14,6" Style="{DynamicResource AccentButtonStyle}"
+                    Content="{Binding DocumentHintAction}" Command="{Binding DocumentHintCommand}" />
+            <Button Grid.Column="2" VerticalAlignment="Center" Margin="8,0,0,0" Padding="10,6" Content="&#x2715;"
+                    ToolTip="{x:Static local:Strings.Close}" Command="{Binding DismissDocumentHintCommand}" />
+          </Grid>
+        </Border>
+
         <ProgressBar IsIndeterminate="{Binding IsBusy}" VerticalAlignment="Bottom" Height="4" Margin="8"
                      Visibility="{Binding IsBusy, Converter={StaticResource Bool}}" />
 
@@ -273,10 +300,6 @@
       <TextBlock Opacity="0.7" Text="{Binding Status}" TextTrimming="CharacterEllipsis" />
       <TextBlock Margin="10,0,0,0" Visibility="{Binding HasBlank, Converter={StaticResource Bool}}">
         <Hyperlink Command="{Binding SaveAnywayCommand}"><Run Text="{x:Static local:Strings.SaveAnyway}" /></Hyperlink>
-      </TextBlock>
-      <TextBlock Margin="10,0,0,0" Visibility="{Binding HasDocumentHint, Converter={StaticResource Bool}}">
-        <Run FontWeight="SemiBold" Text="{x:Static local:Strings.LooksLikeDocument}" />
-        <Hyperlink Command="{Binding DocumentHintCommand}"><Run Text="{Binding DocumentHintAction, Mode=OneWay}" /></Hyperlink>
       </TextBlock>
       <TextBlock Margin="10,0,0,0" Visibility="{Binding CanAppendLastPdf, Converter={StaticResource Bool}}">
         <Hyperlink Command="{Binding AppendLastPdfCommand}"><Run Text="{Binding AppendLastPdfText, Mode=OneWay}" /></Hyperlink>
