@@ -328,6 +328,25 @@ public sealed class PipelineTests
     }
 
     [Fact]
+    public void ColorlessSheetWithFewLines_IsDocument()
+    {
+        // Handwriting, formulas, a sparse test: few lines that count, but a colorless, lightly covered sheet.
+        Pix sheet = Bed();
+        TextBlock(sheet, 1.0, 1.0, 0.5, 3.0);   // lines too short to count
+        TextBlock(sheet, 1.0, 5.0, 6.0, 0.3);
+        Assert.Equal(ContentKind.Document, ContentGuess.Classify(sheet));
+    }
+
+    [Fact]
+    public void ColoredDrawing_GivesNoGuess()
+    {
+        Pix drawing = Bed();
+        for (int i = 0; i < 6; i++)
+            Photo(drawing, 2.0 + i * 0.9, 3.0 + (i % 2) * 2.0, 0.5, 0.4, 0, seed: i);
+        Assert.Equal(ContentKind.Unknown, ContentGuess.Classify(drawing));
+    }
+
+    [Fact]
     public void FewLinesOrEmptyBed_GiveNoGuess()
     {
         Pix caption = Bed();
