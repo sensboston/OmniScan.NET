@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -20,6 +21,7 @@
     <ProjectReference Include="..\..\src\OmniScan.Net.Assist\OmniScan.Net.Assist.csproj" />
     <ProjectReference Include="..\..\src\OmniScan.Net.Core\OmniScan.Net.Core.csproj" />
     <ProjectReference Include="..\..\src\OmniScan.Net.Imaging\OmniScan.Net.Imaging.csproj" />
+    <ProjectReference Include="..\..\src\OmniScan.Net.Ocr\OmniScan.Net.Ocr.csproj" />
     <ProjectReference Include="..\..\src\OmniScan.Net.Scanning\OmniScan.Net.Scanning.csproj" />
     <ProjectReference Include="..\..\src\OmniScan.Net.Remote\OmniScan.Net.Remote.csproj" />
   </ItemGroup>

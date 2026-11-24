@@ -2,7 +2,9 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <!-- The Windows SDK version brings the text recognition of Windows (Windows.Media.Ocr); runs on 1809 and later. -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
     <UseWPF>true</UseWPF>
     <AssemblyName>OmniScan</AssemblyName>
     <RootNamespace>OmniScan.Net.App</RootNamespace>
@@ -50,6 +52,7 @@
     <ProjectReference Include="..\OmniScan.Net.Assist\OmniScan.Net.Assist.csproj" />
     <ProjectReference Include="..\OmniScan.Net.Core\OmniScan.Net.Core.csproj" />
     <ProjectReference Include="..\OmniScan.Net.Imaging\OmniScan.Net.Imaging.csproj" />
+    <ProjectReference Include="..\OmniScan.Net.Ocr\OmniScan.Net.Ocr.csproj" />
     <ProjectReference Include="..\OmniScan.Net.Remote\OmniScan.Net.Remote.csproj" />
     <ProjectReference Include="..\OmniScan.Net.Scanning\OmniScan.Net.Scanning.csproj" />
   </ItemGroup>
