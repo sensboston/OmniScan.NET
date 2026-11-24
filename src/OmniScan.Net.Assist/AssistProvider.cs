@@ -67,15 +67,15 @@ public static class AssistProviders
     });
 
     /// <summary>
-    /// Models to use, best first: cheap ones that read images well. For OpenAI the full gpt-4.1 comes first:
-    /// the mini models miss the turn of photos where only a sign or a word tells which way is up. For the free Google tier
+    /// Models to use, best first: cheap ones that read images well. (The full gpt-4.1 also gets the photos where
+    /// only a sign tells which way is up, at several times the price: it can be set by hand, [Assist] Model.) For the free Google tier
     /// the previous-generation light model comes first: it is the least crowded, so the least often
     /// refused for load. The first one the key can use is taken; when none is listed,
     /// <see cref="Fallback"/> picks from the list by name.
     /// </summary>
     internal static IReadOnlyList<string> Preferred(AssistProvider p) => p switch
     {
-        AssistProvider.OpenAI => ["gpt-4.1", "gpt-4.1-mini", "gpt-4o", "gpt-4o-mini"],
+        AssistProvider.OpenAI => ["gpt-4.1-mini", "gpt-4o-mini", "gpt-4.1", "gpt-4o"],
         AssistProvider.Google => ["gemini-2.5-flash-lite", "gemini-2.0-flash-lite", "gemini-2.0-flash", "gemini-2.5-flash", "gemini-flash-lite-latest"],
         AssistProvider.Anthropic => ["claude-haiku-5-5", "claude-haiku-4-5"],
         AssistProvider.XAi => ["grok-4-fast", "grok-2-vision-1212", "grok-2-vision"],
