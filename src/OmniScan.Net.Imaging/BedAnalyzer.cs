@@ -32,7 +32,13 @@ public sealed record BedObject(RotatedRect Bounds, PixelBox Box, double Density,
     public const double PhotoDensity = 0.75;
     public const double PhotoMinShare = 0.01;
 
-    public bool LooksLikePhoto => Density >= PhotoDensity && Share >= PhotoMinShare;
+    /// <summary>
+    /// Many lines of text were found inside: a solid-looking block of a document (a colored bill,
+    /// paper darker than the lid), not a photo.
+    /// </summary>
+    public bool HasText { get; init; }
+
+    public bool LooksLikePhoto => !HasText && Density >= PhotoDensity && Share >= PhotoMinShare;
 }
 
 /// <summary>The result of looking at a whole-bed scan.</summary>

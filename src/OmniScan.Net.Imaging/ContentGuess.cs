@@ -34,7 +34,22 @@ public static class ContentGuess
     private const double MinLineWidth = 0.6;     // inches
     private const double MinLineAspect = 5;
 
-    public static ContentKind Classify(Pix page) => Classify(page, BedLayout.Group(BedAnalyzer.Analyze(page)));
+    public static ContentKind Classify(Pix page) =>
+        Classify(page, BedLayout.Group(MarkText(page, BedAnalyzer.Analyze(page))));
+
+    /// <summary>
+    /// Marks the solid-looking blobs that are full of text lines (<see cref="BedObject.HasText"/>), so that
+    /// a colored bill or a sheet darker than the lid is kept whole instead of being cut out as a photo.
+    /// </summary>
+    public static BedAnalysis MarkText(Pix page, BedAnalysis bed)
+    {
+        if (!bed.Objects.Any(o => o.LooksLikePhoto))
+            return bed;
+        List<BedObject> marked = bed.Objects
+            .Select(o => o.LooksLikePhoto && CountTextLines(page, o.Box) >= MinTextLines ? o with { HasText = true } : o)
+            .ToList();
+        return bed with { Objects = marked };
+    }
 
     /// <summary>Same, reusing the items found by <see cref="BedLayout.Group"/>.</summary>
     public static ContentKind Classify(Pix page, IReadOnlyList<BedItem> items)

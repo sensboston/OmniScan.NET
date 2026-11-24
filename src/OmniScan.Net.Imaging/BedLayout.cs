@@ -55,17 +55,27 @@ public static class BedLayout
             }
         }
 
-        // Photos join a sheet they lie next to, otherwise stand alone; never two photos together.
+        // Photos join the sheets they lie next to (all of them, which then become one sheet),
+        // otherwise stand alone; never two photos together.
         foreach (BedObject photo in bed.Objects.Where(o => o.LooksLikePhoto))
         {
             // A speck of dust next to a photo must not turn the photo into a "sheet".
-            Cluster? sheet = clusters
-                .Where(c => !c.IsPhoto && c.Parts.Sum(p => p.Share) >= MinSheetShare)
-                .FirstOrDefault(c => c.Box.GapTo(photo.Box) < gap);
-            if (sheet is not null)
-                sheet.Add(photo);
-            else
+            List<Cluster> sheets = clusters
+                .Where(c => !c.IsPhoto && c.Parts.Sum(p => p.Share) >= MinSheetShare && c.Box.GapTo(photo.Box) < gap)
+                .ToList();
+            if (sheets.Count == 0)
+            {
                 clusters.Add(new Cluster(photo) { IsPhoto = true });
+                continue;
+            }
+
+            sheets[0].Add(photo);
+            foreach (Cluster other in sheets.Skip(1))
+            {
+                foreach (BedObject part in other.Parts)
+                    sheets[0].Add(part);
+                clusters.Remove(other);
+            }
         }
 
         return clusters

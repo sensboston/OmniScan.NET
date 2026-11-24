@@ -303,4 +303,30 @@ public sealed class PipelineTests
         Assert.Equal(ContentKind.Unknown, ContentGuess.Classify(caption));
         Assert.Equal(ContentKind.Unknown, ContentGuess.Classify(Bed()));
     }
+
+    [Fact]
+    public void TintedSheetWithPiecesBelow_StaysOneDocument()
+    {
+        // Paper darker than the lid (or a colored bill) looks solid like a photo, but is full of text;
+        // the stub below it, with an address and a code line, belongs to the same sheet.
+        Pix bed = Bed();
+        uint[] data = bed.Data;
+        int wpl = bed.Wpl;
+        for (int y = (int)(0.5 * Dpi); y < (int)(8.0 * Dpi); y++)
+        {
+            for (int x = (int)(0.6 * Dpi); x < (int)(7.9 * Dpi); x++)
+                data[y * wpl + x] = 0xC8D2DC00u;
+        }
+
+        TextBlock(bed, 1.0, 1.0, 6.5, 6.5);
+        TextBlock(bed, 1.0, 8.3, 3.0, 0.8);
+        TextBlock(bed, 4.8, 8.3, 2.6, 0.6);
+        TextBlock(bed, 4.5, 9.3, 3.0, 0.2);
+
+        IReadOnlyList<CutFrame> frames = ScanPipeline.Plan(bed, PipelineOptions.All);
+
+        Assert.Single(frames);
+        Assert.Equal(ItemKind.Document, frames[0].Kind);
+        Assert.Equal(ContentKind.Document, ContentGuess.Classify(bed));
+    }
 }

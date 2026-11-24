@@ -65,7 +65,7 @@ public static class ScanPipeline
             return [];
 
         int dpi = page.XRes > 0 ? page.XRes : 300;
-        IReadOnlyList<BedItem> items = BedLayout.Group(BedAnalyzer.Analyze(page));
+        IReadOnlyList<BedItem> items = BedLayout.Group(ContentGuess.MarkText(page, BedAnalyzer.Analyze(page)));
         if (items.Count == 0)
             return [];
 
