@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +19,8 @@ public sealed record PhotoReport(int? Rotation, string? Description);
 /// <summary>
 /// Questions about a photo: which way is up, and what is on it. For the orientation the photo is sent
 /// four times, turned each way, and the service picks the upright copy: models tell "which of these
-/// looks right" much more reliably than "how many degrees is this turned".
+/// looks right" much more reliably than "how many degrees is this turned". An answer other than
+/// "already upright" is asked once more with the copies in another order and used only when both agree.
 /// </summary>
 public static class PhotoAssist
 {
@@ -27,6 +29,9 @@ public static class PhotoAssist
 
     private static readonly int[] Turns = [0, 90, 180, 270];
 
+    /// <summary>The order of the copies for the confirming question.</summary>
+    private static readonly int[] ConfirmTurns = [180, 270, 0, 90];
+
     public static async Task<PhotoReport> LookAsync(AssistClient client, Pix photo, bool orient, bool describe,
         string? languageCode, CancellationToken cancellationToken = default)
     {
@@ -34,21 +39,20 @@ public static class PhotoAssist
             return new PhotoReport(null, null);
 
         Pix small = Shrink(photo, ImageSide);
-        List<byte[]> images = [];
-        if (orient)
-        {
-            foreach (int turn in Turns)
-                images.Add(Jpeg(FrameCodec.Rotate(small, turn)));
-        }
-        else
-        {
-            images.Add(Jpeg(small));
-        }
-
         string prompt = Prompt(orient, describe, LanguageName(languageCode));
+        List<byte[]> images = orient ? Copies(small, Turns) : [Jpeg(small)];
         string? answer = await client.AskAsync(prompt, images, 400, cancellationToken).ConfigureAwait(false);
-        return Parse(answer, orient, describe);
+        PhotoReport report = Parse(answer, orient, describe, Turns);
+        if (report.Rotation is not (int turn and not 0))
+            return report;
+
+        string? again = await client.AskAsync(Prompt(orient: true, describe: false, "English"), Copies(small, ConfirmTurns),
+            400, cancellationToken).ConfigureAwait(false);
+        int? confirmed = Parse(again, orient: true, describe: false, ConfirmTurns).Rotation;
+        return confirmed == turn ? report : report with { Rotation = null };
     }
+
+    private static List<byte[]> Copies(Pix small, int[] turns) => turns.Select(t => Jpeg(FrameCodec.Rotate(small, t))).ToList();
 
     internal static string Prompt(bool orient, bool describe, string language)
     {
@@ -76,18 +80,20 @@ public static class PhotoAssist
         return rules + "Answer with JSON only, exactly: " + fields;
     }
 
-    internal static PhotoReport Parse(string? answer, bool orient, bool describe)
+    /// <param name="turns">The turn of each copy, in the order they were sent.</param>
+    internal static PhotoReport Parse(string? answer, bool orient, bool describe, int[]? turns = null)
     {
+        turns ??= Turns;
         JsonObject? json = FindJson(answer);
         if (json is null)
             return new PhotoReport(null, null);
 
         int? rotation = null;
         if (orient && json["upright"] is JsonValue v && v.TryGetValue(out int n) && n is >= 1 and <= 4)
-            rotation = Turns[n - 1];
+            rotation = turns[n - 1];
         else if (orient && json["upright"] is JsonValue s && s.TryGetValue(out string? text)
                  && int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out int m) && m is >= 1 and <= 4)
-            rotation = Turns[m - 1];
+            rotation = turns[m - 1];
 
         string? caption = null;
         if (describe && json["caption"] is JsonValue c && c.TryGetValue(out string? t) && !string.IsNullOrWhiteSpace(t))
