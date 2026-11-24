@@ -83,5 +83,6 @@
   "Theme": "Téma",
   "ThemeLight": "Világos",
   "ThemeDark": "Sötét",
-  "ThemeSystem": "Ahogy a Windowsban"
+  "JpegQuality": "JPEG-minőség",
+  "JpegQualityHint": "JPEG-fájlokhoz és a PDF-ben lévő képekhez. Kisebb érték — kisebb fájl, nagyobb — jobb minőség."
 }

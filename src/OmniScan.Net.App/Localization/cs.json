@@ -83,5 +83,6 @@
   "Theme": "Motiv",
   "ThemeLight": "Světlý",
   "ThemeDark": "Tmavý",
-  "ThemeSystem": "Podle Windows"
+  "JpegQuality": "Kvalita JPEG",
+  "JpegQualityHint": "Pro soubory JPEG a obrázky v PDF. Nižší — menší soubor, vyšší — lepší kvalita."
 }

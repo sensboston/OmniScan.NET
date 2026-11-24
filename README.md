@@ -32,7 +32,7 @@ Already have the [.NET 10 Desktop Runtime](https://aka.ms/dotnet/10.0/windowsdes
   running OmniScan, as if they were attached locally. Processing always happens on the PC where you sit.
 - **Portable settings** in a plain `OmniScan.ini` next to the executable
   (or in `%AppData%\OmniScan` if that folder is read-only).
-- **29 UI languages**, light / dark / system theme.
+- **29 UI languages**, light and dark theme.
 
 ## First start
 

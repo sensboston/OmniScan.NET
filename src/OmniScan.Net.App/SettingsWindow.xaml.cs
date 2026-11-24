@@ -19,6 +19,7 @@ public sealed class SettingsModel
         ServerEnabled = settings.ServerEnabled;
         AutoContinueSeconds = settings.AutoContinueSeconds;
         Theme = settings.Theme;
+        JpegQuality = settings.JpegQuality;
         int[] seconds = [0, 5, 10, 15, 20, 30, 45, 60];
         if (!seconds.Contains(AutoContinueSeconds))
             seconds = [.. seconds.Append(AutoContinueSeconds).Order()];
@@ -43,10 +44,11 @@ public sealed class SettingsModel
     [
         new(UiTheme.Light, Strings.ThemeLight),
         new(UiTheme.Dark, Strings.ThemeDark),
-        new(UiTheme.System, Strings.ThemeSystem),
     ];
 
     public UiTheme Theme { get; set; }
+
+    public int JpegQuality { get; set; }
     public string Language { get; set; }
     public bool ServerEnabled { get; set; }
 
@@ -79,6 +81,7 @@ public sealed class SettingsModel
         settings.ServerEnabled = ServerEnabled;
         settings.AutoContinueSeconds = AutoContinueSeconds;
         settings.Theme = Theme;
+        settings.JpegQuality = JpegQuality;
         if (Device is { } d)
         {
             int rotation = Flip ? 180 : 0;

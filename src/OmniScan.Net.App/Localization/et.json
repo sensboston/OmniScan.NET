@@ -83,5 +83,6 @@
   "Theme": "Teema",
   "ThemeLight": "Hele",
   "ThemeDark": "Tume",
-  "ThemeSystem": "Nagu Windowsis"
+  "JpegQuality": "JPEG-i kvaliteet",
+  "JpegQualityHint": "JPEG-failidele ja PDF-i piltidele. Madalam — väiksem fail, kõrgem — parem kvaliteet."
 }

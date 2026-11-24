@@ -83,5 +83,6 @@
   "Theme": "Motīvs",
   "ThemeLight": "Gaišs",
   "ThemeDark": "Tumšs",
-  "ThemeSystem": "Kā sistēmā Windows"
+  "JpegQuality": "JPEG kvalitāte",
+  "JpegQualityHint": "JPEG failiem un attēliem PDF. Zemāka — mazāks fails, augstāka — labāka kvalitāte."
 }

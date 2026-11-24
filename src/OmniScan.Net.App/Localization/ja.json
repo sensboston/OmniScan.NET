@@ -83,5 +83,6 @@
   "Theme": "テーマ",
   "ThemeLight": "ライト",
   "ThemeDark": "ダーク",
-  "ThemeSystem": "Windows と同じ"
+  "JpegQuality": "JPEG の画質",
+  "JpegQualityHint": "JPEG ファイルと PDF 内の画像に適用されます。低いほどファイルが小さく、高いほど高画質になります。"
 }

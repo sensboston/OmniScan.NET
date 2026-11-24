@@ -83,5 +83,6 @@
   "Theme": "테마",
   "ThemeLight": "밝게",
   "ThemeDark": "어둡게",
-  "ThemeSystem": "Windows와 동일"
+  "JpegQuality": "JPEG 품질",
+  "JpegQualityHint": "JPEG 파일과 PDF 안의 이미지에 적용됩니다. 낮을수록 파일이 작고, 높을수록 품질이 좋습니다."
 }

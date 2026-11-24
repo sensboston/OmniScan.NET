@@ -83,5 +83,6 @@
   "Theme": "Tema",
   "ThemeLight": "Šviesi",
   "ThemeDark": "Tamsi",
-  "ThemeSystem": "Kaip „Windows“"
+  "JpegQuality": "JPEG kokybė",
+  "JpegQualityHint": "JPEG failams ir vaizdams PDF faile. Mažesnė — mažesnis failas, didesnė — geresnė kokybė."
 }

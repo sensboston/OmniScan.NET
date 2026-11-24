@@ -76,7 +76,8 @@ public static class Strings
     public static string Theme => T();
     public static string ThemeLight => T();
     public static string ThemeDark => T();
-    public static string ThemeSystem => T();
+    public static string JpegQuality => T();
+    public static string JpegQualityHint => T();
     public static string LanguageSystem => T();
     public static string ServerMode => T();
     public static string ServerModeHint => T();

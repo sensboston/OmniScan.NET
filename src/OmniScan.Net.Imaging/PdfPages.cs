@@ -88,9 +88,9 @@ public static class PdfPages
     public static byte[] PreviewBmp(PdfPage page) => FrameCodec.PreviewBmp(Decode(page), ScanSaver.PreviewMaxSide);
 
     /// <summary>Writes the pages as one new PDF into the day folder; returns its path.</summary>
-    public static string Save(IReadOnlyList<PdfPage> pages, string rootFolder, DateTime date)
+    public static string Save(IReadOnlyList<PdfPage> pages, string rootFolder, DateTime date, int jpegQuality)
     {
-        byte[] pdf = Build(pages);
+        byte[] pdf = Build(pages, jpegQuality);
         string folder = ScanOutput.DayFolder(rootFolder, date);
         using FileStream file = ScanOutput.CreateNext(folder, ".pdf");
         file.Write(pdf);
@@ -98,15 +98,15 @@ public static class PdfPages
     }
 
     /// <summary>Writes the pages over an existing PDF made by this program (adding pages to it later).</summary>
-    public static void SaveTo(IReadOnlyList<PdfPage> pages, string path)
+    public static void SaveTo(IReadOnlyList<PdfPage> pages, string path, int jpegQuality)
     {
-        byte[] pdf = Build(pages);
+        byte[] pdf = Build(pages, jpegQuality);
         string temp = path + ".tmp";
         File.WriteAllBytes(temp, pdf);
         File.Move(temp, path, overwrite: true);
     }
 
-    private static byte[] Build(IReadOnlyList<PdfPage> pages)
+    private static byte[] Build(IReadOnlyList<PdfPage> pages, int jpegQuality)
     {
         if (pages.Count == 0)
             throw new ArgumentException("No pages.", nameof(pages));
@@ -114,7 +114,7 @@ public static class PdfPages
         // One page decoded at a time: a 300 dpi color page is ~27 MB unpacked.
         L_Ptra<L_Bytea> parts = L_Ptra<L_Bytea>.Create(pages.Count);
         foreach (PdfPage page in pages)
-            parts.Add(L_Bytea.InitFromMem(Pix.WriteMemPdf(Decode(page), page.Dpi, null)));
+            parts.Add(L_Bytea.InitFromMem(FrameCodec.Pdf(Decode(page), page.Dpi, jpegQuality)));
         return PdfIo.PtraConcatenateToData(parts, null);
     }
 

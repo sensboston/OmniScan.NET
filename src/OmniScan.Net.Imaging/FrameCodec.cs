@@ -45,12 +45,19 @@ public static class FrameCodec
                 return Pix.WriteMemJpeg(jpegSource, jpegQuality, 0);
 
             case OutputFormat.Pdf:
-                // G4 for black & white, JPEG (quality 75) for gray and color.
-                return Pix.WriteMemPdf(pix, dpi, title);
+                return Pdf(pix, dpi, jpegQuality, title);
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(format));
         }
+    }
+
+    /// <summary>A one-page PDF: G4 for black &amp; white, JPEG of the given quality for gray and color.</summary>
+    public static byte[] Pdf(Pix pix, int dpi, int jpegQuality, string? title = null)
+    {
+        Pixa one = Pixa.Create(1);
+        one.AddPix(pix, L.L_CLONE);
+        return one.ConvertToPdfData(dpi, 1.0f, L.L_DEFAULT_ENCODE, jpegQuality, title);
     }
 
     /// <summary>A small BMP for the preview pane (BMP is the cheapest format for WPF to load).</summary>

@@ -83,5 +83,6 @@
   "Theme": "Thema",
   "ThemeLight": "Licht",
   "ThemeDark": "Donker",
-  "ThemeSystem": "Zoals Windows"
+  "JpegQuality": "JPEG-kwaliteit",
+  "JpegQualityHint": "Voor JPEG-bestanden en afbeeldingen in PDF. Lager geeft kleinere bestanden, hoger meer detail."
 }

@@ -83,5 +83,6 @@
   "Theme": "Tema",
   "ThemeLight": "Svijetla",
   "ThemeDark": "Tamna",
-  "ThemeSystem": "Kao u sustavu Windows"
+  "JpegQuality": "Kvaliteta JPEG-a",
+  "JpegQualityHint": "Za JPEG datoteke i slike u PDF-u. Niže — manja datoteka, više — bolja kvaliteta."
 }

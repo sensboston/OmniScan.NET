@@ -106,7 +106,8 @@ Rarely changed options live in a separate dialog (gear button next to the scanne
 
 - UI language: "same as Windows" or any of the bundled translations (Localization/*.json,
   English fallback for missing keys);
-- theme: light (default), dark, or same as Windows;
+- theme: light (default) or dark;
+- JPEG quality (50–100, default 90), also used for gray and color images inside PDFs;
 - turn scans upside down, per scanner;
 - auto-continue delay for multi-page PDF;
 - sharing scanners on the network (server role, below).

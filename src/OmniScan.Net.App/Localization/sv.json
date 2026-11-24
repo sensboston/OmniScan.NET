@@ -83,5 +83,6 @@
   "Theme": "Tema",
   "ThemeLight": "Ljust",
   "ThemeDark": "Mörkt",
-  "ThemeSystem": "Samma som Windows"
+  "JpegQuality": "JPEG-kvalitet",
+  "JpegQualityHint": "För JPEG-filer och bilder i PDF. Lägre ger mindre filer, högre bättre kvalitet."
 }

@@ -83,5 +83,6 @@
   "Theme": "主题",
   "ThemeLight": "浅色",
   "ThemeDark": "深色",
-  "ThemeSystem": "跟随 Windows"
+  "JpegQuality": "JPEG 质量",
+  "JpegQualityHint": "用于 JPEG 文件和 PDF 中的图像。越低文件越小，越高质量越好。"
 }

@@ -189,7 +189,6 @@ public partial class App : Application
     private void ApplyTheme(UiTheme theme) => ThemeMode = theme switch
     {
         UiTheme.Dark => ThemeMode.Dark,
-        UiTheme.System => ThemeMode.System,
         _ => ThemeMode.Light,
     };
 

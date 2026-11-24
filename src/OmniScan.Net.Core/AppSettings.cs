@@ -17,7 +17,11 @@ public sealed class AppSettings
     public int Dpi { get; set; } = 300;
     public ColorMode ColorMode { get; set; } = ColorMode.Color;
     public OutputFormat Format { get; set; } = OutputFormat.Jpeg;
-    public int JpegQuality { get; set; } = 90;
+    public const int MinJpegQuality = 50;
+    public const int DefaultJpegQuality = 90;
+
+    /// <summary>JPEG quality for JPEG files and for the gray and color images inside PDFs.</summary>
+    public int JpegQuality { get; set; } = DefaultJpegQuality;
     public string RootFolder { get; set; } = DefaultRootFolder;
 
     public bool AutoCrop { get; set; } = true;
@@ -76,8 +80,8 @@ public sealed class AppSettings
             Dpi = 300;
         if (AutoContinueSeconds < 0 || AutoContinueSeconds > 120)
             AutoContinueSeconds = 10;
-        if (JpegQuality < 1 || JpegQuality > 100)
-            JpegQuality = 90;
+        if (JpegQuality < MinJpegQuality || JpegQuality > 100)
+            JpegQuality = DefaultJpegQuality;
         if (string.IsNullOrWhiteSpace(RootFolder) || !Path.IsPathFullyQualified(RootFolder))
             RootFolder = DefaultRootFolder;
         if (!Enum.IsDefined(Source))

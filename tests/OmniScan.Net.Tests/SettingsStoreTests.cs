@@ -138,5 +138,32 @@ public sealed class SettingsStoreTests
         Assert.Equal(0, settings.GetRotation("net"));
     }
 
+    [Theory]
+    [InlineData("System", UiTheme.Light)]
+    [InlineData("Dark", UiTheme.Dark)]
+    [InlineData("nonsense", UiTheme.Light)]
+    public void Load_Theme_UnknownFallsBackToLight(string value, UiTheme expected)
+    {
+        using TempFolder temp = new();
+        string path = Path.Combine(temp.Path, "OmniScan.ini");
+        File.WriteAllText(path, $"[App]\nTheme = {value}\n");
+
+        Assert.Equal(expected, new SettingsStore(path).Load().Theme);
+    }
+
+    [Theory]
+    [InlineData(49, 90)]
+    [InlineData(50, 50)]
+    [InlineData(100, 100)]
+    [InlineData(101, 90)]
+    public void Load_JpegQuality_KeptWithinRange(int value, int expected)
+    {
+        using TempFolder temp = new();
+        string path = Path.Combine(temp.Path, "OmniScan.ini");
+        File.WriteAllText(path, $"[Scan]\nJpegQuality = {value}\n");
+
+        Assert.Equal(expected, new SettingsStore(path).Load().JpegQuality);
+    }
+
 
 }

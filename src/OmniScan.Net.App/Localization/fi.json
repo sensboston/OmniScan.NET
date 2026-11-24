@@ -83,5 +83,6 @@
   "Theme": "Teema",
   "ThemeLight": "Vaalea",
   "ThemeDark": "Tumma",
-  "ThemeSystem": "Kuten Windowsissa"
+  "JpegQuality": "JPEG-laatu",
+  "JpegQualityHint": "JPEG-tiedostoille ja PDF:n kuville. Pienempi — pienempi tiedosto, suurempi — parempi laatu."
 }

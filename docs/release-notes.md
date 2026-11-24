@@ -1,3 +1,10 @@
+**What's new**
+
+- JPEG quality setting (50–100, default 90). It also applies to photos and gray pages inside PDFs, which used a fixed quality of 75 before.
+- The theme is light or dark; the "same as Windows" choice is gone (it falls back to light).
+
+**Downloads**
+
 Two downloads below — the same program, pick one:
 
 | File | Size | Needs |

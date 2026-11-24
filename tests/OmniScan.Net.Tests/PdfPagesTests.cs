@@ -92,7 +92,7 @@ public sealed class PdfPagesTests
         (PdfPage? b, _) = PdfPages.Make(Sheet(2), 0, false, false, a);
         (PdfPage? c, _) = PdfPages.Make(Sheet(3), 0, false, false, b);
 
-        string path = PdfPages.Save([a!, b!, c!], temp.Path, new DateTime(2026, 11, 23));
+        string path = PdfPages.Save([a!, b!, c!], temp.Path, new DateTime(2026, 11, 23), 90);
 
         Assert.Equal(Path.Combine(temp.Path, "2026-11-23", "scan_001.pdf"), path);
         Assert.Equal(3, PdfIo.GetPageCount(path));
@@ -104,9 +104,9 @@ public sealed class PdfPagesTests
         using TempFolder temp = new();
         (PdfPage? a, _) = PdfPages.Make(Sheet(1), 0, false, false, null);
         (PdfPage? b, _) = PdfPages.Make(Sheet(2), 0, false, false, a);
-        string path = PdfPages.Save([a!], temp.Path, new DateTime(2026, 11, 23));
+        string path = PdfPages.Save([a!], temp.Path, new DateTime(2026, 11, 23), 90);
 
-        PdfPages.SaveTo([a!, b!], path);
+        PdfPages.SaveTo([a!, b!], path, 90);
 
         Assert.Equal(2, PdfIo.GetPageCount(path));
         Assert.Single(Directory.GetFiles(Path.GetDirectoryName(path)!));

@@ -30,6 +30,16 @@
     <ComboBox ItemsSource="{Binding Themes}" SelectedValue="{Binding Theme}"
               SelectedValuePath="Value" DisplayMemberPath="Label" HorizontalAlignment="Left" MinWidth="200" />
 
+    <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.JpegQuality}" />
+    <DockPanel>
+      <TextBlock DockPanel.Dock="Right" MinWidth="36" Margin="12,0,0,0" VerticalAlignment="Center"
+                 TextAlignment="Right" Text="{Binding Value, ElementName=QualitySlider}" />
+      <Slider x:Name="QualitySlider" Minimum="50" Maximum="100" TickFrequency="5" SmallChange="5" LargeChange="10"
+              IsSnapToTickEnabled="True" TickPlacement="BottomRight" VerticalAlignment="Center"
+              Value="{Binding JpegQuality}" />
+    </DockPanel>
+    <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0" Text="{x:Static local:Strings.JpegQualityHint}" />
+
     <CheckBox Margin="0,18,0,0" IsChecked="{Binding Flip}" IsEnabled="{Binding HasDevice}">
       <TextBlock Text="{x:Static local:Strings.FlipScans}" TextWrapping="Wrap" />
     </CheckBox>

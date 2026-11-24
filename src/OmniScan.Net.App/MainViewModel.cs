@@ -612,9 +612,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
             string? target = Session.TargetPath;
             string path = target ?? "";
             if (target is null)
-                path = await Task.Run(() => PdfPages.Save(pages, root, date));
+                path = await Task.Run(() => PdfPages.Save(pages, root, date, _settings.JpegQuality));
             else
-                await Task.Run(() => PdfPages.SaveTo(pages, target));
+                await Task.Run(() => PdfPages.SaveTo(pages, target, _settings.JpegQuality));
             _lastSavedFile = path;
             _lastPdf = (path, pages, date);
             Session.Clear();

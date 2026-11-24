@@ -83,5 +83,6 @@
   "Theme": "Tema",
   "ThemeLight": "Açık",
   "ThemeDark": "Koyu",
-  "ThemeSystem": "Windows ile aynı"
+  "JpegQuality": "JPEG kalitesi",
+  "JpegQualityHint": "JPEG dosyaları ve PDF içindeki görüntüler için. Düşük — daha küçük dosya, yüksek — daha iyi kalite."
 }

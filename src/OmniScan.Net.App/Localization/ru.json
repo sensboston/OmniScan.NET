@@ -83,5 +83,6 @@
   "Theme": "Тема",
   "ThemeLight": "Светлая",
   "ThemeDark": "Тёмная",
-  "ThemeSystem": "Как в Windows"
+  "JpegQuality": "Качество JPEG",
+  "JpegQualityHint": "Для файлов JPEG и изображений в PDF. Меньше — компактнее файл, больше — лучше качество."
 }

@@ -13,12 +13,11 @@ public enum ScanSource
     Feeder,
 }
 
-/// <summary>Look of the windows: light (default), dark, or following the Windows app mode.</summary>
+/// <summary>Look of the windows: light (default) or dark.</summary>
 public enum UiTheme
 {
     Light,
     Dark,
-    System,
 }
 
 public enum OutputFormat

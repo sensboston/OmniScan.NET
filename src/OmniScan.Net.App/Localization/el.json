@@ -83,5 +83,6 @@
   "Theme": "Θέμα",
   "ThemeLight": "Ανοιχτό",
   "ThemeDark": "Σκούρο",
-  "ThemeSystem": "Όπως στα Windows"
+  "JpegQuality": "Ποιότητα JPEG",
+  "JpegQualityHint": "Για αρχεία JPEG και εικόνες σε PDF. Χαμηλότερη — μικρότερο αρχείο, υψηλότερη — καλύτερη ποιότητα."
 }
