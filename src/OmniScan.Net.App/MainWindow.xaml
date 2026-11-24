@@ -38,9 +38,10 @@
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <!-- Settings -->
+    <!-- Settings. Locked while a scan is acquired and processed: the scan uses the values it started with,
+         and a change made meanwhile would look as if it applied to it. (The panel scrolls still.) -->
     <ScrollViewer Grid.Column="0" Grid.Row="0" VerticalScrollBarVisibility="Auto">
-      <StackPanel Margin="16,4,16,16">
+      <StackPanel Margin="16,4,16,16" IsEnabled="{Binding IsIdle}">
 
         <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Device}" />
         <Grid>
