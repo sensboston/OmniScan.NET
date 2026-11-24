@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:OmniScan.Net.App"
         Title="{x:Static local:Strings.SettingsTitle}"
         Icon="pack://application:,,,/OmniScan;component/Assets/OmniScan.ico"
-        Width="520" SizeToContent="Height" ResizeMode="NoResize"
+        Width="540" Height="640" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
 
   <Window.Resources>
@@ -20,58 +20,61 @@
     </Style>
   </Window.Resources>
 
-  <StackPanel Margin="20,4,20,20">
-
-    <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Language}" />
-    <ComboBox ItemsSource="{Binding Languages}" SelectedValue="{Binding Language}"
-              SelectedValuePath="Value" DisplayMemberPath="Label" />
-
-    <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Theme}" />
-    <ComboBox ItemsSource="{Binding Themes}" SelectedValue="{Binding Theme}"
-              SelectedValuePath="Value" DisplayMemberPath="Label" HorizontalAlignment="Left" MinWidth="200" />
-
-    <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.JpegQuality}" />
-    <DockPanel>
-      <TextBlock DockPanel.Dock="Right" MinWidth="36" Margin="12,0,0,0" VerticalAlignment="Center"
-                 TextAlignment="Right" Text="{Binding Value, ElementName=QualitySlider}" />
-      <Slider x:Name="QualitySlider" Minimum="50" Maximum="100" TickFrequency="5" SmallChange="5" LargeChange="10"
-              IsSnapToTickEnabled="True" TickPlacement="BottomRight" VerticalAlignment="Center"
-              Value="{Binding JpegQuality}" />
-    </DockPanel>
-    <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0" Text="{x:Static local:Strings.JpegQualityHint}" />
-
-    <!-- Where this scanner has the top of the page: two pictures to choose from. -->
-    <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.ScannerTop}" TextWrapping="Wrap" />
-    <StackPanel Orientation="Horizontal" IsEnabled="{Binding HasDevice}">
-      <RadioButton GroupName="ScannerTop" IsChecked="{Binding TopOnLeft}" VerticalContentAlignment="Top">
-        <StackPanel>
-          <local:ScannerPicture TopOnRight="False" TopText="{x:Static local:Strings.TopWord}" />
-          <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" Text="{x:Static local:Strings.TopLeft}" />
-        </StackPanel>
-      </RadioButton>
-      <RadioButton GroupName="ScannerTop" Margin="24,0,0,0" IsChecked="{Binding Flip}" VerticalContentAlignment="Top">
-        <StackPanel>
-          <local:ScannerPicture TopOnRight="True" TopText="{x:Static local:Strings.TopWord}" />
-          <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" Text="{x:Static local:Strings.TopRight}" />
-        </StackPanel>
-      </RadioButton>
-    </StackPanel>
-    <TextBlock Style="{StaticResource Hint}" Margin="0,6,0,0" Text="{x:Static local:Strings.ScannerTopHint}" />
-
-    <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.AutoContinue}" TextWrapping="Wrap" />
-    <ComboBox ItemsSource="{Binding AutoContinueChoices}" SelectedValue="{Binding AutoContinueSeconds}"
-              SelectedValuePath="Value" DisplayMemberPath="Label" HorizontalAlignment="Left" MinWidth="140" />
-
-    <CheckBox Margin="0,20,0,4" IsChecked="{Binding ServerEnabled}">
-      <TextBlock FontWeight="SemiBold" Text="{x:Static local:Strings.ServerMode}" TextWrapping="Wrap" />
-    </CheckBox>
-    <TextBlock Style="{StaticResource Hint}" Margin="28,0,0,0" Text="{x:Static local:Strings.ServerModeHint}" />
-
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+  <DockPanel Margin="16,12,16,16">
+    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
       <Button MinWidth="96" Padding="12,6" IsDefault="True" Style="{DynamicResource AccentButtonStyle}"
               Content="{x:Static local:Strings.Ok}" Click="OnOk" />
       <Button MinWidth="96" Padding="12,6" Margin="8,0,0,0" IsCancel="True"
               Content="{x:Static local:Strings.Cancel}" />
     </StackPanel>
-  </StackPanel>
+    <TabControl x:Name="Tabs">
+      <TabItem Header="{x:Static local:Strings.TabGeneral}">
+        <StackPanel Margin="4,0,4,8">
+          <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Language}" />
+          <ComboBox ItemsSource="{Binding Languages}" SelectedValue="{Binding Language}"
+                    SelectedValuePath="Value" DisplayMemberPath="Label" />
+          <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Theme}" />
+          <ComboBox ItemsSource="{Binding Themes}" SelectedValue="{Binding Theme}"
+                    SelectedValuePath="Value" DisplayMemberPath="Label" HorizontalAlignment="Left" MinWidth="200" />
+          <CheckBox Margin="0,22,0,4" IsChecked="{Binding ServerEnabled}">
+            <TextBlock FontWeight="SemiBold" Text="{x:Static local:Strings.ServerMode}" TextWrapping="Wrap" />
+          </CheckBox>
+          <TextBlock Style="{StaticResource Hint}" Margin="28,0,0,0" Text="{x:Static local:Strings.ServerModeHint}" />
+        </StackPanel>
+      </TabItem>
+      <TabItem Header="{x:Static local:Strings.TabScanning}">
+        <StackPanel Margin="4,0,4,8">
+          <!-- Where this scanner has the top of the page: two pictures to choose from. -->
+          <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.ScannerTop}" TextWrapping="Wrap" />
+          <StackPanel Orientation="Horizontal" IsEnabled="{Binding HasDevice}">
+            <RadioButton GroupName="ScannerTop" IsChecked="{Binding TopOnLeft}" VerticalContentAlignment="Top">
+              <StackPanel>
+                <local:ScannerPicture TopOnRight="False" TopText="{x:Static local:Strings.TopWord}" />
+                <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" Text="{x:Static local:Strings.TopLeft}" />
+              </StackPanel>
+            </RadioButton>
+            <RadioButton GroupName="ScannerTop" Margin="24,0,0,0" IsChecked="{Binding Flip}" VerticalContentAlignment="Top">
+              <StackPanel>
+                <local:ScannerPicture TopOnRight="True" TopText="{x:Static local:Strings.TopWord}" />
+                <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" Text="{x:Static local:Strings.TopRight}" />
+              </StackPanel>
+            </RadioButton>
+          </StackPanel>
+          <TextBlock Style="{StaticResource Hint}" Margin="0,6,0,0" Text="{x:Static local:Strings.ScannerTopHint}" />
+          <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.JpegQuality}" />
+          <DockPanel>
+            <TextBlock DockPanel.Dock="Right" MinWidth="36" Margin="12,0,0,0" VerticalAlignment="Center"
+                       TextAlignment="Right" Text="{Binding Value, ElementName=QualitySlider}" />
+            <Slider x:Name="QualitySlider" Minimum="50" Maximum="100" TickFrequency="5" SmallChange="5" LargeChange="10"
+                    IsSnapToTickEnabled="True" TickPlacement="BottomRight" VerticalAlignment="Center"
+                    Value="{Binding JpegQuality}" />
+          </DockPanel>
+          <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0" Text="{x:Static local:Strings.JpegQualityHint}" />
+          <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.AutoContinue}" TextWrapping="Wrap" />
+          <ComboBox ItemsSource="{Binding AutoContinueChoices}" SelectedValue="{Binding AutoContinueSeconds}"
+                    SelectedValuePath="Value" DisplayMemberPath="Label" HorizontalAlignment="Left" MinWidth="140" />
+        </StackPanel>
+      </TabItem>
+    </TabControl>
+  </DockPanel>
 </Window>

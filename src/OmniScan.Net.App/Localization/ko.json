@@ -72,6 +72,8 @@
   "AutoContinueOff": "끄기",
   "SecondsFormat": "{0}초",
   "PdfSavedFormat": "{0} 저장됨({1}페이지)",
+  "TabGeneral": "일반",
+  "TabScanning": "스캔",
   "ScannerTop": "이 스캐너에서 페이지 위쪽",
   "TopWord": "위",
   "TopLeft": "왼쪽(대부분)",

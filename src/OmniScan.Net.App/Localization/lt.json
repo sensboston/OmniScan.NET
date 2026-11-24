@@ -72,6 +72,8 @@
   "AutoContinueOff": "Išj.",
   "SecondsFormat": "{0} s",
   "PdfSavedFormat": "Įrašyta {0} ({1} psl.)",
+  "TabGeneral": "Bendra",
+  "TabScanning": "Skenavimas",
   "ScannerTop": "Puslapio viršus šiame skeneryje",
   "TopWord": "VIRŠUS",
   "TopLeft": "Kairėje (daugumoje)",

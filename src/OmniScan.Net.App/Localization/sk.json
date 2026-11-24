@@ -72,6 +72,8 @@
   "AutoContinueOff": "Vyp.",
   "SecondsFormat": "{0} s",
   "PdfSavedFormat": "Uložené {0} ({1} str.)",
+  "TabGeneral": "Všeobecné",
+  "TabScanning": "Skenovanie",
   "ScannerTop": "Horný okraj strany pri tomto skeneri",
   "TopWord": "HORE",
   "TopLeft": "Vľavo (pri väčšine)",

@@ -107,6 +107,8 @@ public static class Strings
     public static string SecondsFormat => T();
     public static string PdfSavedFormat => T();
 
+    public static string TabGeneral => T();
+    public static string TabScanning => T();
     public static string ScannerTop => T();
     public static string TopWord => T();
     public static string TopLeft => T();

@@ -72,6 +72,8 @@
   "AutoContinueOff": "关闭",
   "SecondsFormat": "{0} 秒",
   "PdfSavedFormat": "已保存 {0}（{1} 页）",
+  "TabGeneral": "常规",
+  "TabScanning": "扫描",
   "ScannerTop": "此扫描仪上页面的顶端",
   "TopWord": "顶部",
   "TopLeft": "左侧（大多数）",

@@ -72,6 +72,8 @@
   "AutoContinueOff": "Isklj.",
   "SecondsFormat": "{0} s",
   "PdfSavedFormat": "Spremljeno {0} ({1} str.)",
+  "TabGeneral": "Općenito",
+  "TabScanning": "Skeniranje",
   "ScannerTop": "Vrh stranice na ovom skeneru",
   "TopWord": "VRH",
   "TopLeft": "Lijevo (kod većine)",
