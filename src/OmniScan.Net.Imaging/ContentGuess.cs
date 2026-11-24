@@ -19,9 +19,10 @@ public enum ContentKind
 }
 
 /// <summary>
-/// Tells a document from photos without looking at colors (bills are often colorful):
-/// photos are solid rectangles standing apart on the glass, a document is a sheet with
-/// many lines of text. When neither is clear the answer is <see cref="ContentKind.Unknown"/>.
+/// Tells a document from photos: photos are solid rectangles standing apart on the glass, a document
+/// is a sheet with many lines of text (also in color: bills often are). A sheet with fewer lines
+/// (handwriting, formulas, a form, a sparse test) is a document too when it is colorless and lightly
+/// covered, as printed and written pages are. When neither is clear the answer is <see cref="ContentKind.Unknown"/>.
 /// </summary>
 public static class ContentGuess
 {
@@ -33,6 +34,13 @@ public static class ContentGuess
     private const double MaxLineHeight = 0.35;   // inches: a large heading
     private const double MinLineWidth = 0.6;     // inches
     private const double MinLineAspect = 5;
+
+    // A colorless, lightly covered sheet (measured on the corpus: printed pages 2-15% covered and
+    // 0-2% colored; photos 65-94% and 33-65%; a child's drawing 20% and 77%).
+    private const double MinInk = 0.005;
+    private const double MaxInk = 0.30;
+    private const double MaxColorShare = 0.10;
+    private const double MinInkSheetSide = 1.5;   // inches: not a caption strip or a label
 
     public static ContentKind Classify(Pix page) =>
         Classify(page, BedLayout.Group(MarkText(page, BedAnalyzer.Analyze(page))));
@@ -60,7 +68,50 @@ public static class ContentGuess
             return ContentKind.Photos;
 
         PixelBox sheet = items.Select(i => i.Box).Aggregate((a, b) => a.Union(b));
-        return CountTextLines(page, sheet) >= MinTextLines ? ContentKind.Document : ContentKind.Unknown;
+        if (CountTextLines(page, sheet) >= MinTextLines)
+            return ContentKind.Document;
+
+        int dpi = page.XRes > 0 ? page.XRes : 300;
+        if (Math.Min(sheet.Width, sheet.Height) < MinInkSheetSide * dpi)
+            return ContentKind.Unknown;
+        (double coverage, double color) = Ink(page, sheet);
+        return coverage is >= MinInk and <= MaxInk && color <= MaxColorShare ? ContentKind.Document : ContentKind.Unknown;
+    }
+
+    /// <summary>
+    /// How much of <paramref name="area"/> is covered by anything darker than paper (<c>Coverage</c>), and
+    /// which share of that is colored (<c>ColorShare</c>). Measured at a low resolution.
+    /// </summary>
+    public static (double Coverage, double ColorShare) Ink(Pix page, PixelBox area)
+    {
+        int dpi = page.XRes > 0 ? page.XRes : 300;
+        Pix? clip = page.ClipRectangle(Box.Create(area.X, area.Y, area.Width, area.Height), out _);
+        if (clip is null)
+            return (0, 0);
+        float k = Math.Min(1f, 75f / dpi);
+        Pix work = clip.Depth == 32 ? clip : clip.ConvertTo32();
+        if (k < 1f)
+            work = work.ScaleAreaMap(k, k);
+
+        uint[] data = work.Data;
+        int wpl = work.Wpl, w = work.Width, h = work.Height;
+        long content = 0, colored = 0;
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                uint v = data[y * wpl + x];
+                int r = (int)(v >> 24), g = (int)((v >> 16) & 0xFF), bl = (int)((v >> 8) & 0xFF);
+                int max = Math.Max(r, Math.Max(g, bl)), min = Math.Min(r, Math.Min(g, bl));
+                if (max >= 200 && min >= 200)
+                    continue;   // paper (or the lid)
+                content++;
+                if (max - min > 40)
+                    colored++;
+            }
+        }
+
+        return ((double)content / Math.Max(1, (long)w * h), content == 0 ? 0 : (double)colored / content);
     }
 
     /// <summary>
