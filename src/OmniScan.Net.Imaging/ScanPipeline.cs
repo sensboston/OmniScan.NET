@@ -118,7 +118,7 @@ public static class ScanPipeline
         // the user rotated it on purpose.
         Pix image = PageTools.Extract(page, frame.Rect, options.Deskew || frame.Manual);
         if (options.AutoCrop && !frame.Manual)
-            image = PageTools.TrimLightBorder(image);
+            image = PageTools.TrimFringe(PageTools.TrimLightBorder(image), page.XRes > 0 ? page.XRes : 300);
         if (options.AutoOrient && PageTools.FindTextRotation(image, PhotoTextConfidence) is int turn and not 0)
             image = FrameCodec.Rotate(image, turn);
         return image;
