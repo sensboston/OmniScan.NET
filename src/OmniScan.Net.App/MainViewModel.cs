@@ -918,6 +918,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _assistRun = run;
         bool orient = _settings.AssistOrient, describe = _settings.AssistDescribe;
         string language = Localization.Resolve(_settings.Language);
+        foreach (ResultItem item in items)
+            item.IsChecking = true;
         try
         {
             AssistClient client = await ConnectAssistAsync(run.Token);
@@ -930,6 +932,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 if (run.IsCancellationRequested)
                     return;
                 await items[i].ApplyAssistAsync(report.Rotation, report.Description);
+                items[i].IsChecking = false;
             }
         }
         catch (OperationCanceledException)
@@ -952,6 +955,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
         finally
         {
+            foreach (ResultItem item in items)
+                item.IsChecking = false;
             if (ReferenceEquals(_assistRun, run))
                 _assistRun = null;
             run.Dispose();

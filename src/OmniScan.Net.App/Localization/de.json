@@ -74,6 +74,7 @@
   "PdfSavedFormat": "{0} gespeichert ({1} Seiten)",
   "TabGeneral": "Allgemein",
   "TabScanning": "Scannen",
+  "AssistLooking": "Drehung und Beschreibung werden geprüft…",
   "TabAssist": "KI",
   "AssistKey": "API-Schlüssel",
   "AssistCheck": "Prüfen",

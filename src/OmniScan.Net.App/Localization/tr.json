@@ -74,6 +74,7 @@
   "PdfSavedFormat": "{0} kaydedildi ({1} sayfa)",
   "TabGeneral": "Genel",
   "TabScanning": "Tarama",
+  "AssistLooking": "Döndürme ve açıklama denetleniyor…",
   "TabAssist": "YZ",
   "AssistKey": "API anahtarı",
   "AssistCheck": "Denetle",

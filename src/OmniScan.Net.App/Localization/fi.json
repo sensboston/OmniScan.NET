@@ -74,6 +74,7 @@
   "PdfSavedFormat": "Tallennettu {0} ({1} sivua)",
   "TabGeneral": "Yleiset",
   "TabScanning": "Skannaus",
+  "AssistLooking": "Tarkistetaan kierto ja kuvaus…",
   "TabAssist": "Tekoäly",
   "AssistKey": "API-avain",
   "AssistCheck": "Tarkista",

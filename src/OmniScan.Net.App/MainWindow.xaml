@@ -185,8 +185,7 @@
                     </Border.ContextMenu>
                     <StackPanel Width="104">
                       <Grid>
-                        <Image Source="{Binding Thumbnail}" Height="120" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"
-                               ToolTip="{Binding Description}" />
+                        <Image Source="{Binding Thumbnail}" Height="120" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
                         <Border HorizontalAlignment="Left" VerticalAlignment="Top" Background="#CC1B2430" CornerRadius="4" Padding="6,1">
                           <TextBlock Text="{Binding Number}" Foreground="White" FontWeight="SemiBold" FontSize="11" />
                         </Border>
@@ -253,7 +252,14 @@
                     </ContextMenu>
                   </Border.ContextMenu>
                   <StackPanel Width="132">
-                    <Image Source="{Binding Thumbnail}" Height="96" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
+                    <Grid>
+                      <Image Source="{Binding Thumbnail}" Height="96" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"
+                             ToolTip="{Binding Description}" />
+                      <!-- While the online service looks at the photo: its turn or caption may still come. -->
+                      <ProgressBar IsIndeterminate="True" Height="4" VerticalAlignment="Bottom" Margin="2,0,2,0"
+                                   ToolTip="{x:Static local:Strings.AssistLooking}"
+                                   Visibility="{Binding IsChecking, Converter={StaticResource Bool}}" />
+                    </Grid>
                     <TextBlock Margin="0,4,0,2" HorizontalAlignment="Center" FontSize="11" Opacity="0.7"
                                Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

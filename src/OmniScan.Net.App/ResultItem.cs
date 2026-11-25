@@ -50,6 +50,21 @@ public sealed class ResultItem : INotifyPropertyChanged
 
     public string Path { get; }
 
+    private bool _checking;
+
+    /// <summary>The online service is looking at the photo: its turn or caption may still come.</summary>
+    public bool IsChecking
+    {
+        get => _checking;
+        set
+        {
+            if (_checking == value)
+                return;
+            _checking = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsChecking)));
+        }
+    }
+
     /// <summary>The file is gone (deleted here); late answers about it are dropped.</summary>
     public bool IsDeleted { get; private set; }
 

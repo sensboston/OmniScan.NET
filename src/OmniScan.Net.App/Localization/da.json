@@ -74,6 +74,7 @@
   "PdfSavedFormat": "Gemte {0} ({1} sider)",
   "TabGeneral": "Generelt",
   "TabScanning": "Scanning",
+  "AssistLooking": "Kontrollerer rotation og billedtekst…",
   "TabAssist": "AI",
   "AssistKey": "API-nøgle",
   "AssistCheck": "Kontrollér",

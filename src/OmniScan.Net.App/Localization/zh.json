@@ -74,6 +74,7 @@
   "PdfSavedFormat": "已保存 {0}（{1} 页）",
   "TabGeneral": "常规",
   "TabScanning": "扫描",
+  "AssistLooking": "正在检查方向和说明…",
   "TabAssist": "AI",
   "AssistKey": "API 密钥",
   "AssistCheck": "检查",

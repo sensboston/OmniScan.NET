@@ -74,6 +74,7 @@
   "PdfSavedFormat": "Сохранено: {0} ({1} стр.)",
   "TabGeneral": "Общие",
   "TabScanning": "Сканирование",
+  "AssistLooking": "Проверяю поворот и подпись…",
   "TabAssist": "ИИ",
   "AssistKey": "Ключ API",
   "AssistCheck": "Проверить",

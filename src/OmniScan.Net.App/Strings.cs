@@ -110,6 +110,7 @@ public static class Strings
     public static string TabGeneral => T();
     public static string TabScanning => T();
     public static string TabAssist => T();
+    public static string AssistLooking => T();
     public static string AssistKey => T();
     public static string AssistCheck => T();
     public static string AssistChecking => T();

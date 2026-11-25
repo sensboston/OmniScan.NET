@@ -74,6 +74,7 @@
   "PdfSavedFormat": "{0} を保存しました ({1} ページ)",
   "TabGeneral": "全般",
   "TabScanning": "スキャン",
+  "AssistLooking": "向きと説明を確認しています…",
   "TabAssist": "AI",
   "AssistKey": "API キー",
   "AssistCheck": "確認",

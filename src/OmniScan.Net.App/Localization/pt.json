@@ -74,6 +74,7 @@
   "PdfSavedFormat": "Guardado {0} ({1} páginas)",
   "TabGeneral": "Geral",
   "TabScanning": "Digitalização",
+  "AssistLooking": "A verificar a orientação e a legenda…",
   "TabAssist": "IA",
   "AssistKey": "Chave de API",
   "AssistCheck": "Verificar",

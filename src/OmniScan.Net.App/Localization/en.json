@@ -74,6 +74,7 @@
   "PdfSavedFormat": "Saved {0} ({1} pages)",
   "TabGeneral": "General",
   "TabScanning": "Scanning",
+  "AssistLooking": "Checking the turn and the caption…",
   "TabAssist": "AI",
   "AssistKey": "API key",
   "AssistCheck": "Check",

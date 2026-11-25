@@ -74,6 +74,7 @@
   "PdfSavedFormat": "{0} enregistré ({1} pages)",
   "TabGeneral": "Général",
   "TabScanning": "Numérisation",
+  "AssistLooking": "Vérification de l'orientation et de la légende…",
   "TabAssist": "IA",
   "AssistKey": "Clé API",
   "AssistCheck": "Vérifier",
