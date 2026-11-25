@@ -20,17 +20,20 @@ public sealed record SaveOptions(
     PipelineOptions Processing,
     IReadOnlyList<CutFrame>? Frames = null,
     bool SaveBlank = false,
-    bool GuessContent = false);
+    bool GuessContent = false,
+    bool GuessStickers = false);
 
 /// <summary>A preview: the whole bed as an image and the frames that would be cut, in page-width units.</summary>
-public sealed record PreviewResult(byte[] PageBmp, IReadOnlyList<CutFrame> Frames, ContentKind Content = ContentKind.Unknown);
+/// <param name="Stickers">Several stickers seem to lie on the glass (when asked to look).</param>
+public sealed record PreviewResult(byte[] PageBmp, IReadOnlyList<CutFrame> Frames, ContentKind Content = ContentKind.Unknown,
+    bool Stickers = false);
 
 /// <summary>
 /// The files written for one scan, the images they were encoded from (kept for lossless
 /// re-saving after a manual rotation) and a small preview of the result.
 /// </summary>
 public sealed record SaveResult(PageKind Kind, IReadOnlyList<string> Files, IReadOnlyList<Pix> Images, byte[] PreviewBmp,
-    ContentKind Content = ContentKind.Unknown);
+    ContentKind Content = ContentKind.Unknown, bool Stickers = false);
 
 /// <summary>Turns an acquired frame into saved files: rotate, process, encode, write to the day folder.</summary>
 public static class ScanSaver
@@ -71,7 +74,8 @@ public static class ScanSaver
             ? FrameCodec.PreviewBmp(processed.Images[0], PreviewMaxSide)
             : PreviewWithOutlines(page, processed.Outlines);
         ContentKind content = options.GuessContent ? ContentGuess.Classify(page) : ContentKind.Unknown;
-        return new SaveResult(processed.Kind, files, processed.Images, preview, content);
+        bool stickers = options.GuessStickers && content != ContentKind.Document && ScanPipeline.LooksLikeStickers(page);
+        return new SaveResult(processed.Kind, files, processed.Images, preview, content, stickers);
     }
 
     /// <summary>
@@ -104,12 +108,16 @@ public static class ScanSaver
     public static byte[] Thumbnail(Pix image, int maxSide) => FrameCodec.PreviewBmp(image, maxSide);
 
     /// <summary>A preview scan is shown, never saved: the bed and the frames that would be cut.</summary>
-    public static PreviewResult Preview(ScannedFrame frame, int rotation, PipelineOptions processing, bool guessContent = false)
+    public static PreviewResult Preview(ScannedFrame frame, int rotation, PipelineOptions processing, bool guessContent = false,
+        bool guessStickers = false)
     {
         Pix page = Prepare(frame, rotation);
         IReadOnlyList<CutFrame> frames = ScanPipeline.Plan(page, processing);
+        if (processing.Stickers)
+            frames = frames.Select(f => f with { Outline = ScanPipeline.OutlineOf(page, f, processing) }).ToList();
         ContentKind content = guessContent ? ContentGuess.Classify(page) : ContentKind.Unknown;
-        return new PreviewResult(PreviewWithOutlines(page, []), frames.Select(f => f.Normalize(page.Width)).ToList(), content);
+        bool stickers = guessStickers && content != ContentKind.Document && ScanPipeline.LooksLikeStickers(page);
+        return new PreviewResult(PreviewWithOutlines(page, []), frames.Select(f => f.Normalize(page.Width)).ToList(), content, stickers);
     }
 
     internal static byte[] PreviewWithOutlines(Pix page, IReadOnlyList<RotatedRect> outlines)

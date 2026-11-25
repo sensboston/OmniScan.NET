@@ -22,14 +22,20 @@ public static class FrameCodec
     }
 
     /// <summary>Rotates clockwise by 0, 90, 180 or 270 degrees; returns the same object for 0.</summary>
-    public static Pix Rotate(Pix pix, int degrees) => degrees switch
+    public static Pix Rotate(Pix pix, int degrees)
     {
-        0 => pix,
-        90 => pix.Rotate90(1),
-        180 => Pix.Rotate180(null, pix),
-        270 => pix.Rotate90(-1),
-        _ => throw new ArgumentOutOfRangeException(nameof(degrees), degrees, "Only multiples of 90 degrees."),
-    };
+        Pix rotated = degrees switch
+        {
+            0 => pix,
+            90 => pix.Rotate90(1),
+            180 => Pix.Rotate180(null, pix),
+            270 => pix.Rotate90(-1),
+            _ => throw new ArgumentOutOfRangeException(nameof(degrees), degrees, "Only multiples of 90 degrees."),
+        };
+        // A cut-out shape keeps its transparency.
+        rotated.CopySpp(pix);
+        return rotated;
+    }
 
     public static byte[] Encode(Pix pix, OutputFormat format, int jpegQuality, string? title = null)
     {

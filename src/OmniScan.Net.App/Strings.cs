@@ -42,6 +42,8 @@ public static class Strings
     public static string Processing => T();
     public static string SplitPhotos => T();
     public static string AutoCrop => T();
+    public static string Stickers => T();
+    public static string StickersHint => T();
     public static string Deskew => T();
 
     public static string Folder => T();
@@ -159,6 +161,11 @@ public static class Strings
     public static string DeviceInUse => T();
     public static string ScanToPdf => T();
     public static string RedoAsPdf => T();
+    public static string LooksLikeStickers => T();
+    public static string StickersHintDetail => T();
+    public static string StickersHintSavedFormat => T();
+    public static string ScanAsStickers => T();
+    public static string RedoAsStickers => T();
     public static string PageAddedFormat => T();
     public static string ScanAgain => T();
     public static string Close => T();

@@ -278,6 +278,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 return;
             OnPropertyChanged(nameof(IsPdf));
             OnPropertyChanged(nameof(IsImageFormat));
+            OnPropertyChanged(nameof(IsPng));
             OnPropertyChanged(nameof(CanAppendLastPdf));
             AppendLastPdfCommand.RaiseCanExecuteChanged();
             Session.HideCard();
@@ -289,13 +290,26 @@ public sealed class MainViewModel : INotifyPropertyChanged
     /// <summary>The scan looks like a document while an image format is chosen.</summary>
     public bool HasDocumentHint => _hasDocumentHint;
 
+    /// <summary>The card offers stickers (cut along their outline) rather than a PDF.</summary>
+    private bool _hintStickers;
+    private bool _stickersHintUsed;
+
+    public string DocumentHintTitle => _hintStickers ? Strings.LooksLikeStickers : Strings.LooksLikeDocument;
+
     /// <summary>"Scan to PDF" after a preview, "Redo as PDF" when the image is already saved.</summary>
-    public string DocumentHintAction => _hintFrame is null ? Strings.ScanToPdf : Strings.RedoAsPdf;
+    public string DocumentHintAction => _hintStickers
+        ? _hintFrame is null ? Strings.ScanAsStickers : Strings.RedoAsStickers
+        : _hintFrame is null ? Strings.ScanToPdf : Strings.RedoAsPdf;
 
     /// <summary>What happens: the sheet is scanned into a PDF, or the saved file is redone as a PDF without scanning again.</summary>
-    public string DocumentHintText => _hintFrame is null
-        ? Strings.DocumentHintDetail
-        : string.Format(Strings.DocumentHintSavedFormat, Results.Count > 0 ? Results[0].FileName : "");
+    public string DocumentHintText => _hintStickers
+        ? _hintFrame is null ? Strings.StickersHintDetail : string.Format(Strings.StickersHintSavedFormat, Results.Count)
+        : _hintFrame is null
+            ? Strings.DocumentHintDetail
+            : string.Format(Strings.DocumentHintSavedFormat, Results.Count > 0 ? Results[0].FileName : "");
+
+    /// <summary>Whether to look for stickers on the next scan: not in the sticker mode already, and once per run.</summary>
+    private bool WantStickersGuess => IsImageFormat && !(Stickers && IsPng) && !_stickersHintUsed;
 
     public RelayCommand DocumentHintCommand { get; private set; } = null!;
     public RelayCommand DismissDocumentHintCommand { get; private set; } = null!;
@@ -303,13 +317,26 @@ public sealed class MainViewModel : INotifyPropertyChanged
     /// <summary>Whether to look at the content of the next scan (image formats, until the hint was shown once).</summary>
     private bool WantContentGuess => IsImageFormat && !_documentHintUsed;
 
+    private void ShowStickersHint(ScannedFrame? savedFrame, int rotation)
+    {
+        _stickersHintUsed = true;
+        ShowHint(savedFrame, rotation, stickers: true);
+    }
+
     private void ShowDocumentHint(ScannedFrame? savedFrame, int rotation)
     {
         _documentHintUsed = true;
+        ShowHint(savedFrame, rotation, stickers: false);
+    }
+
+    private void ShowHint(ScannedFrame? savedFrame, int rotation, bool stickers)
+    {
+        _hintStickers = stickers;
         _hasDocumentHint = true;
         _hintFrame = savedFrame;
         _hintRotation = rotation;
         OnPropertyChanged(nameof(HasDocumentHint));
+        OnPropertyChanged(nameof(DocumentHintTitle));
         OnPropertyChanged(nameof(DocumentHintAction));
         OnPropertyChanged(nameof(DocumentHintText));
         DocumentHintCommand.RaiseCanExecuteChanged();
@@ -332,6 +359,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
     /// </summary>
     private async Task AcceptDocumentHintAsync()
     {
+        if (_hintStickers)
+        {
+            await AcceptStickersHintAsync();
+            return;
+        }
+
         ScannedFrame? frame = _hintFrame;
         int rotation = _hintRotation;
         string[] saved = Results.Select(r => r.Path).ToArray();
@@ -369,6 +402,47 @@ public sealed class MainViewModel : INotifyPropertyChanged
             PreviewImage = full;
             Status = Session.Summary;
             Session.ShowPageCard(number, thumb, _settings.AutoContinueSeconds);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            Status = Strings.SaveFailed + " " + e.Message;
+        }
+        finally
+        {
+            EndBusy();
+        }
+    }
+
+    /// <summary>
+    /// Switches to stickers (PNG, cut along the outline). After a preview, the preview shows their outlines
+    /// (the scan is the user's next step); when the scan was already saved, those files are replaced by the
+    /// stickers cut from the same scan.
+    /// </summary>
+    private async Task AcceptStickersHintAsync()
+    {
+        ScannedFrame? frame = _hintFrame;
+        int rotation = _hintRotation;
+        string[] saved = Results.Select(r => r.Path).ToArray();
+        HideDocumentHint();
+        Format = OutputFormat.Png;
+        Stickers = true;   // redraws the preview with the outlines
+        if (frame is null)
+            return;
+
+        BeginBusy(Strings.ProcessingBusy);
+        try
+        {
+            foreach (string path in saved)
+            {
+                File.Delete(path);
+                Descriptions.Set(path, null);
+            }
+
+            if (saved.Contains(_lastSavedFile))
+                _lastSavedFile = null;
+            ClearResults();
+            SaveOptions options = new(RootFolder, DateTime.Now, Format, _settings.JpegQuality, rotation, EffectiveProcessing());
+            await SaveScanAsync(frame, options);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
@@ -423,6 +497,25 @@ public sealed class MainViewModel : INotifyPropertyChanged
         set
         {
             if (SetSetting(_settings.SplitPhotos, value, v => _settings.SplitPhotos = v))
+                _ = RedrawPreviewAsync();
+        }
+    }
+
+    /// <summary>Only PNG keeps the transparency around a sticker.</summary>
+    public bool IsPng => Format == OutputFormat.Png;
+
+    private bool _stickers;
+
+    /// <summary>
+    /// Cut pictures along their outline with a white border (PNG). Off at every start: left on, it would
+    /// cut the next drawing or card along its outline too.
+    /// </summary>
+    public bool Stickers
+    {
+        get => _stickers;
+        set
+        {
+            if (Set(ref _stickers, value))
                 _ = RedrawPreviewAsync();
         }
     }
@@ -590,7 +683,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             ? PreviewFrames.Select(f => f.ToCutFrame()).ToList()
             : null;
         SaveOptions options = new(RootFolder, DateTime.Now, Format,
-            _settings.JpegQuality, Rotation, processing, frames, GuessContent: WantContentGuess);
+            _settings.JpegQuality, Rotation, processing, frames, GuessContent: WantContentGuess, GuessStickers: WantStickersGuess);
 
         BeginBusy(preview ? Strings.Previewing : Strings.Scanning);
         try
@@ -629,25 +722,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 _framesEdited = false;
                 PreviewFrames.Clear();
                 OnPropertyChanged(nameof(CanEditFrames));
-                SaveResult result = await Task.Run(() => ScanSaver.Save(frame, options));
-                PreviewImage = await Task.Run(() => LoadBitmap(result.PreviewBmp));
-                if (result.Files.Count == 0)
-                {
-                    ClearResults();
-                    SetBlank(frame, options, options.Rotation);
-                    Status = Strings.BlankNotSaved;
-                    return;
-                }
-
-                await ShowResultsAsync(result, options);
-                _lastSavedFile = result.Files[^1];
-                string files = result.Files.Count <= 3
-                    ? string.Join(", ", result.Files.Select(Path.GetFileName))
-                    : $"{Path.GetFileName(result.Files[0])} … {Path.GetFileName(result.Files[^1])}";
-                string found = result.Kind == PageKind.Photos ? string.Format(Strings.PhotosFoundFormat, result.Files.Count) + " " : "";
-                Status = found + string.Format(Strings.SavedFormat, files, _busyClock.Elapsed.TotalSeconds);
-                if (result.Content == ContentKind.Document && result.Files.Count == 1 && WantContentGuess)
-                    ShowDocumentHint(frame, options.Rotation);
+                await SaveScanAsync(frame, options);
             }
         }
         catch (ScannerException e)
@@ -666,11 +741,38 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>Saves a scan as files and shows them; offers PDF or stickers when the content suggests it.</summary>
+    private async Task SaveScanAsync(ScannedFrame frame, SaveOptions options)
+    {
+        SaveResult result = await Task.Run(() => ScanSaver.Save(frame, options));
+        PreviewImage = await Task.Run(() => LoadBitmap(result.PreviewBmp));
+        if (result.Files.Count == 0)
+        {
+            ClearResults();
+            SetBlank(frame, options, options.Rotation);
+            Status = Strings.BlankNotSaved;
+            return;
+        }
+
+        await ShowResultsAsync(result, options);
+        _lastSavedFile = result.Files[^1];
+        string files = result.Files.Count <= 3
+            ? string.Join(", ", result.Files.Select(Path.GetFileName))
+            : $"{Path.GetFileName(result.Files[0])} … {Path.GetFileName(result.Files[^1])}";
+        string found = result.Kind == PageKind.Photos ? string.Format(Strings.PhotosFoundFormat, result.Files.Count) + " " : "";
+        Status = found + string.Format(Strings.SavedFormat, files, _busyClock.Elapsed.TotalSeconds);
+        if (result.Content == ContentKind.Document && result.Files.Count == 1 && WantContentGuess)
+            ShowDocumentHint(frame, options.Rotation);
+        else if (result.Stickers && WantStickersGuess)
+            ShowStickersHint(frame, options.Rotation);
+    }
+
     private static BitmapSource LoadBitmap(byte[] bmp) => ResultItem.LoadBitmap(bmp);
 
     /// <summary>The processing switches as they apply to the chosen format: a PDF is never split or cropped.</summary>
     private PipelineOptions EffectiveProcessing() =>
-        IsPdf ? new PipelineOptions(false, false, Deskew, Deskew) : new PipelineOptions(AutoCrop, SplitPhotos, Deskew, Deskew);
+        IsPdf ? new PipelineOptions(false, false, Deskew, Deskew)
+        : new PipelineOptions(AutoCrop, SplitPhotos, Deskew, Deskew, Stickers: Stickers && IsPng);
 
     /// <summary>
     /// Scans one PDF page (or the replacement of a page). An automatic scan that finds the same sheet as
@@ -887,10 +989,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
     /// <summary>Shows the bed and the planned frames; a newer request wins over an older one.</summary>
     private async Task ShowPreviewAsync(ScannedFrame frame, int rotation, PipelineOptions processing, int version)
     {
-        bool guess = WantContentGuess;
+        bool guess = WantContentGuess, guessStickers = WantStickersGuess;
         (BitmapSource image, PreviewResult result) = await Task.Run(() =>
         {
-            PreviewResult r = ScanSaver.Preview(frame, rotation, processing, guess);
+            PreviewResult r = ScanSaver.Preview(frame, rotation, processing, guess, guessStickers);
             return (LoadBitmap(r.PageBmp), r);
         });
         if (version != _previewVersion || _previewFrame != frame)
@@ -900,10 +1002,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(CanEditFrames));
         PreviewFrames.Clear();
         foreach (CutFrame f in result.Frames)
-            PreviewFrames.Add(new EditableFrame(f.Rect, f.Kind));
+            PreviewFrames.Add(new EditableFrame(f.Rect, f.Kind, outline: f.Outline));
         _framesEdited = false;
         if (result.Content == ContentKind.Document && WantContentGuess)
             ShowDocumentHint(null, rotation);
+        else if (result.Stickers && WantStickersGuess)
+            ShowStickersHint(null, rotation);
     }
 
     private async Task ShowResultsAsync(SaveResult result, SaveOptions options)
@@ -936,7 +1040,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         OnPropertyChanged(nameof(HasResults));
         if (result.Kind is PageKind.Photo or PageKind.Photos && WantAssist)
-            _ = LookAtPhotosAsync(Results.ToList(), result.Images);
+        {
+            // Stickers (cut out, with transparency) are kept as they came: no online service for them.
+            int[] photos = Enumerable.Range(0, Math.Min(Results.Count, result.Images.Count)).Where(i => result.Images[i].Spp != 4).ToArray();
+            if (photos.Length > 0)
+                _ = LookAtPhotosAsync(photos.Select(i => Results[i]).ToList(), photos.Select(i => result.Images[i]).ToList());
+        }
     }
 
     /// <summary>A key is set and at least one use of it for photos is on.</summary>

@@ -18,12 +18,19 @@ public sealed class EditableFrame : INotifyPropertyChanged
 {
     private RotatedRect _rect;
 
-    public EditableFrame(RotatedRect rect, ItemKind kind, bool manual = false)
+    public EditableFrame(RotatedRect rect, ItemKind kind, bool manual = false, IReadOnlyList<(double X, double Y)>? outline = null)
     {
         _rect = rect;
         Kind = kind;
         Manual = manual;
+        Outline = outline;
     }
+
+    /// <summary>
+    /// A sticker's outline (page-width units): shown instead of the frame until the frame is selected;
+    /// gone once the frame is changed (it is then cut as drawn).
+    /// </summary>
+    public IReadOnlyList<(double X, double Y)>? Outline { get; private set; }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -39,6 +46,7 @@ public sealed class EditableFrame : INotifyPropertyChanged
         {
             _rect = value;
             Manual = true;
+            Outline = null;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Rect)));
         }
     }
@@ -159,7 +167,10 @@ public sealed class FrameEditor : FrameworkElement
         {
             Point[] c = ScreenCorners(frame.Rect, image);
             bool selected = frame == _selected;
-            dc.DrawGeometry(null, selected ? SelectedPen : FramePen, Polygon(c));
+            dc.DrawGeometry(null, selected ? SelectedPen : FramePen,
+                !selected && frame.Outline is { Count: > 2 } outline
+                    ? Polygon(outline.Select(p => new Point(p.X * image.Width + image.X, p.Y * image.Width + image.Y)).ToArray())
+                    : Polygon(c));
             if (!selected)
                 continue;
 

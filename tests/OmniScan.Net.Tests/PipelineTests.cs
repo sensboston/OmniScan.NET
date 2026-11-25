@@ -454,4 +454,95 @@ public sealed class PipelineTests
         Assert.Equal(ItemKind.Document, frames[0].Kind);
         Assert.Equal(ContentKind.Document, ContentGuess.Classify(bed));
     }
+
+    /// <summary>Paints a colored disc with a thin white border (a sticker): center and radius in inches.</summary>
+    private static void Sticker(Pix bed, double cxIn, double cyIn, double rIn, int seed = 2)
+    {
+        double cx = cxIn * Dpi, cy = cyIn * Dpi, r = rIn * Dpi, border = 0.05 * Dpi;
+        Random random = new(seed);
+        uint[] data = bed.Data;
+        int wpl = bed.Wpl;
+        for (int y = 0; y < bed.Height; y++)
+        {
+            for (int x = 0; x < bed.Width; x++)
+            {
+                double d = Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+                if (d > r + border)
+                    continue;
+                uint red = (uint)(180 + random.Next(60)), green = (uint)(30 + random.Next(60)), blue = (uint)(40 + random.Next(60));
+                data[y * wpl + x] = d > r ? 0xF5F5F500u : (red << 24) | (green << 16) | (blue << 8);
+            }
+        }
+    }
+
+    private static int Alpha(Pix pix, int x, int y) => (int)(pix.Data[y * pix.Wpl + x] & 0xff);
+
+    [Fact]
+    public void Stickers_AreCutAlongTheirOutline_PhotosStayRectangles()
+    {
+        Pix bed = Bed(254, 254);
+        Sticker(bed, 2.0, 2.0, 1.0);
+        Sticker(bed, 5.5, 2.2, 0.8, seed: 3);
+        Photo(bed, 4.2, 7.0, 5.0, 3.5, 4.0);
+        PipelineOptions options = PipelineOptions.All with { Stickers = true };
+
+        PipelineResult result = ScanPipeline.Process(bed, options);
+
+        Assert.Equal(3, result.Images.Count);
+        Pix[] stickers = result.Images.Where(i => i.Spp == 4).ToArray();
+        Assert.Equal(2, stickers.Length);
+        foreach (Pix s in stickers)
+        {
+            // Transparent in the corners, opaque in the middle, the border added around the disc.
+            Assert.Equal(0, Alpha(s, 0, 0));
+            Assert.Equal(0, Alpha(s, s.Width - 1, s.Height - 1));
+            Assert.Equal(255, Alpha(s, s.Width / 2, s.Height / 2));
+            Assert.Equal(255, Alpha(s, s.Width / 2, 6));
+        }
+
+        Pix photo = Assert.Single(result.Images, i => i.Spp != 4);
+        Assert.InRange(photo.Width, 4.8 * Dpi, 5.1 * Dpi);
+    }
+
+    [Fact]
+    public void Stickers_Off_CutsRectangles()
+    {
+        Pix bed = Bed(254, 254);
+        Sticker(bed, 2.0, 2.0, 1.0);
+        Sticker(bed, 5.5, 2.2, 0.8, seed: 3);
+
+        PipelineResult result = ScanPipeline.Process(bed, PipelineOptions.All);
+
+        Assert.All(result.Images, i => Assert.NotEqual(4, i.Spp));
+    }
+
+    [Fact]
+    public void Stickers_KeepTheirTransparency_WhenTurned()
+    {
+        Pix bed = Bed(254, 254);
+        Sticker(bed, 3.0, 3.0, 1.0);
+        Sticker(bed, 3.0, 7.0, 1.0);
+        Pix sticker = ScanPipeline.Process(bed, PipelineOptions.All with { Stickers = true }).Images[0];
+
+        Pix turned = FrameCodec.Rotate(sticker, 90);
+
+        Assert.Equal(4, turned.Spp);
+    }
+
+    [Fact]
+    public void Stickers_AreRecognized_PhotosAndSheetsAreNot()
+    {
+        Pix stickers = Bed(254, 254);
+        Sticker(stickers, 2.0, 2.0, 1.0);
+        Sticker(stickers, 5.5, 2.2, 0.8, seed: 3);
+        Pix photos = Bed(254, 254);
+        Photo(photos, 4.2, 2.5, 6.0, 4.0, 2.0);
+        Photo(photos, 4.2, 7.5, 6.0, 4.0, -3.0, seed: 2);
+        Pix sheet = Bed(254, 254);
+        TextBlock(sheet, 1.0, 1.0, 6.5, 8.0);
+
+        Assert.True(ScanPipeline.LooksLikeStickers(stickers));
+        Assert.False(ScanPipeline.LooksLikeStickers(photos));
+        Assert.False(ScanPipeline.LooksLikeStickers(sheet));
+    }
 }
