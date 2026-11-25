@@ -9,8 +9,11 @@ using Leptonica;
 
 namespace OmniScan.Net.Imaging;
 
-/// <summary>A recognized word: its text and its box on the page image, in pixels from the top left corner.</summary>
-public sealed record TextWord(string Text, double X, double Y, double Width, double Height);
+/// <summary>
+/// A recognized word: its text and its box on the page image, in pixels from the top left corner.
+/// Words with the same <paramref name="Line"/> next to each other in a list are one line of text.
+/// </summary>
+public sealed record TextWord(string Text, double X, double Y, double Width, double Height, int Line = 0);
 
 /// <summary>One PDF page: the scanned image, its resolution and, when recognized, the words on it.</summary>
 public sealed record PdfSheet(Pix Image, int Dpi, IReadOnlyList<TextWord>? Words = null);
@@ -77,26 +80,53 @@ public static class PdfWriter
     }
 
     /// <summary>
-    /// Each word at its box: the font size is the box height, the horizontal scaling makes the word as
-    /// wide as the box, the baseline is a fifth of the height above the box bottom (room for descenders).
+    /// Each word at its box, stretched to its width. The words of one line (<see cref="TextWord.Line"/>)
+    /// share one font size, the height of the line, and one baseline, a fifth of that above the line
+    /// bottom (room for descenders): viewers then take them as one line of text, and short words with
+    /// low boxes ("и", "a") are not lost or split off.
     /// </summary>
     private static void AppendText(StringBuilder content, IReadOnlyList<TextWord> words, double scale, double pageHeight)
     {
         content.Append("BT\n3 Tr\n");
-        foreach (TextWord word in words)
+        for (int start = 0; start < words.Count;)
         {
-            string text = word.Text.Trim();
-            if (text.Length == 0 || word.Width <= 0 || word.Height <= 0)
-                continue;
-            double size = word.Height * scale;
-            double natural = text.Length * size * GlyphlessFont.Advance / GlyphlessFont.UnitsPerEm;
-            double stretch = Math.Clamp(100 * word.Width * scale / natural, 1, 10000);
-            double x = word.X * scale;
-            double y = pageHeight - (word.Y + word.Height) * scale + size * 0.2;
-            content.Append(Invariant, $"/F0 {N(size)} Tf {N(stretch)} Tz 1 0 0 1 {N(x)} {N(y)} Tm <");
-            foreach (char c in text)
-                content.Append(((int)c).ToString("X4", Invariant));
-            content.Append("> Tj\n");
+            int end = start;
+            while (end < words.Count && words[end].Line == words[start].Line)
+                end++;
+            double top = double.MaxValue, bottom = double.MinValue;
+            for (int i = start; i < end; i++)
+            {
+                top = Math.Min(top, words[i].Y);
+                bottom = Math.Max(bottom, words[i].Y + words[i].Height);
+            }
+
+            double size = (bottom - top) * scale;
+            double baseline = pageHeight - bottom * scale + size * 0.2;
+            for (int i = start; i < end; i++)
+            {
+                TextWord word = words[i];
+                string text = word.Text.Trim();
+                if (text.Length == 0 || word.Width <= 0 || size <= 0)
+                    continue;
+
+                // A space after each word but the last, reaching to the next word: the line is one run of
+                // text (some viewers drop a lone one-letter word otherwise) and copies with its spaces.
+                double width = word.Width;
+                if (i + 1 < end && words[i + 1].X > word.X + word.Width)
+                {
+                    text += " ";
+                    width = words[i + 1].X - word.X;
+                }
+
+                double natural = text.Length * size * GlyphlessFont.Advance / GlyphlessFont.UnitsPerEm;
+                double stretch = Math.Clamp(100 * width * scale / natural, 1, 10000);
+                content.Append(Invariant, $"/F0 {N(size)} Tf {N(stretch)} Tz 1 0 0 1 {N(word.X * scale)} {N(baseline)} Tm <");
+                foreach (char c in text)
+                    content.Append(((int)c).ToString("X4", Invariant));
+                content.Append("> Tj\n");
+            }
+
+            start = end;
         }
 
         content.Append("ET\n");

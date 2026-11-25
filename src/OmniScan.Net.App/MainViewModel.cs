@@ -725,8 +725,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
             {
                 // Usually read already, while the next pages were scanned.
                 BeginBusy(Strings.ReadingText);
-                string language = Localization.Resolve(_settings.Language);
-                text = await Task.WhenAll(pages.Select(p => _texts.Get(p, language)));
+                PageText?[] read = await Task.WhenAll(pages.Select(p => _texts.Get(p, TextLanguage, Deskew)));
+                // A page found upside down that was not turned in the strip yet (saved right after scanning).
+                for (int i = 0; i < pages.Length; i++)
+                {
+                    if (read[i] is { Turn: not 0 } r)
+                    {
+                        PdfPage source = pages[i];
+                        pages[i] = await Task.Run(() => PdfPages.Rotate(source, r.Turn));
+                    }
+                }
+
+                text = read.Select(r => r?.Words).ToArray();
                 BeginBusy(Strings.ProcessingBusy);
             }
 
@@ -969,7 +979,21 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private void ReadText(PdfPage page)
     {
         if (_settings.PdfText)
-            _texts.Start(page, Localization.Resolve(_settings.Language));
+            _ = TurnWhenReadAsync(page);
+    }
+
+    private string TextLanguage => Localization.Resolve(_settings.Language);
+
+    /// <summary>
+    /// When reading shows that a page is still upside down or sideways (its letter shapes did not tell
+    /// when it was straightened), the page turns itself in the strip, keeping the words read.
+    /// </summary>
+    private async Task TurnWhenReadAsync(PdfPage page)
+    {
+        if (await _texts.Get(page, TextLanguage, Deskew) is not { Turn: not 0 } read)
+            return;
+        if (await Session.TurnQuietlyAsync(page, read.Turn) is { } turned)
+            _texts.Known(turned, read.Words);
     }
 
     private void ClearResults()
