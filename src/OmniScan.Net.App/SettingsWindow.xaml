@@ -67,25 +67,28 @@
         </StackPanel>
       </TabItem>
       <TabItem Header="{x:Static local:Strings.TabScanning}">
+        <!-- The fullest tab: it sets the height of the window, so no extra air here. -->
         <StackPanel x:Name="ScanningPage" Margin="4,0,4,8">
-          <!-- Short tabs: the window is as tall as the longest one, so these get more air. -->
-          <StackPanel.Resources>
-            <Style x:Key="Caption" TargetType="TextBlock" BasedOn="{StaticResource Caption}">
-              <Setter Property="Margin" Value="0,26,0,8" />
-            </Style>
-          </StackPanel.Resources>
           <!-- Where this scanner has the top of the page: two pictures to choose from. -->
           <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.ScannerTop}" TextWrapping="Wrap" />
           <StackPanel Orientation="Horizontal" IsEnabled="{Binding HasDevice}">
             <RadioButton GroupName="ScannerTop" IsChecked="{Binding TopOnLeft}" VerticalContentAlignment="Top">
               <StackPanel>
-                <local:ScannerPicture TopOnRight="False" TopText="{x:Static local:Strings.TopWord}" />
+                <local:ScannerPicture TopOnRight="False" TopText="{x:Static local:Strings.TopWord}">
+                  <local:ScannerPicture.LayoutTransform>
+                    <ScaleTransform ScaleX="0.72" ScaleY="0.72" />
+                  </local:ScannerPicture.LayoutTransform>
+                </local:ScannerPicture>
                 <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" Text="{x:Static local:Strings.TopLeft}" />
               </StackPanel>
             </RadioButton>
             <RadioButton GroupName="ScannerTop" Margin="24,0,0,0" IsChecked="{Binding Flip}" VerticalContentAlignment="Top">
               <StackPanel>
-                <local:ScannerPicture TopOnRight="True" TopText="{x:Static local:Strings.TopWord}" />
+                <local:ScannerPicture TopOnRight="True" TopText="{x:Static local:Strings.TopWord}">
+                  <local:ScannerPicture.LayoutTransform>
+                    <ScaleTransform ScaleX="0.72" ScaleY="0.72" />
+                  </local:ScannerPicture.LayoutTransform>
+                </local:ScannerPicture>
                 <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" Text="{x:Static local:Strings.TopRight}" />
               </StackPanel>
             </RadioButton>
