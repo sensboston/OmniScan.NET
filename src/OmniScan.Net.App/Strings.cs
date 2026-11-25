@@ -125,6 +125,7 @@ public static class Strings
     public static string AssistOnline => T();
     public static string AssistGoogleNotice => T();
     public static string AssistOpenRouterNotice => T();
+    public static string AssistDeepSeekNotice => T();
     public static string AssistUse => T();
     public static string AssistOrient => T();
     public static string AssistDescribe => T();

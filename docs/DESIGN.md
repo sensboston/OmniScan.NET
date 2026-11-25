@@ -143,7 +143,8 @@ Rarely changed options live in a separate dialog (gear button next to the scanne
 - JPEG quality (50–100, default 75), also used for gray and color images inside PDFs;
 - turn scans upside down, per scanner;
 - auto-continue delay for multi-page PDF;
-- sharing scanners on the network (server role, below).
+- sharing scanners on the network (server role, below);
+- the online services tab: API key, turning photos upright, describing photos and PDFs (section 9).
 
 ---
 
@@ -186,6 +187,7 @@ OmniScan.Net.slnx
 │   ├── OmniScan.Net.Core/       # settings (INI), naming/folders, IScannerBackend
 │   ├── OmniScan.Net.Imaging/    # bed analysis, photo splitting, deskew, orientation, encoding, PDF writer (Leptonica.Managed)
 │   ├── OmniScan.Net.Ocr/        # page text with the recognition built into Windows (Windows.Media.Ocr)
+│   ├── OmniScan.Net.Assist/     # online services: key → service, model choice, photo turn and captions
 │   ├── OmniScan.Net.Scanning/   # WIA backend
 │   ├── OmniScan.Net.Remote/     # discovery, HTTP server, remote backend (client side)
 │   └── OmniScan.Net.App/        # WPF windows, tray, single instance, translations (AssemblyName: OmniScan)
@@ -195,8 +197,29 @@ OmniScan.Net.slnx
 
 ---
 
-## 9. Roadmap
+## 9. Online services (optional)
+
+With an API key (OpenAI, Google AI Studio, DeepSeek; Anthropic, xAI and OpenRouter untested) photos are
+turned upright and photos and PDFs described after saving, in the background; a running bar under a
+result shows it is being looked at. The user-facing side is in [ASSIST.md](ASSIST.md).
+
+- **No SDKs:** plain `HttpClient` and JSON; OpenAI-style chat completions for all but Anthropic.
+  The service is told by the key's prefix and checked by listing its models; the model is chosen
+  from a preferred list per service (`[Assist] Model` in the INI goes first). A busy model (429/5xx)
+  gives way to the next one for two minutes, one answering 404 for half an hour.
+- **Turn:** the photo is sent as 4 copies (384 px) turned 4 ways, and the service picks the upright
+  one (more reliable than asking for an angle); a turn is applied only when a second question with the
+  copies in another order agrees. Then the file is written again from the in-memory image.
+- **Captions** are asked in the UI language, with words to search by and never numbers, addresses or
+  dates of birth. They go to `descript.ion` (UTF-8 with BOM, hidden, as Total Commander makes it), to
+  the JPEG's Exif XPSubject/XPComment (read and indexed by Windows), and to a PDF's title.
+- **Key:** stored DPAPI-encrypted for the Windows user; an INI copied elsewhere just loses it.
+
+---
+
+## 10. Roadmap
 
 - **v1.0:** everything above except eSCL.
-- **Later:** eSCL backend for network scanners; photo orientation.
+- **v1.1:** the online services (section 9), the built-in viewer, the document hint, photos laid at any angle.
+- **Later:** eSCL backend for network scanners.
 - **Done:** searchable PDFs, with the text recognition built into Windows (section 5).

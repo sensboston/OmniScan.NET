@@ -99,6 +99,7 @@ public sealed class AssistSettingsModel : INotifyPropertyChanged
             {
                 AssistProvider.Google => text + " " + Strings.AssistGoogleNotice,
                 AssistProvider.OpenRouter => text + " " + Strings.AssistOpenRouterNotice,
+                AssistProvider.DeepSeek => text + " " + Strings.AssistDeepSeekNotice,
                 _ => text,
             };
         }

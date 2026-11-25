@@ -90,6 +90,7 @@
   "AssistOnline": "un servicio en línea",
   "AssistGoogleNotice": "Con una clave gratuita, Google puede usar lo enviado para mejorar sus modelos.",
   "AssistOpenRouterNotice": "OpenRouter reenvía las solicitudes a modelos de otras empresas.",
+  "AssistDeepSeekNotice": "DeepSeek opera desde China, y sus condiciones permiten usar lo enviado para mejorar el servicio.",
   "AssistUse": "Usar para",
   "AssistOrient": "Corregir la orientación de las fotos",
   "AssistDescribe": "Describir fotos y PDF",

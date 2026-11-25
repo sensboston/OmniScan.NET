@@ -123,8 +123,8 @@ public static class PhotoAssist
         "Then add in parentheses 2 to 4 other words or short names people would use to search for it " +
         "(the everyday name, an abbreviation, the kind of document). For example: " +
         "\"Massachusetts ID card (Mass ID, driver's license, identity card)\", " +
-        "\"Eversource electric bill, October 2026 (electricity, utility bill)\", " +
-        "\"Algebra I Honors test, page 3, Russian School of Mathematics (RSM, math test)\". " +
+        "\"Electric bill, October 2026 (electricity, utility bill)\", " +
+        "\"Algebra test, chapter 3, page 2 (math test, quiz)\". " +
         "Never write numbers of accounts, cards, documents, policies or IDs, street addresses, phone numbers, " +
         "e-mail addresses or dates of birth. " +
         "Answer with JSON only, exactly: {\"caption\": \"...\"}";

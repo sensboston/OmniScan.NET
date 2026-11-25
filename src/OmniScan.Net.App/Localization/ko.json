@@ -90,6 +90,7 @@
   "AssistOnline": "온라인 서비스",
   "AssistGoogleNotice": "무료 키를 쓰면 Google이 전송된 내용을 모델 개선에 사용할 수 있습니다.",
   "AssistOpenRouterNotice": "OpenRouter는 요청을 다른 회사의 모델로 전달합니다.",
+  "AssistDeepSeekNotice": "DeepSeek는 중국에서 운영되며, 약관상 전송된 내용을 서비스 개선에 사용할 수 있습니다.",
   "AssistUse": "사용할 기능",
   "AssistOrient": "사진 방향 바로잡기",
   "AssistDescribe": "사진과 PDF 설명 붙이기",

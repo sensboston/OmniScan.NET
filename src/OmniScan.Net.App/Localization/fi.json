@@ -90,6 +90,7 @@
   "AssistOnline": "verkkopalvelu",
   "AssistGoogleNotice": "Ilmaisella avaimella Google voi käyttää lähetettyä mallien parantamiseen.",
   "AssistOpenRouterNotice": "OpenRouter välittää pyynnöt muiden yritysten malleille.",
+  "AssistDeepSeekNotice": "DeepSeekiä ylläpidetään Kiinasta, ja sen ehdot sallivat lähetetyn käytön palvelun parantamiseen.",
   "AssistUse": "Käytä",
   "AssistOrient": "Korjaa valokuvien kierto",
   "AssistDescribe": "Kuvaile valokuvat ja PDF:t",

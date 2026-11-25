@@ -90,6 +90,7 @@
   "AssistOnline": "在线服务",
   "AssistGoogleNotice": "使用免费密钥时，Google 可能会用发送的内容改进其模型。",
   "AssistOpenRouterNotice": "OpenRouter 会把请求转发给其他公司的模型。",
+  "AssistDeepSeekNotice": "DeepSeek 在中国运营，其条款允许将发送的内容用于改进服务。",
   "AssistUse": "用于",
   "AssistOrient": "纠正照片方向",
   "AssistDescribe": "为照片和 PDF 添加说明",

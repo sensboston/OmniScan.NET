@@ -90,6 +90,7 @@
   "AssistOnline": "an online service",
   "AssistGoogleNotice": "With a free key, Google may use what is sent to improve its models.",
   "AssistOpenRouterNotice": "OpenRouter passes requests on to models of other companies.",
+  "AssistDeepSeekNotice": "DeepSeek is run from China, and its terms allow using what is sent to improve the service.",
   "AssistUse": "Use for",
   "AssistOrient": "Fix the rotation of photos",
   "AssistDescribe": "Describe photos and PDFs",
