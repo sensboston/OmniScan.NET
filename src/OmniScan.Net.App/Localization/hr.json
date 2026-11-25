@@ -77,6 +77,8 @@
   "AssistLooking": "Provjeravam zakretanje i opis…",
   "TabAssist": "UI",
   "AssistKey": "API ključ",
+  "AssistClearKey": "Obriši ključ",
+  "ServerNoScanner": "Na ovo računalo nije priključen nijedan skener, pa nema što dijeliti.",
   "AssistCheck": "Provjeri",
   "AssistChecking": "Provjeravam ključ…",
   "AssistConnected": "{0}, model {1}",

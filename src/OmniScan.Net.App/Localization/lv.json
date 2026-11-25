@@ -77,6 +77,8 @@
   "AssistLooking": "Pārbaudu pagriezienu un aprakstu…",
   "TabAssist": "MI",
   "AssistKey": "API atslēga",
+  "AssistClearKey": "Notīrīt atslēgu",
+  "ServerNoScanner": "Šim datoram nav pievienots neviens skeneris, tāpēc nav ko kopīgot.",
   "AssistCheck": "Pārbaudīt",
   "AssistChecking": "Pārbaudu atslēgu…",
   "AssistConnected": "{0}, modelis {1}",

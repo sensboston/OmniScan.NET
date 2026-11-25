@@ -77,6 +77,8 @@
   "AssistLooking": "Tarkistetaan kierto ja kuvaus…",
   "TabAssist": "Tekoäly",
   "AssistKey": "API-avain",
+  "AssistClearKey": "Tyhjennä avain",
+  "ServerNoScanner": "Tähän tietokoneeseen ei ole liitetty skanneria, joten jaettavaa ei ole.",
   "AssistCheck": "Tarkista",
   "AssistChecking": "Tarkistetaan avainta…",
   "AssistConnected": "{0}, malli {1}",

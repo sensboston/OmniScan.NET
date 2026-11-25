@@ -77,6 +77,8 @@
   "AssistLooking": "Kontrollin pööret ja kirjeldust…",
   "TabAssist": "TI",
   "AssistKey": "API-võti",
+  "AssistClearKey": "Kustuta võti",
+  "ServerNoScanner": "Selle arvutiga pole ühtegi skannerit ühendatud, seega pole midagi jagada.",
   "AssistCheck": "Kontrolli",
   "AssistChecking": "Kontrollin võtit…",
   "AssistConnected": "{0}, mudel {1}",

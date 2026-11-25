@@ -77,6 +77,8 @@
   "AssistLooking": "Kontrollerer rotasjon og bildetekst…",
   "TabAssist": "KI",
   "AssistKey": "API-nøkkel",
+  "AssistClearKey": "Tøm nøkkelen",
+  "ServerNoScanner": "Ingen skanner er koblet til denne datamaskinen, så det er ingenting å dele.",
   "AssistCheck": "Kontroller",
   "AssistChecking": "Kontrollerer nøkkelen…",
   "AssistConnected": "{0}, modell {1}",

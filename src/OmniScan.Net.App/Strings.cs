@@ -112,6 +112,8 @@ public static class Strings
     public static string TabAssist => T();
     public static string AssistLooking => T();
     public static string AssistKey => T();
+    public static string AssistClearKey => T();
+    public static string ServerNoScanner => T();
     public static string AssistCheck => T();
     public static string AssistChecking => T();
     public static string AssistConnected => T();

@@ -77,6 +77,8 @@
   "AssistLooking": "Sprawdzanie obrotu i opisu…",
   "TabAssist": "AI",
   "AssistKey": "Klucz API",
+  "AssistClearKey": "Wyczyść klucz",
+  "ServerNoScanner": "Do tego komputera nie podłączono żadnego skanera, więc nie ma czego udostępniać.",
   "AssistCheck": "Sprawdź",
   "AssistChecking": "Sprawdzanie klucza…",
   "AssistConnected": "{0}, model {1}",

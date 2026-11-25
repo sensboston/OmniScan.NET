@@ -77,6 +77,8 @@
   "AssistLooking": "Tikrinamas pasukimas ir aprašas…",
   "TabAssist": "DI",
   "AssistKey": "API raktas",
+  "AssistClearKey": "Išvalyti raktą",
+  "ServerNoScanner": "Prie šio kompiuterio neprijungtas joks skeneris, todėl nėra ką bendrinti.",
   "AssistCheck": "Tikrinti",
   "AssistChecking": "Tikrinamas raktas…",
   "AssistConnected": "{0}, modelis {1}",

@@ -77,6 +77,8 @@
   "AssistLooking": "向きと説明を確認しています…",
   "TabAssist": "AI",
   "AssistKey": "API キー",
+  "AssistClearKey": "キーを消去",
+  "ServerNoScanner": "この PC にスキャナーが接続されていないため、共有するものがありません。",
   "AssistCheck": "確認",
   "AssistChecking": "キーを確認しています…",
   "AssistConnected": "{0}、モデル {1}",

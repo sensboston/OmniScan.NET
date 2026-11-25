@@ -77,6 +77,8 @@
   "AssistLooking": "Перевіряю поворот і підпис…",
   "TabAssist": "ШІ",
   "AssistKey": "Ключ API",
+  "AssistClearKey": "Стерти ключ",
+  "ServerNoScanner": "До цього комп’ютера не під’єднано жодного сканера — ділитися нічим.",
   "AssistCheck": "Перевірити",
   "AssistChecking": "Перевіряю ключ…",
   "AssistConnected": "{0}, модель {1}",

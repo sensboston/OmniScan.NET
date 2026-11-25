@@ -77,6 +77,8 @@
   "AssistLooking": "Se verifică rotirea și descrierea…",
   "TabAssist": "IA",
   "AssistKey": "Cheie API",
+  "AssistClearKey": "Șterge cheia",
+  "ServerNoScanner": "La acest computer nu este conectat niciun scaner, deci nu există nimic de partajat.",
   "AssistCheck": "Verifică",
   "AssistChecking": "Se verifică cheia…",
   "AssistConnected": "{0}, model {1}",

@@ -11,8 +11,11 @@ public sealed class SettingsModel
 {
     /// <param name="device">The scanner selected in the main window; the 180 degree option applies to it.</param>
     /// <param name="rotation">Its current rotation (for a shared scanner, as reported by its computer).</param>
-    public SettingsModel(AppSettings settings, ScannerDevice? device, int rotation)
+    /// <param name="hasOwnScanner">A scanner is attached to this computer (or the search is not over).</param>
+    public SettingsModel(AppSettings settings, ScannerDevice? device, int rotation, bool hasOwnScanner = true)
     {
+        // Without a scanner of its own there is nothing to share; sharing that is on can still be turned off.
+        CanShare = hasOwnScanner || settings.ServerEnabled;
         Device = device;
         Flip = rotation == 180;
         _originalFlip = Flip;
@@ -57,6 +60,11 @@ public sealed class SettingsModel
     /// <summary>Recognize the text of PDF pages (on this computer).</summary>
     public string Language { get; set; }
     public bool ServerEnabled { get; set; }
+
+    /// <summary>There is a scanner here to share (or sharing is on and may be turned off).</summary>
+    public bool CanShare { get; }
+
+    public bool CannotShare => !CanShare;
 
     private readonly bool _originalFlip;
 
@@ -155,6 +163,12 @@ public partial class SettingsWindow : Window
         Tabs.SelectedIndex = selected;
         foreach (FrameworkElement page in pages)
             page.MinHeight = tallest;
+    }
+
+    private void OnClearKey(object sender, RoutedEventArgs e)
+    {
+        KeyBox.Clear();
+        KeyBox.Focus();
     }
 
     private void OnKeyChanged(object sender, RoutedEventArgs e) => _model.Assist.Key = KeyBox.Password;

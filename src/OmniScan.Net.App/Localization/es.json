@@ -77,6 +77,8 @@
   "AssistLooking": "Comprobando la orientación y la descripción…",
   "TabAssist": "IA",
   "AssistKey": "Clave de API",
+  "AssistClearKey": "Borrar la clave",
+  "ServerNoScanner": "No hay ningún escáner conectado a este equipo, así que no hay nada que compartir.",
   "AssistCheck": "Comprobar",
   "AssistChecking": "Comprobando la clave…",
   "AssistConnected": "{0}, modelo {1}",

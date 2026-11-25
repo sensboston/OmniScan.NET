@@ -77,6 +77,8 @@
   "AssistLooking": "正在检查方向和说明…",
   "TabAssist": "AI",
   "AssistKey": "API 密钥",
+  "AssistClearKey": "清除密钥",
+  "ServerNoScanner": "这台电脑没有连接扫描仪，没有可共享的内容。",
   "AssistCheck": "检查",
   "AssistChecking": "正在检查密钥…",
   "AssistConnected": "{0}，模型 {1}",

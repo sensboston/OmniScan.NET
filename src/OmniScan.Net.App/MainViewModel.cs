@@ -134,6 +134,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public ObservableCollection<ScannerDevice> Devices { get; } = [];
 
+    /// <summary>The scanners are still being looked for.</summary>
+    public bool IsSearchingDevices => _isSearching;
+
     /// <summary>Frames to cut, shown on the preview and editable by the user.</summary>
     public ObservableCollection<EditableFrame> PreviewFrames { get; } = [];
 

@@ -77,6 +77,8 @@
   "AssistLooking": "Έλεγχος περιστροφής και λεζάντας…",
   "TabAssist": "ΤΝ",
   "AssistKey": "Κλειδί API",
+  "AssistClearKey": "Διαγραφή κλειδιού",
+  "ServerNoScanner": "Σε αυτόν τον υπολογιστή δεν είναι συνδεδεμένος σαρωτής, οπότε δεν υπάρχει τίποτα για κοινή χρήση.",
   "AssistCheck": "Έλεγχος",
   "AssistChecking": "Έλεγχος κλειδιού…",
   "AssistConnected": "{0}, μοντέλο {1}",

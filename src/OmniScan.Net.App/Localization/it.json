@@ -77,6 +77,8 @@
   "AssistLooking": "Verifica di orientamento e didascalia…",
   "TabAssist": "IA",
   "AssistKey": "Chiave API",
+  "AssistClearKey": "Cancella la chiave",
+  "ServerNoScanner": "A questo computer non è collegato alcuno scanner: non c'è nulla da condividere.",
   "AssistCheck": "Verifica",
   "AssistChecking": "Verifica della chiave…",
   "AssistConnected": "{0}, modello {1}",

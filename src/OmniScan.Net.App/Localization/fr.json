@@ -77,6 +77,8 @@
   "AssistLooking": "Vérification de l'orientation et de la légende…",
   "TabAssist": "IA",
   "AssistKey": "Clé API",
+  "AssistClearKey": "Effacer la clé",
+  "ServerNoScanner": "Aucun scanner n'est branché sur cet ordinateur : il n'y a rien à partager.",
   "AssistCheck": "Vérifier",
   "AssistChecking": "Vérification de la clé…",
   "AssistConnected": "{0}, modèle {1}",

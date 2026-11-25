@@ -77,6 +77,8 @@
   "AssistLooking": "Elforgatás és leírás ellenőrzése…",
   "TabAssist": "MI",
   "AssistKey": "API-kulcs",
+  "AssistClearKey": "Kulcs törlése",
+  "ServerNoScanner": "Ehhez a számítógéphez nincs szkenner csatlakoztatva, így nincs mit megosztani.",
   "AssistCheck": "Ellenőrzés",
   "AssistChecking": "Kulcs ellenőrzése…",
   "AssistConnected": "{0}, modell: {1}",

@@ -77,6 +77,8 @@
   "AssistLooking": "Preverjam zasuk in opis…",
   "TabAssist": "UI",
   "AssistKey": "Ključ API",
+  "AssistClearKey": "Izbriši ključ",
+  "ServerNoScanner": "Na ta računalnik ni priključen noben optični bralnik, zato ni česa deliti.",
   "AssistCheck": "Preveri",
   "AssistChecking": "Preverjam ključ…",
   "AssistConnected": "{0}, model {1}",

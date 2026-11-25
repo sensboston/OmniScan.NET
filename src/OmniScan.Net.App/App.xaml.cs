@@ -139,7 +139,9 @@ public partial class App : Application
         int rotation = device is null ? 0
             : device.Backend == RemoteBackend.BackendName ? _remote!.KnownRotation(device.Id) ?? 0
             : _settings.GetRotation(device.Id);
-        SettingsModel settingsModel = new(_settings, device, rotation);
+        // Sharing makes sense with a scanner attached here (shared ones of other computers do not count).
+        bool canShare = model.IsSearchingDevices || model.Devices.Any(d => d.Backend != RemoteBackend.BackendName);
+        SettingsModel settingsModel = new(_settings, device, rotation, canShare);
         SettingsWindow dialog = new(settingsModel) { Owner = _window };
         if (dialog.ShowDialog() != true)
             return;

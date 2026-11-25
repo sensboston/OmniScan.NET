@@ -77,6 +77,8 @@
   "AssistLooking": "Drehung und Beschreibung werden geprüft…",
   "TabAssist": "KI",
   "AssistKey": "API-Schlüssel",
+  "AssistClearKey": "Schlüssel löschen",
+  "ServerNoScanner": "An diesen Computer ist kein Scanner angeschlossen, es gibt nichts freizugeben.",
   "AssistCheck": "Prüfen",
   "AssistChecking": "Schlüssel wird geprüft…",
   "AssistConnected": "{0}, Modell {1}",

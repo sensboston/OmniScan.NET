@@ -77,6 +77,8 @@
   "AssistLooking": "방향과 설명을 확인하는 중…",
   "TabAssist": "AI",
   "AssistKey": "API 키",
+  "AssistClearKey": "키 지우기",
+  "ServerNoScanner": "이 컴퓨터에 연결된 스캐너가 없어 공유할 것이 없습니다.",
   "AssistCheck": "확인",
   "AssistChecking": "키 확인 중…",
   "AssistConnected": "{0}, 모델 {1}",

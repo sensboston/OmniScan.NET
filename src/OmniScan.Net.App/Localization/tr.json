@@ -77,6 +77,8 @@
   "AssistLooking": "Döndürme ve açıklama denetleniyor…",
   "TabAssist": "YZ",
   "AssistKey": "API anahtarı",
+  "AssistClearKey": "Anahtarı temizle",
+  "ServerNoScanner": "Bu bilgisayara bağlı tarayıcı yok, paylaşılacak bir şey yok.",
   "AssistCheck": "Denetle",
   "AssistChecking": "Anahtar denetleniyor…",
   "AssistConnected": "{0}, model {1}",

@@ -77,6 +77,8 @@
   "AssistLooking": "Checking the turn and the caption…",
   "TabAssist": "AI",
   "AssistKey": "API key",
+  "AssistClearKey": "Clear the key",
+  "ServerNoScanner": "No scanner is attached to this computer, so there is nothing to share.",
   "AssistCheck": "Check",
   "AssistChecking": "Checking the key…",
   "AssistConnected": "{0}, model {1}",

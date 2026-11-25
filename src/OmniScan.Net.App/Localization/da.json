@@ -77,6 +77,8 @@
   "AssistLooking": "Kontrollerer rotation og billedtekst…",
   "TabAssist": "AI",
   "AssistKey": "API-nøgle",
+  "AssistClearKey": "Ryd nøglen",
+  "ServerNoScanner": "Der er ingen scanner tilsluttet denne computer, så der er intet at dele.",
   "AssistCheck": "Kontrollér",
   "AssistChecking": "Kontrollerer nøglen…",
   "AssistConnected": "{0}, model {1}",

@@ -57,6 +57,7 @@ public sealed class AssistSettingsModel : INotifyPropertyChanged
             OnPropertyChanged();
             OnPropertyChanged(nameof(Warning));
             OnPropertyChanged(nameof(CanCheck));
+            OnPropertyChanged(nameof(HasKey));
             Show(KeyState.None, "");
             // Pasted keys are checked by themselves; typing waits for a pause.
             if (AssistProviders.Detect(_key) is not null)
@@ -87,6 +88,8 @@ public sealed class AssistSettingsModel : INotifyPropertyChanged
     }
 
     public bool CanCheck => _key.Length > 0 && _state != KeyState.Checking;
+
+    public bool HasKey => _key.Length > 0;
 
     /// <summary>What is sent where, with what the service may do with it.</summary>
     public string Warning

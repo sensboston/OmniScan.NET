@@ -77,6 +77,8 @@
   "AssistLooking": "Kontroluji otočení a popis…",
   "TabAssist": "AI",
   "AssistKey": "Klíč API",
+  "AssistClearKey": "Smazat klíč",
+  "ServerNoScanner": "K tomuto počítači není připojen žádný skener, není co sdílet.",
   "AssistCheck": "Ověřit",
   "AssistChecking": "Ověřuji klíč…",
   "AssistConnected": "{0}, model {1}",

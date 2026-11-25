@@ -60,10 +60,12 @@
           <TextBlock Style="{StaticResource Caption}" Text="{x:Static local:Strings.Theme}" />
           <ComboBox ItemsSource="{Binding Themes}" SelectedValue="{Binding Theme}"
                     SelectedValuePath="Value" DisplayMemberPath="Label" HorizontalAlignment="Left" MinWidth="200" />
-          <CheckBox Margin="0,34,0,6" IsChecked="{Binding ServerEnabled}">
+          <CheckBox Margin="0,34,0,6" IsChecked="{Binding ServerEnabled}" IsEnabled="{Binding CanShare}">
             <TextBlock FontWeight="SemiBold" Text="{x:Static local:Strings.ServerMode}" TextWrapping="Wrap" />
           </CheckBox>
           <TextBlock Style="{StaticResource Hint}" Margin="28,0,0,0" Text="{x:Static local:Strings.ServerModeHint}" />
+          <TextBlock Style="{StaticResource Hint}" Margin="28,6,0,0" FontStyle="Italic" Text="{x:Static local:Strings.ServerNoScanner}"
+                     Visibility="{Binding CannotShare, Converter={StaticResource BoolToVisibility}}" />
         </StackPanel>
       </TabItem>
       <TabItem Header="{x:Static local:Strings.TabScanning}">
@@ -114,7 +116,14 @@
           <DockPanel>
             <Button DockPanel.Dock="Right" Margin="8,0,0,0" Padding="12,5" MinWidth="96"
                     Content="{x:Static local:Strings.AssistCheck}" IsEnabled="{Binding Assist.CanCheck}" Click="OnCheckKey" />
-            <PasswordBox x:Name="KeyBox" VerticalAlignment="Center" PasswordChanged="OnKeyChanged" />
+            <Grid VerticalAlignment="Center">
+              <PasswordBox x:Name="KeyBox" PasswordChanged="OnKeyChanged" Padding="10,5,34,6" />
+              <!-- Clears the key: shown while there is one. -->
+              <Button HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0" Padding="7,2"
+                      Content="&#x2715;" FontSize="11" Background="Transparent" BorderThickness="0" Cursor="Arrow"
+                      ToolTip="{x:Static local:Strings.AssistClearKey}" Click="OnClearKey"
+                      Visibility="{Binding Assist.HasKey, Converter={StaticResource BoolToVisibility}}" />
+            </Grid>
           </DockPanel>
           <TextBlock Style="{StaticResource KeyStatus}" Text="{Binding Assist.Status}" />
           <TextBlock Style="{StaticResource Hint}" Margin="0,6,0,0" Text="{x:Static local:Strings.AssistKeyHint}" />
