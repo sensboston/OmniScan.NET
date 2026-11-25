@@ -42,6 +42,8 @@ public static class PhotoAssist
         string prompt = Prompt(orient, describe, LanguageName(languageCode));
         List<byte[]> images = orient ? Copies(small, Turns) : [Jpeg(small)];
         string? answer = await client.AskAsync(prompt, images, 400, cancellationToken).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(answer))   // a model that spent the answer thinking: once more
+            answer = await client.AskAsync(prompt, images, 800, cancellationToken).ConfigureAwait(false);
         PhotoReport report = Parse(answer, orient, describe, Turns);
         if (report.Rotation is not (int turn and not 0))
             return report;
@@ -73,7 +75,12 @@ public static class PhotoAssist
         if (describe)
         {
             rules += $"Write a short caption of what the photo shows, in {language}, at most 12 words, " +
-                     "no \"photo of\" or \"image of\", no guesses about names. ";
+                     "no \"photo of\" or \"image of\", no guesses about names. " +
+                     "If it is a card or a document (an ID, a license, a receipt, a ticket), say what it is and add in " +
+                     "parentheses 2 or 3 other words people would search it by, for example " +
+                     "\"Massachusetts ID card (Mass ID, driver's license)\". " +
+                     "Never write numbers of accounts, cards, documents, policies or IDs, street addresses, phone numbers, " +
+                     "e-mail addresses or dates of birth. ";
         }
 
         fields = (orient, describe) switch
@@ -84,6 +91,43 @@ public static class PhotoAssist
         };
         return rules + "Answer with JSON only, exactly: " + fields;
     }
+
+    /// <summary>Longest side of a document page sent to be described, pixels: enough to read its headings.</summary>
+    public const int DocumentSide = 1280;
+
+    /// <summary>
+    /// A one-line description of a scanned document from its first page, for finding it later: what it is
+    /// and from whom, the month and year when shown, then in parentheses a few words people would search
+    /// it by. No numbers, addresses or dates of birth: the line is kept next to the file.
+    /// </summary>
+    public static async Task<string?> DescribeDocumentAsync(AssistClient client, Pix firstPage, string? languageCode,
+        CancellationToken cancellationToken = default)
+    {
+        // Some models now and then spend the whole answer thinking and say nothing: asked once more.
+        byte[] image = Jpeg(Shrink(firstPage, DocumentSide));
+        string prompt = DocumentPrompt(LanguageName(languageCode));
+        for (int attempt = 0; attempt < 2; attempt++)
+        {
+            string? answer = await client.AskAsync(prompt, [image], 800, cancellationToken).ConfigureAwait(false);
+            if (Parse(answer, orient: false, describe: true).Description is { } caption)
+                return caption;
+        }
+
+        return null;
+    }
+
+    internal static string DocumentPrompt(string language) =>
+        "This is the first page of a scanned document. " +
+        $"Write one line in {language} that tells what the document is and from whom, with the month and year " +
+        "when the document shows them, at most 12 words; keep names of companies and agencies as written. " +
+        "Then add in parentheses 2 to 4 other words or short names people would use to search for it " +
+        "(the everyday name, an abbreviation, the kind of document). For example: " +
+        "\"Massachusetts ID card (Mass ID, driver's license, identity card)\", " +
+        "\"Eversource electric bill, October 2026 (electricity, utility bill)\", " +
+        "\"Algebra I Honors test, page 3, Russian School of Mathematics (RSM, math test)\". " +
+        "Never write numbers of accounts, cards, documents, policies or IDs, street addresses, phone numbers, " +
+        "e-mail addresses or dates of birth. " +
+        "Answer with JSON only, exactly: {\"caption\": \"...\"}";
 
     /// <param name="turns">The turn of each copy, in the order they were sent.</param>
     internal static PhotoReport Parse(string? answer, bool orient, bool describe, int[]? turns = null)

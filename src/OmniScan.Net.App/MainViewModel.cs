@@ -745,6 +745,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 await Task.Run(() => PdfPages.SaveTo(pages, target, _settings.JpegQuality));
             _lastSavedFile = path;
             _lastPdf = (path, pages, date);
+            if (_settings.AssistKey is not null && _settings.AssistDescribe)
+                _ = DescribePdfAsync(path, pages);
             Session.Clear();
             OnPropertyChanged(nameof(CanAppendLastPdf));
             OnPropertyChanged(nameof(AppendLastPdfText));
@@ -955,6 +957,49 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (ReferenceEquals(_assistRun, run))
                 _assistRun = null;
             run.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// After a PDF is saved, has the online service describe it from its first page, for finding it later:
+    /// the line goes to descript.ion and becomes the document's title (re-written from the same pages,
+    /// unless more pages were added to the file meanwhile).
+    /// </summary>
+    private async Task DescribePdfAsync(string path, PdfPage[] pages)
+    {
+        try
+        {
+            AssistClient client = await ConnectAssistAsync(CancellationToken.None);
+            string language = Localization.Resolve(_settings.Language);
+            PdfPage first = pages[0];
+            string? caption = await Task.Run(() => PhotoAssist.DescribeDocumentAsync(client, PdfPages.Decode(first), language));
+            if (string.IsNullOrWhiteSpace(caption))
+                return;
+            await Task.Run(() => Descriptions.Set(path, caption));
+            if (_lastPdf is { } last && last.Path == path && ReferenceEquals(last.Pages, pages))
+            {
+                int quality = _settings.JpegQuality;
+                await Task.Run(() => PdfPages.SaveTo(pages, path, quality, null, caption));
+            }
+
+            Status = $"{Path.GetFileName(path)}: {caption}";
+        }
+        catch (AssistException e)
+        {
+            if (e.Failure is AssistFailure.BadKey or AssistFailure.UnknownKey or AssistFailure.NoModel)
+                DropAssist();
+            Status = e.Failure switch
+            {
+                AssistFailure.UnknownKey => Strings.AssistUnknownKey,
+                AssistFailure.BadKey => Strings.AssistBadKey,
+                AssistFailure.NoModel => Strings.AssistNoModel,
+                AssistFailure.Unavailable => Strings.AssistUnavailable,
+                _ => Strings.AssistBadAnswer,
+            };
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            // The file is open elsewhere: the description is in descript.ion, the title stays empty.
         }
     }
 

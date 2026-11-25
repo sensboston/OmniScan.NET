@@ -111,6 +111,22 @@ public sealed class AssistTests
     }
 
     [Fact]
+    public void Captions_AreAskedWithoutNumbersOrAddresses_AndWithSearchWords()
+    {
+        // The caption ends up in the file's properties, descript.ion and the search index.
+        foreach (string prompt in new[] { PhotoAssist.DocumentPrompt("Russian"), PhotoAssist.Prompt(orient: true, describe: true, "English") })
+        {
+            Assert.Contains("Never write numbers of accounts, cards, documents", prompt);
+            Assert.Contains("dates of birth", prompt);
+            Assert.Contains("search", prompt);
+        }
+
+        Assert.Contains("in Russian", PhotoAssist.DocumentPrompt("Russian"));
+        Assert.Equal("Massachusetts ID card (Mass ID, driver's license)",
+            PhotoAssist.Parse("""{"caption": "massachusetts ID card (Mass ID, driver's license)."}""", orient: false, describe: true).Description);
+    }
+
+    [Fact]
     public void ChooseModel_NothingUsable_IsNull() =>
         Assert.Null(AssistProviders.ChooseModel(AssistProvider.OpenAI, ["text-embedding-3-small", "whisper-1"]));
 

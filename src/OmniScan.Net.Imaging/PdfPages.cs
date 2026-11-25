@@ -95,7 +95,7 @@ public static class PdfPages
     public static string Save(IReadOnlyList<PdfPage> pages, string rootFolder, DateTime date, int jpegQuality,
         IReadOnlyList<IReadOnlyList<TextWord>?>? text = null)
     {
-        byte[] pdf = Build(pages, jpegQuality, text);
+        byte[] pdf = Build(pages, jpegQuality, text, null);
         string folder = ScanOutput.DayFolder(rootFolder, date);
         using FileStream file = ScanOutput.CreateNext(folder, ".pdf");
         file.Write(pdf);
@@ -103,16 +103,18 @@ public static class PdfPages
     }
 
     /// <summary>Writes the pages over an existing PDF made by this program (adding pages to it later).</summary>
+    /// <param name="title">The document's title (shown by viewers on their tab or title bar).</param>
     public static void SaveTo(IReadOnlyList<PdfPage> pages, string path, int jpegQuality,
-        IReadOnlyList<IReadOnlyList<TextWord>?>? text = null)
+        IReadOnlyList<IReadOnlyList<TextWord>?>? text = null, string? title = null)
     {
-        byte[] pdf = Build(pages, jpegQuality, text);
+        byte[] pdf = Build(pages, jpegQuality, text, title);
         string temp = path + ".tmp";
         File.WriteAllBytes(temp, pdf);
         File.Move(temp, path, overwrite: true);
     }
 
-    private static byte[] Build(IReadOnlyList<PdfPage> pages, int jpegQuality, IReadOnlyList<IReadOnlyList<TextWord>?>? text)
+    private static byte[] Build(IReadOnlyList<PdfPage> pages, int jpegQuality, IReadOnlyList<IReadOnlyList<TextWord>?>? text,
+        string? title)
     {
         if (pages.Count == 0)
             throw new ArgumentException("No pages.", nameof(pages));
@@ -120,7 +122,7 @@ public static class PdfPages
         // Pages are decoded one at a time, as the writer comes to them: a 300 dpi color page is ~27 MB unpacked.
         IEnumerable<PdfSheet> sheets = pages
             .Select((page, i) => new PdfSheet(Decode(page), page.Dpi, text is not null && i < text.Count ? text[i] : null));
-        return PdfWriter.Write(sheets, jpegQuality);
+        return PdfWriter.Write(sheets, jpegQuality, title);
     }
 
     /// <summary>The page image as it goes into the PDF (and to the text recognition).</summary>
