@@ -125,6 +125,33 @@ public sealed class SettingsStoreTests
     }
 
     [Fact]
+    public void SectionsOfANewerVersion_AreKeptWhenSaving()
+    {
+        // An older copy of the program must not wipe out what a newer one keeps in the same file.
+        using TempFolder temp = new();
+        SettingsStore store = new(Path.Combine(temp.Path, "OmniScan.ini"));
+        File.WriteAllLines(store.Path,
+        [
+            "[Scan]", "Dpi = 600",
+            "[Future]", "; a comment of the newer version", "Key = dpapi:AQAAANCMnd8=", "Flag = true",
+            "[App]", "Theme = Dark",
+        ]);
+
+        AppSettings settings = store.Load();
+        settings.Dpi = 300;
+        store.Save(settings);
+        string text = File.ReadAllText(store.Path);
+
+        Assert.Contains("[Future]", text);
+        Assert.Contains("; a comment of the newer version", text);
+        Assert.Contains("Key = dpapi:AQAAANCMnd8=", text);
+        Assert.Contains("Flag = true", text);
+        Assert.Equal(300, store.Load().Dpi);
+        Assert.Equal(UiTheme.Dark, store.Load().Theme);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(text, @"\[Future\]"));
+    }
+
+    [Fact]
     public void File_IsPlainIni()
     {
         using TempFolder temp = new();

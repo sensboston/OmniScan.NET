@@ -133,23 +133,48 @@ public sealed class SettingsStore
                 Key(b, id, degrees);
         }
 
+        if (s.OtherSections.Count > 0)
+        {
+            b.AppendLine();
+            foreach (string line in s.OtherSections)
+                b.AppendLine(line);
+        }
+
         return b.ToString();
     }
+
+    /// <summary>The sections this version reads; any other is kept as it is (<see cref="AppSettings.OtherSections"/>).</summary>
+    private static readonly HashSet<string> KnownSections = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Scan", "Processing", "Pdf", "App", "Window", "Rotation",
+    };
 
     internal static AppSettings Parse(IEnumerable<string> lines)
     {
         AppSettings s = new();
         string section = "";
+        bool other = false;
         foreach (string raw in lines)
         {
             string line = raw.Trim();
-            if (line.Length == 0 || line[0] is ';' or '#')
-                continue;
-            if (line[0] == '[' && line[^1] == ']')
+            if (line.Length > 1 && line[0] == '[' && line[^1] == ']')
             {
                 section = line[1..^1].Trim();
+                other = !KnownSections.Contains(section);
+                if (other)
+                    s.OtherSections.Add(line);
                 continue;
             }
+
+            if (other)
+            {
+                if (line.Length > 0)
+                    s.OtherSections.Add(raw.TrimEnd());
+                continue;
+            }
+
+            if (line.Length == 0 || line[0] is ';' or '#')
+                continue;
 
             int eq = line.IndexOf('=');
             if (eq <= 0)

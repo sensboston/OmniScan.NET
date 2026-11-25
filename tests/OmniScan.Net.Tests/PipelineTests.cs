@@ -135,6 +135,32 @@ public sealed class PipelineTests
     }
 
     [Fact]
+    public void LightFringeAlongAnEdge_IsTrimmed_AndAPhotoWithoutIsLeftAlone()
+    {
+        // A cut photo that kept the paper's edge along its top: a light gradient over a dark picture
+        // (as the frame found on the small copy of the bed can leave at 300 dpi).
+        Pix photo = Pix.Create(1800, 1200, 32);
+        photo.SetAllArbitrary(0x30303000);
+        uint[] data = photo.Data;
+        int wpl = photo.Wpl;
+        int[] fringe = [200, 171, 138, 85];
+        for (int y = 0; y < fringe.Length; y++)
+        {
+            uint g = (uint)fringe[y], v = (g << 24) | (g << 16) | (g << 8);
+            for (int x = 0; x < photo.Width; x++)
+                data[y * wpl + x] = v;
+        }
+
+        Pix trimmed = PageTools.TrimFringe(photo, 300);
+
+        Assert.Equal(1800, trimmed.Width);
+        Assert.Equal(1200 - fringe.Length, trimmed.Height);
+        Pix plain = Pix.Create(1800, 1200, 32);
+        plain.SetAllArbitrary(0x30303000);
+        Assert.Same(plain, PageTools.TrimFringe(plain, 300));
+    }
+
+    [Fact]
     public void PhotoWithAWhiteBand_TakesBackItsCutOffStrip()
     {
         // A product shot: the photo, then white (the table) that runs into the white lid, then a cable

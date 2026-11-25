@@ -86,6 +86,66 @@ public static class PageTools
         return Clip(image, left, top, right - left, bottom - top);
     }
 
+    /// <summary>Widest light fringe trimmed by <see cref="TrimFringe"/>, inches (about 0.6 mm).</summary>
+    private const double MaxFringe = 0.025;
+
+    /// <summary>How much lighter than the inside a line along an edge is to count as fringe.</summary>
+    private const int FringeLighter = 20;
+
+    /// <summary>
+    /// Trims the thin light fringe a photo keeps along a side: the frame is found on a small copy of
+    /// the bed, so one side may take in a few pixels of the paper's edge, a gradient from light to the
+    /// picture that is not white enough for <see cref="TrimLightBorder"/>. Lines along each side are
+    /// trimmed while they are clearly lighter than the lines just inside, at most <see cref="MaxFringe"/>.
+    /// </summary>
+    public static Pix TrimFringe(Pix image, int dpi)
+    {
+        if (image.Depth != 32 && image.Depth != 8)
+            return image;
+        int w = image.Width, h = image.Height;
+        int max = Math.Max(1, (int)Math.Round(MaxFringe * dpi));
+        const int inside = 12;
+        if (w < 4 * (max + inside) || h < 4 * (max + inside))
+            return image;
+
+        byte[] gray = new byte[w * h];
+        byte[] sat = new byte[w * h];
+        PixelAccess.ReadGrayAndSaturation(image, gray, sat);
+        double Row(int y)
+        {
+            long sum = 0;
+            for (int x = 0; x < w; x++)
+                sum += gray[y * w + x];
+            return (double)sum / w;
+        }
+
+        double Col(int x)
+        {
+            long sum = 0;
+            for (int y = 0; y < h; y++)
+                sum += gray[y * w + x];
+            return (double)sum / h;
+        }
+
+        int Count(Func<int, double> line)
+        {
+            double reference = 0;
+            for (int i = max; i < max + inside; i++)
+                reference += line(i);
+            reference /= inside;
+            int n = 0;
+            while (n < max && line(n) > reference + FringeLighter)
+                n++;
+            return n;
+        }
+
+        int top = Count(Row), bottom = Count(y => Row(h - 1 - y));
+        int left = Count(Col), right = Count(x => Col(w - 1 - x));
+        if (top + bottom + left + right == 0)
+            return image;
+        return Clip(image, left, top, w - left - right, h - top - bottom);
+    }
+
     /// <summary>Paints a band of <paramref name="inches"/> along every edge white (the dark strips at the glass edges).</summary>
     public static Pix WhitenBorder(Pix page, double inches)
     {

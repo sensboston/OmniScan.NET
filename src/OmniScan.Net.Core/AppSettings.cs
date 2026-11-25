@@ -88,6 +88,12 @@ public sealed class AppSettings
 
     public WindowPlacement? Window { get; set; }
 
+    /// <summary>
+    /// Sections of the file this version does not know (written by a newer one), kept line by line and
+    /// written back as they were: an older copy of the program must not wipe out a newer one's settings.
+    /// </summary>
+    public List<string> OtherSections { get; set; } = [];
+
     public static string DefaultRootFolder =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Scans");
 
