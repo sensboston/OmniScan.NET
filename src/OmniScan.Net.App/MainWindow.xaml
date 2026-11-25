@@ -238,6 +238,7 @@
                 <Border Margin="0,0,8,0" Padding="6" CornerRadius="6" BorderThickness="1" Background="Transparent"
                         BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}">
                   <Border.InputBindings>
+                    <MouseBinding Gesture="LeftClick" Command="{Binding ViewCommand}" />
                     <MouseBinding Gesture="LeftDoubleClick" Command="{Binding OpenCommand}" />
                   </Border.InputBindings>
                   <Border.ContextMenu>
@@ -377,6 +378,65 @@
             </StackPanel>
           </Grid>
         </StackPanel>
+      </Border>
+    </Grid>
+    <!-- The built-in viewer: a file of the last scan over the whole window; wheel zooms at the
+         cursor, dragging pans, a double-click opens the file in the program Windows has for it. -->
+    <Grid x:Name="ViewerPane" Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" Grid.ColumnSpan="2"
+          Background="#FC141414" ClipToBounds="True" Focusable="False"
+          Visibility="{Binding Viewer.IsOpen, Converter={StaticResource Bool}}"
+          MouseWheel="OnViewerWheel" MouseLeftButtonDown="OnViewerDown" MouseMove="OnViewerMove"
+          MouseLeftButtonUp="OnViewerUp">
+      <Grid.Resources>
+        <!-- Light marks on the dark: the arrows stay visible over any picture. -->
+        <Style x:Key="ViewerArrow" TargetType="Button">
+          <Setter Property="Foreground" Value="White" />
+          <Setter Property="Background" Value="#33FFFFFF" />
+          <Setter Property="BorderThickness" Value="0" />
+          <Setter Property="FontSize" Value="28" />
+          <Setter Property="Width" Value="44" />
+          <Setter Property="Height" Value="72" />
+          <Setter Property="Cursor" Value="Hand" />
+          <Setter Property="Template">
+            <Setter.Value>
+              <ControlTemplate TargetType="Button">
+                <Border x:Name="Back" Background="{TemplateBinding Background}" CornerRadius="6">
+                  <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,4" />
+                </Border>
+                <ControlTemplate.Triggers>
+                  <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Back" Property="Background" Value="#66FFFFFF" />
+                  </Trigger>
+                </ControlTemplate.Triggers>
+              </ControlTemplate>
+            </Setter.Value>
+          </Setter>
+        </Style>
+      </Grid.Resources>
+      <Image x:Name="ViewerImage" Margin="64,52,64,40" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"
+             Source="{Binding Viewer.Image, NotifyOnTargetUpdated=True}" TargetUpdated="OnViewerImageChanged">
+        <Image.RenderTransform>
+          <TransformGroup>
+            <ScaleTransform x:Name="ViewerScale" />
+            <TranslateTransform x:Name="ViewerShift" />
+          </TransformGroup>
+        </Image.RenderTransform>
+      </Image>
+      <DockPanel VerticalAlignment="Top" Margin="20,10,12,0">
+        <Button DockPanel.Dock="Right" Content="&#x2715;" FontSize="14" Padding="12,6" ToolTip="{x:Static local:Strings.Close}"
+                Command="{Binding Viewer.CloseCommand}" />
+        <TextBlock Text="{Binding Viewer.Title}" Foreground="White" FontSize="15" VerticalAlignment="Center"
+                   TextTrimming="CharacterEllipsis" />
+      </DockPanel>
+      <Button Style="{StaticResource ViewerArrow}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="12,0,0,0"
+              Content="&#x2039;" Command="{Binding Viewer.PreviousCommand}"
+              Visibility="{Binding Viewer.HasSeveral, Converter={StaticResource Bool}}" />
+      <Button Style="{StaticResource ViewerArrow}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0"
+              Content="&#x203A;" Command="{Binding Viewer.NextCommand}"
+              Visibility="{Binding Viewer.HasSeveral, Converter={StaticResource Bool}}" />
+      <Border VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,10" Padding="12,4" CornerRadius="4"
+              Background="#99000000" IsHitTestVisible="False">
+        <TextBlock Foreground="#D0FFFFFF" Text="{x:Static local:Strings.ViewerHint}" TextWrapping="Wrap" TextAlignment="Center" />
       </Border>
     </Grid>
   </Grid>

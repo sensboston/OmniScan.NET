@@ -96,6 +96,7 @@
   "PdfText": "识别 PDF 中的文字",
   "PdfTextHint": "这样就可以搜索和复制文字。由 Windows 在本机识别，不会发送到任何地方。",
   "ReadingText": "正在识别文字…",
+  "ViewerHint": "滚轮：缩放 · 拖动：移动 · ← →：上一张、下一张 · 双击或 Enter：用其他程序打开 · Esc：关闭",
   "ScannerTop": "此扫描仪上页面的顶端",
   "TopWord": "顶部",
   "TopLeft": "左侧（大多数）",

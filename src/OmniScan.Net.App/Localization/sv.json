@@ -96,6 +96,7 @@
   "PdfText": "Känn igen text i PDF-filer",
   "PdfTextHint": "Texten kan då sökas och kopieras. Windows läser den på den här datorn; inget skickas någonstans.",
   "ReadingText": "Läser texten…",
+  "ViewerHint": "Hjul: zooma · dra: flytta · ← →: föregående, nästa · dubbelklick eller Enter: öppna i annat program · Esc: stäng",
   "ScannerTop": "Sidans överkant på den här skannern",
   "TopWord": "UPP",
   "TopLeft": "Vänster (de flesta)",

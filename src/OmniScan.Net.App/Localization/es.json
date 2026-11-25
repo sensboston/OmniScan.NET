@@ -96,6 +96,7 @@
   "PdfText": "Reconocer el texto en los PDF",
   "PdfTextHint": "Así se podrá buscar y copiar el texto. Windows lo lee en este equipo; no se envía nada a ninguna parte.",
   "ReadingText": "Leyendo el texto…",
+  "ViewerHint": "Rueda: zoom · arrastrar: mover · ← →: anterior, siguiente · doble clic o Intro: abrir en otro programa · Esc: cerrar",
   "ScannerTop": "Parte superior de la página en este escáner",
   "TopWord": "ARRIBA",
   "TopLeft": "Izquierda (la mayoría)",

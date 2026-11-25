@@ -96,6 +96,7 @@
   "PdfText": "Tunnista teksti PDF-tiedostoissa",
   "PdfTextHint": "Tekstiä voi silloin hakea ja kopioida. Windows lukee sen tällä tietokoneella; mitään ei lähetetä minnekään.",
   "ReadingText": "Luetaan tekstiä…",
+  "ViewerHint": "Rulla: zoomaus · vetäminen: siirto · ← →: edellinen, seuraava · kaksoisnapsautus tai Enter: avaa toisessa ohjelmassa · Esc: sulje",
   "ScannerTop": "Sivun yläreuna tässä skannerissa",
   "TopWord": "YLÄ",
   "TopLeft": "Vasemmalla (useimmissa)",

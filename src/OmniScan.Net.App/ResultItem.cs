@@ -34,6 +34,7 @@ public sealed class ResultItem : INotifyPropertyChanged
         DeleteCommand = new RelayCommand(Delete, () => !_busy);
         ShowInFolderCommand = new RelayCommand(() => Shell("explorer.exe", $"/select,\"{Path}\""));
         OpenCommand = new RelayCommand(() => Shell(Path, null));
+        ViewCommand = new RelayCommand(() => ViewRequested?.Invoke(this));
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -68,6 +69,12 @@ public sealed class ResultItem : INotifyPropertyChanged
     public RelayCommand DeleteCommand { get; }
     public RelayCommand ShowInFolderCommand { get; }
     public RelayCommand OpenCommand { get; }
+
+    /// <summary>Shows the file in the built-in viewer.</summary>
+    public RelayCommand ViewCommand { get; }
+
+    /// <summary>Raised when the file is to be shown in the built-in viewer.</summary>
+    public event Action<ResultItem>? ViewRequested;
 
     public BitmapSource Thumbnail
     {
