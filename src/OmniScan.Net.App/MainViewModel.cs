@@ -711,13 +711,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
         try
         {
             PdfPage[] pages = Session.Pages.Select(p => p.Page).ToArray();
-            IReadOnlyList<TextWord>?[]? text = null;
-            if (_settings.PdfText)
+            if (Deskew)
             {
-                // Usually read already, while the next pages were scanned.
-                BeginBusy(Strings.ReadingText);
-                PageText?[] read = await Task.WhenAll(pages.Select(p => _texts.Get(p, TextLanguage, Deskew)));
-                // A page found upside down that was not turned in the strip yet (saved right after scanning).
+                // Pages are read to tell which way up they are (usually done already, while the next
+                // pages were scanned); one still upside down that was not turned in the strip yet is turned now.
+                PageText?[] read = await Task.WhenAll(pages.Select(p => _texts.Get(p, TextLanguage)));
                 for (int i = 0; i < pages.Length; i++)
                 {
                     if (read[i] is { Turn: not 0 } r)
@@ -726,9 +724,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
                         pages[i] = await Task.Run(() => PdfPages.Rotate(source, r.Turn));
                     }
                 }
-
-                text = read.Select(r => r?.Words).ToArray();
-                BeginBusy(Strings.ProcessingBusy);
             }
 
             string root = RootFolder;
@@ -736,9 +731,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
             string? target = Session.TargetPath;
             string path = target ?? "";
             if (target is null)
-                path = await Task.Run(() => PdfPages.Save(pages, root, date, _settings.JpegQuality, text));
+                path = await Task.Run(() => PdfPages.Save(pages, root, date, _settings.JpegQuality));
             else
-                await Task.Run(() => PdfPages.SaveTo(pages, target, _settings.JpegQuality, text));
+                await Task.Run(() => PdfPages.SaveTo(pages, target, _settings.JpegQuality));
             _lastSavedFile = path;
             _lastPdf = (path, pages, date);
             Session.Clear();
@@ -893,10 +888,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(HasResults));
     }
 
-    /// <summary>Starts reading the text of a PDF page in the background (when that is on).</summary>
+    /// <summary>
+    /// Starts reading a PDF page in the background, to tell which way up it is (with "Straighten" on).
+    /// The text itself is not put into the PDF: viewers such as Chrome read scanned pages better.
+    /// </summary>
     private void ReadText(PdfPage page)
     {
-        if (_settings.PdfText)
+        if (Deskew)
             _ = TurnWhenReadAsync(page);
     }
 
@@ -908,7 +906,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     /// </summary>
     private async Task TurnWhenReadAsync(PdfPage page)
     {
-        if (await _texts.Get(page, TextLanguage, Deskew) is not { Turn: not 0 } read)
+        if (await _texts.Get(page, TextLanguage) is not { Turn: not 0 } read)
             return;
         if (await Session.TurnQuietlyAsync(page, read.Turn) is { } turned)
             _texts.Known(turned, read.Words);

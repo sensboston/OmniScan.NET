@@ -19,23 +19,18 @@ public sealed class PageTexts
 {
     private readonly ConditionalWeakTable<PdfPage, Task<PageText?>> _reads = [];
 
-    /// <summary>
-    /// The text of the page, read now or before; null when it could not be read. With
-    /// <paramref name="upright"/> the reading also checks whether the page needs turning.
-    /// </summary>
-    public Task<PageText?> Get(PdfPage page, string language, bool upright) =>
-        _reads.GetValue(page, p => Task.Run(() => ReadAsync(p, language, upright)));
+    /// <summary>The reading of the page (which way up, and the words), now or before; null when it could not be read.</summary>
+    public Task<PageText?> Get(PdfPage page, string language) =>
+        _reads.GetValue(page, p => Task.Run(() => ReadAsync(p, language)));
 
     /// <summary>Gives a page turned by the program the words read on the page before the turn.</summary>
     public void Known(PdfPage page, IReadOnlyList<TextWord> words) =>
         _reads.AddOrUpdate(page, Task.FromResult<PageText?>(new PageText(0, words)));
 
-    private static async Task<PageText?> ReadAsync(PdfPage page, string language, bool upright)
+    private static async Task<PageText?> ReadAsync(PdfPage page, string language)
     {
         try
         {
-            if (!upright)
-                return new PageText(0, await PageReader.ReadAsync(PdfPages.Decode(page), language).ConfigureAwait(false));
             (int turn, IReadOnlyList<TextWord> words) = await PageReader.ReadUprightAsync(PdfPages.Decode(page), language).ConfigureAwait(false);
             return new PageText(turn, words);
         }
