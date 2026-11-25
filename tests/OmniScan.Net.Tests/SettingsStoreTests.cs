@@ -86,6 +86,18 @@ public sealed class SettingsStoreTests
     }
 
     [Fact]
+    public void AssistSection_IsWrittenOnce()
+    {
+        using TempFolder temp = new();
+        SettingsStore store = new(Path.Combine(temp.Path, "OmniScan.ini"));
+        store.Save(new AppSettings { AssistOrient = true });
+        store.Save(store.Load());
+
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(File.ReadAllText(store.Path), @"\[Assist\]"));
+        Assert.True(store.Load().AssistOrient);
+    }
+
+    [Fact]
     public void AssistModel_UncommentedDearerChoice_Wins()
     {
         using TempFolder temp = new();

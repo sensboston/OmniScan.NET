@@ -146,7 +146,7 @@ public sealed class SettingsStore
     /// <summary>The sections this version reads; any other is kept as it is (<see cref="AppSettings.OtherSections"/>).</summary>
     private static readonly HashSet<string> KnownSections = new(StringComparer.OrdinalIgnoreCase)
     {
-        "Scan", "Processing", "Pdf", "App", "Window", "Rotation",
+        "Scan", "Processing", "Pdf", "App", "Window", "Rotation", "Assist",
     };
 
     internal static AppSettings Parse(IEnumerable<string> lines)
