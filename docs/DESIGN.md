@@ -106,12 +106,18 @@ This keeps a single place for processing settings and keeps the server trivial.
 - A page that is nearly blank is skipped (the user can keep it).
 - The session can also be appended to the last saved PDF.
 
-### Text layer
+### Pages turned upright by reading them
 
 Each page is read by the text recognition built into Windows (`Windows.Media.Ocr`, on the computer,
-nothing is sent anywhere) as soon as it is added, in the background, so the text is usually ready when
-the PDF is saved. The recognized words go into the PDF as an invisible layer over the page image: the
-text can be searched, selected and copied where it is on the page.
+nothing is sent anywhere) as soon as it is added, in the background, to tell which way up it is when
+its letter shapes did not (tables, figures, sparse text): text read upside down or sideways comes out
+as garbage without the short common words every text has, so the page is read turned over (and
+sideways) too, and the clearly better reading wins. The page then turns itself in the strip.
+
+The recognized text is **not** put into the PDF. An invisible text layer was tried and dropped: viewers
+such as Chrome recognize the text of a scanned page themselves, on the computer, and better than the
+Windows recognizer (minus signs, absolute values, the parts of fractions), but only when the file has
+no text of its own.
 
 - **Languages.** A recognizer reads one language, and Windows has those of its installed language packs.
   A language written in Latin letters (German, French) is read by its own recognizer alone. For another
@@ -120,11 +126,10 @@ text can be searched, selected and copied where it is on the page.
   English one (a Russian letter with an English address); a page mostly in Latin letters is English, and
   the few look-alike letters of the other reading (Cyrillic "Раде" for "Page") are ignored. Without a
   recognizer for the language, the page is saved without text, as before.
-- **PDF writer.** Pages are written by our own small writer: the image compressed as Leptonica does for
-  its PDFs (G4 for black and white, JPEG for gray and color), and each word drawn in invisible mode with a
-  generated TrueType font that has no visible glyphs, stretched to the width of its box. Characters are
-  written as their Unicode values (Identity-H with a ToUnicode map), so every language works the same way.
-- The option is on by default (Settings → Scanning).
+- **PDF writer.** Pages are written by our own small writer, the image compressed as Leptonica does for
+  its PDFs (G4 for black and white, JPEG for gray and color). It can also draw words in invisible mode
+  with a generated glyphless TrueType font (Unicode through Identity-H and a ToUnicode map); that is
+  kept for a better recognizer, unused for now.
 
 ---
 
@@ -138,7 +143,6 @@ Rarely changed options live in a separate dialog (gear button next to the scanne
 - JPEG quality (50–100, default 75), also used for gray and color images inside PDFs;
 - turn scans upside down, per scanner;
 - auto-continue delay for multi-page PDF;
-- recognizing the text of PDF pages (on by default);
 - sharing scanners on the network (server role, below).
 
 ---

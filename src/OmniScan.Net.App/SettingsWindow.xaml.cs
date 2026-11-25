@@ -22,7 +22,6 @@ public sealed class SettingsModel
         Theme = settings.Theme;
         JpegQuality = settings.JpegQuality;
         Assist = new AssistSettingsModel(settings);
-        PdfText = settings.PdfText;
         int[] seconds = [0, 5, 10, 15, 20, 30, 45, 60];
         if (!seconds.Contains(AutoContinueSeconds))
             seconds = [.. seconds.Append(AutoContinueSeconds).Order()];
@@ -56,7 +55,6 @@ public sealed class SettingsModel
     public int JpegQuality { get; set; }
 
     /// <summary>Recognize the text of PDF pages (on this computer).</summary>
-    public bool PdfText { get; set; }
     public string Language { get; set; }
     public bool ServerEnabled { get; set; }
 
@@ -105,7 +103,6 @@ public sealed class SettingsModel
         settings.Theme = Theme;
         settings.JpegQuality = JpegQuality;
         Assist.ApplyTo(settings);
-        settings.PdfText = PdfText;
         if (Device is { } d)
         {
             int rotation = Flip ? 180 : 0;
