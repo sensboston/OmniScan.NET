@@ -101,7 +101,7 @@ public static class BedAnalyzer
         Pix closed = Pix.CloseBrick(null, ink, 7, 7);
         Boxa boxa = closed.ConnComp(out Pixa comps, 8);
 
-        List<Group> groups = GroupBoxes(boxa);
+        List<Group> groups = GroupBlobs(boxa, comps, w, h);
         List<BedObject> objects = [];
         PixelBox? content = null;
         double bedArea = (double)w * h;
@@ -221,49 +221,100 @@ public static class BedAnalyzer
     /// <summary>The shadow of a paper or lid edge: long and hair-thin. Not content.</summary>
     private static bool IsEdgeLine(int w, int h) => Math.Min(w, h) <= EdgeLineThickness && Math.Max(w, h) >= EdgeLineLength;
 
-    private static List<Group> GroupBoxes(Boxa boxa)
+    /// <summary>
+    /// Blobs closer than <see cref="GroupGap"/> to each other, measured between their pixels, are one
+    /// thing on the glass (the letters and lines of a sheet). Not between their bounding boxes: the box
+    /// of a print lying at an angle reaches far past its corners, and two tilted prints an inch apart
+    /// would become one.
+    /// </summary>
+    private static List<Group> GroupBlobs(Boxa boxa, Pixa comps, int w, int h)
     {
-        List<Group> groups = [];
+        // Blobs that count: dust and the shadows of paper or lid edges are dropped first (next to a
+        // photo an edge shadow would merge with it and stretch its frame to the edge of the glass).
+        int[] label = new int[w * h];
+        List<int> kept = [];
         for (int i = 0; i < boxa.Count; i++)
         {
             boxa.GetBox(i, L.L_CLONE).GetGeometry(out int x, out int y, out int bw, out int bh);
-            if (bw * bh < 40)
+            if (bw * bh < 40 || IsEdgeLine(bw, bh))
                 continue;
-
-            // Shadows of paper or lid edges are dropped before grouping: next to a photo they would
-            // otherwise merge with it and stretch its frame to the edge of the glass.
-            if (IsEdgeLine(bw, bh))
-                continue;
-            Group g = new() { X0 = x, Y0 = y, X1 = x + bw - 1, Y1 = y + bh - 1 };
-            g.Members.Add(i);
-            groups.Add(g);
-        }
-
-        bool merged = true;
-        while (merged)
-        {
-            merged = false;
-            for (int a = 0; a < groups.Count && !merged; a++)
+            kept.Add(i);
+            Pix comp = comps.GetPix(i, L.L_CLONE);
+            uint[] data = comp.Data;
+            int wpl = comp.Wpl;
+            for (int yy = 0; yy < bh; yy++)
             {
-                for (int b = a + 1; b < groups.Count && !merged; b++)
+                for (int xx = 0; xx < bw; xx++)
                 {
-                    Group g1 = groups[a], g2 = groups[b];
-                    int gx = Math.Max(0, Math.Max(g1.X0, g2.X0) - Math.Min(g1.X1, g2.X1));
-                    int gy = Math.Max(0, Math.Max(g1.Y0, g2.Y0) - Math.Min(g1.Y1, g2.Y1));
-                    if (gx > GroupGap || gy > GroupGap)
-                        continue;
-                    g1.X0 = Math.Min(g1.X0, g2.X0);
-                    g1.Y0 = Math.Min(g1.Y0, g2.Y0);
-                    g1.X1 = Math.Max(g1.X1, g2.X1);
-                    g1.Y1 = Math.Max(g1.Y1, g2.Y1);
-                    g1.Members.AddRange(g2.Members);
-                    groups.RemoveAt(b);
-                    merged = true;
+                    if ((data[yy * wpl + (xx >> 5)] & (0x80000000u >> (xx & 31))) != 0)
+                        label[(y + yy) * w + x + xx] = i + 1;
                 }
             }
         }
 
-        return groups;
+        int[] parent = new int[boxa.Count + 1];
+        for (int i = 0; i < parent.Length; i++)
+            parent[i] = i;
+        int Find(int a)
+        {
+            while (parent[a] != a)
+                a = parent[a] = parent[parent[a]];
+            return a;
+        }
+
+        // Grow all blobs at once, a pixel ring (8 neighbors) per step: a background pixel takes the
+        // label of the blob that reaches it first. Two blobs whose rings meet within the gap are joined.
+        int[] dist = new int[w * h];
+        Queue<int> queue = new();
+        for (int p = 0; p < label.Length; p++)
+        {
+            if (label[p] != 0)
+                queue.Enqueue(p);
+        }
+
+        while (queue.Count > 0)
+        {
+            int p = queue.Dequeue();
+            int px = p % w, py = p / w, d = dist[p];
+            for (int dy = -1; dy <= 1; dy++)
+            {
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    int nx = px + dx, ny = py + dy;
+                    if ((dx | dy) == 0 || nx < 0 || ny < 0 || nx >= w || ny >= h)
+                        continue;
+                    int n = ny * w + nx;
+                    if (label[n] == 0)
+                    {
+                        if (d + 1 > GroupGap / 2 + 1)
+                            continue;
+                        label[n] = label[p];
+                        dist[n] = d + 1;
+                        queue.Enqueue(n);
+                    }
+                    else if (label[n] != label[p] && d + dist[n] + 1 <= GroupGap)
+                    {
+                        parent[Find(label[n])] = Find(label[p]);
+                    }
+                }
+            }
+        }
+
+        Dictionary<int, Group> byRoot = [];
+        foreach (int i in kept)
+        {
+            boxa.GetBox(i, L.L_CLONE).GetGeometry(out int x, out int y, out int bw, out int bh);
+            int root = Find(i + 1);
+            if (!byRoot.TryGetValue(root, out Group? g))
+                byRoot[root] = g = new Group { X0 = x, Y0 = y, X1 = x + bw - 1, Y1 = y + bh - 1 };
+            g.X0 = Math.Min(g.X0, x);
+            g.Y0 = Math.Min(g.Y0, y);
+            g.X1 = Math.Max(g.X1, x + bw - 1);
+            g.Y1 = Math.Max(g.Y1, y + bh - 1);
+            g.Members.Add(i);
+        }
+
+        return [.. byRoot.Values];
     }
 
     /// <summary>Adds the corners of the first and last set pixel of each row; returns the set pixel count.</summary>

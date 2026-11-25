@@ -24,6 +24,69 @@ public readonly record struct RotatedRect(double Cx, double Cy, double Width, do
 
 internal static class Geometry
 {
+    /// <summary>
+    /// The shortest distance between two rotated rectangles; 0 when they overlap. Unlike the gap
+    /// between their bounding boxes, it does not shrink when the rectangles lie at an angle.
+    /// </summary>
+    public static double Distance(RotatedRect a, RotatedRect b)
+    {
+        (double X, double Y)[] p = a.Corners(), q = b.Corners();
+        if (Overlap(p, q))
+            return 0;
+        double best = double.MaxValue;
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 4; j++)
+            {
+                best = Math.Min(best, PointToSegment(p[i], q[j], q[(j + 1) % 4]));
+                best = Math.Min(best, PointToSegment(q[j], p[i], p[(i + 1) % 4]));
+            }
+        }
+
+        return best;
+    }
+
+    /// <summary>Two convex quadrilaterals overlap when no edge direction of either separates them.</summary>
+    private static bool Overlap((double X, double Y)[] p, (double X, double Y)[] q)
+    {
+        foreach ((double X, double Y)[] shape in new[] { p, q })
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                (double X, double Y) e0 = shape[i], e1 = shape[(i + 1) % 4];
+                double nx = e0.Y - e1.Y, ny = e1.X - e0.X;
+                double pMin = double.MaxValue, pMax = double.MinValue, qMin = double.MaxValue, qMax = double.MinValue;
+                foreach ((double X, double Y) v in p)
+                {
+                    double d = v.X * nx + v.Y * ny;
+                    pMin = Math.Min(pMin, d);
+                    pMax = Math.Max(pMax, d);
+                }
+
+                foreach ((double X, double Y) v in q)
+                {
+                    double d = v.X * nx + v.Y * ny;
+                    qMin = Math.Min(qMin, d);
+                    qMax = Math.Max(qMax, d);
+                }
+
+                if (pMax < qMin || qMax < pMin)
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static double PointToSegment((double X, double Y) p, (double X, double Y) a, (double X, double Y) b)
+    {
+        double dx = b.X - a.X, dy = b.Y - a.Y;
+        double len = dx * dx + dy * dy;
+        double t = len == 0 ? 0 : Math.Clamp(((p.X - a.X) * dx + (p.Y - a.Y) * dy) / len, 0, 1);
+        double x = a.X + t * dx - p.X, y = a.Y + t * dy - p.Y;
+        return Math.Sqrt(x * x + y * y);
+    }
+
     /// <summary>Convex hull (Andrew's monotone chain), counter-clockwise, without collinear points.</summary>
     public static List<(double X, double Y)> ConvexHull(IEnumerable<(double X, double Y)> points)
     {
