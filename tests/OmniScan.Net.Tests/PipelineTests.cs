@@ -116,6 +116,54 @@ public sealed class PipelineTests
     }
 
     [Fact]
+    public void TwoTiltedPhotos_WhoseBoundingBoxesOverlap_AreTwoPhotos()
+    {
+        // Laid "any old way": at 30 degrees, 0.7 in apart, their bounding boxes overlap by 0.6 in.
+        Pix bed = Bed();
+        Photo(bed, 4.25, 3.0, 5.0, 3.5, 30, seed: 1);
+        Photo(bed, 4.25, 7.9, 5.0, 3.5, 30, seed: 2);
+
+        PipelineResult result = ScanPipeline.Process(bed, PipelineOptions.All);
+
+        Assert.Equal(PageKind.Photos, result.Kind);
+        Assert.Equal(2, result.Images.Count);
+        foreach (Pix photo in result.Images)
+        {
+            Assert.InRange(Math.Max(photo.Width, photo.Height), 4.85 * Dpi, 5.1 * Dpi);
+            Assert.InRange(Math.Min(photo.Width, photo.Height), 3.35 * Dpi, 3.6 * Dpi);
+        }
+    }
+
+    [Fact]
+    public void PhotoWithAWhiteBand_TakesBackItsCutOffStrip()
+    {
+        // A product shot: the photo, then white (the table) that runs into the white lid, then a cable
+        // along the bottom edge of the print. The strip is a piece of the photo, not a sheet beside it.
+        Pix bed = Bed();
+        Photo(bed, 4.25, 3.6, 6.0, 3.2, 0);
+        TextBlock(bed, 2.0, 5.45, 4.0, 0.3);   // sparse, like a cable and its shadow
+
+        PipelineResult result = ScanPipeline.Process(bed, PipelineOptions.All);
+
+        Assert.Equal(PageKind.Photo, result.Kind);
+        Pix photo = Assert.Single(result.Images);
+        Assert.InRange(photo.Height, 3.5 * Dpi, 3.8 * Dpi);
+    }
+
+    [Fact]
+    public void TiltedPhoto_DoesNotJoinASheetInTheCornerOfItsBoundingBox()
+    {
+        // A note lying in the empty corner of a tilted photo's bounding box, 1.4 in from the photo itself.
+        Pix bed = Bed();
+        Photo(bed, 4.25, 3.0, 5.0, 3.5, 30);
+        TextBlock(bed, 1.4, 5.0, 1.0, 0.5);
+
+        PipelineResult result = ScanPipeline.Process(bed, PipelineOptions.All);
+
+        Assert.Equal(2, result.Images.Count);
+    }
+
+    [Fact]
     public void SparseTestPage_StaysOnePage()
     {
         // A test sheet: a header line, problems with room for the answers, a footer far below.

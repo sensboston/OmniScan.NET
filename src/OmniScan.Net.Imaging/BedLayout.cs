@@ -53,7 +53,7 @@ public static class BedLayout
             {
                 for (int b = a + 1; b < clusters.Count && !merged; b++)
                 {
-                    if (clusters[a].Box.GapTo(clusters[b].Box) >= gap)
+                    if (clusters[a].GapTo(clusters[b]) >= gap)
                         continue;
                     foreach (BedObject part in clusters[b].Parts)
                         clusters[a].Add(part);
@@ -84,12 +84,20 @@ public static class BedLayout
         }
 
         // Photos join the sheets they lie next to (all of them, which then become one sheet),
-        // otherwise stand alone; never two photos together.
-        foreach (BedObject photo in bed.Objects.Where(o => o.LooksLikePhoto))
+        // otherwise stand alone; never two photos together. First a photo takes back the pieces of
+        // itself that a white area cut off (a white sky or table running into the white lid).
+        foreach (BedObject found in bed.Objects.Where(o => o.LooksLikePhoto))
         {
+            BedObject photo = found;
+            foreach (Cluster piece in clusters.Where(c => !c.IsPhoto && IsPieceOf(c, photo, gap)).ToList())
+            {
+                photo = Absorb(photo, piece.Parts);
+                clusters.Remove(piece);
+            }
+
             // A speck of dust next to a photo must not turn the photo into a "sheet".
             List<Cluster> sheets = clusters
-                .Where(c => !c.IsPhoto && c.Parts.Sum(p => p.Share) >= MinSheetShare && c.Box.GapTo(photo.Box) < gap)
+                .Where(c => !c.IsPhoto && c.Parts.Sum(p => p.Share) >= MinSheetShare && c.GapTo(photo) < gap)
                 .ToList();
             if (sheets.Count == 0)
             {
@@ -110,6 +118,65 @@ public static class BedLayout
             .Where(c => c.IsPhoto || c.Parts.Sum(p => p.Share) >= MinSheetShare)
             .Select(c => c.ToItem())
             .ToList();
+    }
+
+    /// <summary>Degrees within which a piece lies "the same way" as the photo.</summary>
+    private const double PieceAngle = 4;
+
+    /// <summary>
+    /// A piece of a photo cut off by a white area: close to it, smaller than half of it, turned the
+    /// same way (its parts' sides parallel to the photo's) and lying in the band of the photo's sides,
+    /// as if the photo went on. A note or a receipt next to a photo is turned another way or lies
+    /// beside it; a sheet with a photo on it (an ID card, a letter) is bigger than the photo.
+    /// </summary>
+    private static bool IsPieceOf(Cluster piece, BedObject photo, int gap)
+    {
+        if (piece.GapTo(photo) >= gap || piece.Parts.Sum(p => p.Share) > photo.Share / 2)
+            return false;
+        foreach (BedObject part in piece.Parts)
+        {
+            double turn = Math.Abs(part.Bounds.Angle - photo.Bounds.Angle) % 90;
+            if (Math.Min(turn, 90 - turn) > PieceAngle && Math.Min(part.Bounds.Width, part.Bounds.Height) > gap)
+                return false;   // thin slivers have no reliable angle
+        }
+
+        // In the band of the photo's width or of its height: projected on that axis, the piece lies
+        // within the photo's extent.
+        (double U0, double U1, double V0, double V1) p = Extent(photo.Bounds, photo.Bounds.Corners());
+        (double U0, double U1, double V0, double V1) q = Extent(photo.Bounds, piece.Parts.SelectMany(x => x.Bounds.Corners()).ToArray());
+        double slack = gap / 2.0;
+        bool inWidth = q.U0 >= p.U0 - slack && q.U1 <= p.U1 + slack;
+        bool inHeight = q.V0 >= p.V0 - slack && q.V1 <= p.V1 + slack;
+        return inWidth || inHeight;
+    }
+
+    /// <summary>The photo grown to cover the pieces, keeping its angle.</summary>
+    private static BedObject Absorb(BedObject photo, IReadOnlyList<BedObject> pieces)
+    {
+        (double X, double Y)[] corners = [.. photo.Bounds.Corners(), .. pieces.SelectMany(p => p.Bounds.Corners())];
+        (double u0, double u1, double v0, double v1) = Extent(photo.Bounds, corners);
+        double rad = photo.Bounds.Angle * Math.PI / 180, c = Math.Cos(rad), s = Math.Sin(rad);
+        double cu = (u0 + u1) / 2, cv = (v0 + v1) / 2;
+        RotatedRect grown = new(cu * c - cv * s, cu * s + cv * c, u1 - u0, v1 - v0, photo.Bounds.Angle);
+        PixelBox box = pieces.Aggregate(photo.Box, (b, p) => b.Union(p.Box));
+        return photo with { Bounds = grown, Box = box, Share = photo.Share + pieces.Sum(p => p.Share) };
+    }
+
+    /// <summary>Extents of points along the rectangle's own axes (u along its width, v along its height).</summary>
+    private static (double U0, double U1, double V0, double V1) Extent(RotatedRect r, (double X, double Y)[] points)
+    {
+        double rad = r.Angle * Math.PI / 180, c = Math.Cos(rad), s = Math.Sin(rad);
+        double u0 = double.MaxValue, u1 = double.MinValue, v0 = double.MaxValue, v1 = double.MinValue;
+        foreach ((double x, double y) in points)
+        {
+            double u = x * c + y * s, v = -x * s + y * c;
+            u0 = Math.Min(u0, u);
+            u1 = Math.Max(u1, u);
+            v0 = Math.Min(v0, v);
+            v1 = Math.Max(v1, v);
+        }
+
+        return (u0, u1, v0, v1);
     }
 
     private static bool IsBlock(Cluster c) => c.Parts.Sum(p => p.Share) >= MinSheetShare;
@@ -138,6 +205,14 @@ public static class BedLayout
         public bool IsPhoto { get; init; }
         public PixelBox Box { get; private set; }
         public IReadOnlyList<BedObject> Parts => _parts;
+
+        /// <summary>
+        /// The gap to another thing on the glass, between the outlines of their parts (rotated rectangles),
+        /// not their bounding boxes: those of a print at an angle reach far past its corners.
+        /// </summary>
+        public double GapTo(Cluster other) => _parts.Min(p => other._parts.Min(q => Geometry.Distance(p.Bounds, q.Bounds)));
+
+        public double GapTo(BedObject o) => _parts.Min(p => Geometry.Distance(p.Bounds, o.Bounds));
 
         public void Add(BedObject o)
         {
