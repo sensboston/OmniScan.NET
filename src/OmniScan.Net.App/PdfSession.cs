@@ -334,6 +334,26 @@ public sealed class PdfSession : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Turns a page found upside down or sideways after it was added, without showing it or blocking
+    /// anything (a next page may be being scanned). Returns the turned page, or null when the page was
+    /// changed or removed meanwhile.
+    /// </summary>
+    internal async Task<PdfPage?> TurnQuietlyAsync(PdfPage page, int degrees)
+    {
+        (PdfPage turned, BitmapSource thumb) = await Task.Run(() =>
+        {
+            PdfPage t = PdfPages.Rotate(page, degrees);
+            return (t, ResultItem.LoadBitmap(t.ThumbnailBmp));
+        });
+        PdfPageItem? item = Pages.FirstOrDefault(i => ReferenceEquals(i.Page, page));
+        if (item is null)
+            return null;
+        item.Page = turned;
+        item.Thumbnail = thumb;
+        return turned;
+    }
+
     internal void Delete(PdfPageItem item)
     {
         _insertAt = null;

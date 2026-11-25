@@ -55,9 +55,11 @@ public static class PageReader
     /// </summary>
     public static async Task<IReadOnlyList<TextWord>> ReadAsync(Pix page, string? languageCode, CancellationToken cancellationToken = default)
     {
+        // The user's language; with English, another script the user has installed in Windows (an
+        // English-speaking user who also reads Russian has the Russian recognizer).
         OcrEngine? native = string.IsNullOrEmpty(languageCode) || languageCode.StartsWith("en", StringComparison.OrdinalIgnoreCase)
-            ? null
-            : Engine(languageCode);
+            ? OtherScriptEngine()
+            : Engine(languageCode) ?? OtherScriptEngine();
         OcrEngine? english = native is not null && IsLatinScript(native) ? null : Engine("en-US") ?? Engine("en");
         if (english is null && native is null)
         {
@@ -83,10 +85,98 @@ public static class PageReader
         IReadOnlyList<ReadLine> lines = english is null ? second ?? [] : second is null ? first : Merge(first, second);
 
         return lines.SelectMany((l, line) => l.Words.Select(w => scale < 1.0
-                ? new TextWord(w.Text, w.X / scale, w.Y / scale, w.Width / scale, w.Height / scale, line)
-                : w with { Line = line }))
+                ? new TextWord(FixMixedScript(w.Text), w.X / scale, w.Y / scale, w.Width / scale, w.Height / scale, line)
+                : w with { Text = FixMixedScript(w.Text), Line = line }))
             .ToList();
     }
+
+    /// <summary>
+    /// A Cyrillic word with a Latin "i" or a Serbian "Ј" in it is the Ukrainian "і" misread (no recognizer
+    /// knows Ukrainian; the Russian one reads it): no real word mixes the two, so the letter is put right.
+    /// </summary>
+    internal static string FixMixedScript(string word)
+    {
+        if (word.IndexOfAny(['i', 'I', 'Ј', 'ј']) < 0 || !word.Any(c => c is >= 'А' and <= 'я'))
+            return word;
+        if (word.Any(c => c is >= 'a' and <= 'z' or >= 'A' and <= 'Z' && c is not ('i' or 'I')))
+            return word;   // other Latin letters too: not a Cyrillic word with one wrong letter
+        // A capital in the middle of a word is a small letter read too big.
+        char[] letters = word.ToCharArray();
+        for (int i = 0; i < letters.Length; i++)
+        {
+            if (letters[i] is 'i' or 'ј' or 'I' or 'Ј')
+                letters[i] = i == 0 && letters[i] is 'I' or 'Ј' ? 'І' : 'і';
+        }
+
+        return new string(letters);
+    }
+
+    /// <summary>
+    /// Reads the page and checks which way up it is by what was read: text read upside down or sideways
+    /// comes out as letter garbage, without the small common words every text has ("the", "and", "и",
+    /// "не"). The page is read as it is and turned over, and sideways too when neither has such words;
+    /// another turn is taken only when it has clearly more of them. Catches the pages whose letter shapes
+    /// did not tell (tables, figures, sparse text). <c>Turn</c> is the clockwise turn the words belong to.
+    /// </summary>
+    public static async Task<(int Turn, IReadOnlyList<TextWord> Words)> ReadUprightAsync(Pix page, string? languageCode,
+        CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<TextWord> asIs = await ReadAsync(page, languageCode, cancellationToken).ConfigureAwait(false);
+        int score = CommonWordCount(asIs);
+        if (score >= SureCommonWords)
+            return (0, asIs);
+
+        (int Turn, IReadOnlyList<TextWord> Words, int Score) best = (0, asIs, score);
+        foreach (int turn in new[] { 180, 90, 270 })
+        {
+            // Sideways only when neither way up reads like text at all.
+            if (turn != 180 && Math.Max(score, best.Score) >= MinCommonWords)
+                break;
+            IReadOnlyList<TextWord> words = await ReadAsync(FrameCodec.Rotate(page, turn), languageCode, cancellationToken).ConfigureAwait(false);
+            int s = CommonWordCount(words);
+            if (s > best.Score)
+                best = (turn, words, s);
+        }
+
+        return best.Turn != 0 && best.Score >= MinCommonWords && best.Score >= 2 * score + 1
+            ? (best.Turn, best.Words)
+            : (0, asIs);
+    }
+
+    /// <summary>Common words that make a reading certain at once: the page is not checked turned.</summary>
+    internal const int SureCommonWords = 8;
+
+    /// <summary>Common words another turn needs (and twice as many as the page as it is, plus one).</summary>
+    internal const int MinCommonWords = 3;
+
+    /// <summary>
+    /// Small words of English, Russian and Ukrainian, two letters and more: one-letter ones ("a", "и",
+    /// "в") come out of garbage too often to count.
+    /// </summary>
+    private static readonly HashSet<string> CommonWords = new(
+        ("the of and to in is for that on with as by are be this it from or at your you not an will if all can we may " +
+         "our has have was which their more any other such no do " +
+         "не на что он как то это по но из за от так для же все бы ты мы вы до если или только уже его она они был " +
+         "при про над под без " +
+         "що та це від ми ви він вона але як щоб або вже які")
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries),
+        StringComparer.Ordinal);
+
+    /// <summary>How many of the words read are such common words.</summary>
+    internal static int CommonWordCount(IEnumerable<TextWord> words)
+    {
+        int count = 0;
+        foreach (TextWord word in words)
+        {
+            string w = word.Text.Trim().Trim(Punctuation).ToLowerInvariant();
+            if (w.Length >= 2 && CommonWords.Contains(w))
+                count++;
+        }
+
+        return count;
+    }
+
+    private static readonly char[] Punctuation = ".,;:!?\"'«»()[]{}".ToCharArray();
 
     /// <summary>
     /// The English lines, with each line read in the other script put in place of the English lines it
@@ -150,6 +240,20 @@ public static class PageReader
         }
 
         return letters == 0 ? 0 : (double)other / letters;
+    }
+
+    /// <summary>A recognizer for the first installed language not written in Latin letters, or null.</summary>
+    private static OcrEngine? OtherScriptEngine()
+    {
+        try
+        {
+            Language? other = OcrEngine.AvailableRecognizerLanguages.FirstOrDefault(l => l.Script is { Length: > 0 } s && s != "Latn");
+            return other is null ? null : OcrEngine.TryCreateFromLanguage(other);
+        }
+        catch (COMException)
+        {
+            return null;
+        }
     }
 
     private static bool IsLatinScript(OcrEngine engine)

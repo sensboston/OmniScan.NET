@@ -37,6 +37,25 @@ public sealed class TextLayerTests
     }
 
     [Theory]
+    [InlineData("рЈвняння", "рівняння")]
+    [InlineData("pa3i", "pa3i")]            // mostly Latin letters: left alone
+    [InlineData("перевiрити", "перевірити")]
+    [InlineData("invoice", "invoice")]
+    [InlineData("Привет", "Привет")]
+    public void MixedScriptWord_GetsTheUkrainianI(string read, string expected) =>
+        Assert.Equal(expected, PageReader.FixMixedScript(read));
+
+    [Fact]
+    public void CommonWords_TellTextFromUpsideDownGarbage()
+    {
+        static TextWord[] Words(string text) => text.Split(' ').Select(w => new TextWord(w, 0, 0, 10, 10)).ToArray();
+
+        Assert.Equal(10, PageReader.CommonWordCount(Words("The rate is for all of the year, and it is not")));
+        Assert.Equal(5, PageReader.CommonWordCount(Words("Оплата не позднее числа, как и для всех, что это")));
+        Assert.Equal(0, PageReader.CommonWordCount(Words("aq Kew }! 'eaÁ ou} Jo lle Joj sl ")));
+    }
+
+    [Theory]
     [InlineData("Привет", 1.0)]
     [InlineData("Größe", 0.0)]
     [InlineData("12 345", 0.0)]
