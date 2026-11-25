@@ -37,6 +37,9 @@ public sealed class SettingsStoreTests
             SplitPhotos = false,
             Deskew = false,
             AutoContinueSeconds = 25,
+            CheckUpdates = false,
+            UpdateChecked = new System.DateTime(2026, 11, 25, 22, 47, 32, System.DateTimeKind.Utc),
+            SkipVersion = "1.2.0",
             ServerEnabled = true,
             Language = "uk",
             Window = new WindowPlacement { Left = -1200, Top = 40.5, Width = 900, Height = 640, Maximized = true },
@@ -57,6 +60,9 @@ public sealed class SettingsStoreTests
         Assert.False(loaded.SplitPhotos);
         Assert.False(loaded.Deskew);
         Assert.Equal(25, loaded.AutoContinueSeconds);
+        Assert.False(loaded.CheckUpdates);
+        Assert.Equal(new System.DateTime(2026, 11, 25, 22, 47, 32, System.DateTimeKind.Utc), loaded.UpdateChecked);
+        Assert.Equal("1.2.0", loaded.SkipVersion);
         Assert.True(loaded.ServerEnabled);
         Assert.Equal("uk", loaded.Language);
         Assert.NotNull(loaded.Window);

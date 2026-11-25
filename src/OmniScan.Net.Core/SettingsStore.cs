@@ -92,6 +92,9 @@ public sealed class SettingsStore
         Key(b, "Language", s.Language ?? "");
         Key(b, "Theme", s.Theme.ToString());
         Key(b, "ShareScanners", s.ServerEnabled);
+        Key(b, "CheckUpdates", s.CheckUpdates);
+        Key(b, "UpdateChecked", s.UpdateChecked is { } checkedAt ? Updates.FormatTime(checkedAt) : "");
+        Key(b, "SkipVersion", s.SkipVersion ?? "");
         Section(b, "Assist");
         Key(b, "Key", string.IsNullOrEmpty(s.AssistKey) ? "" : SecretText.Protect(s.AssistKey));
         // The tested models, so that the line can be filled in without looking anything up. The dearer choice
@@ -196,6 +199,9 @@ public sealed class SettingsStore
                 case ("app", "language"): s.Language = value.Length == 0 ? null : value; break;
                 case ("app", "theme"): s.Theme = Enum<UiTheme>(value, s.Theme); break;
                 case ("app", "sharescanners"): s.ServerEnabled = Bool(value, s.ServerEnabled); break;
+                case ("app", "checkupdates"): s.CheckUpdates = Bool(value, s.CheckUpdates); break;
+                case ("app", "updatechecked"): s.UpdateChecked = Updates.ParseTime(value); break;
+                case ("app", "skipversion"): s.SkipVersion = value.Length == 0 ? null : value; break;
                 case ("assist", "key"): s.AssistKey = value.Length == 0 ? null : SecretText.Unprotect(value); break;
                 case ("assist", "model"): s.AssistModel = value.Length == 0 ? null : value; break;
                 case ("assist", "turnphotos"): s.AssistOrient = Bool(value, s.AssistOrient); break;

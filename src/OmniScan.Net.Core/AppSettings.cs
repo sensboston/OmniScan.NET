@@ -30,9 +30,18 @@ public sealed class AppSettings
     public bool Deskew { get; set; } = true;
 
     /// <summary>Seconds before the next PDF page is scanned by itself; 0 turns it off.</summary>
-    public int AutoContinueSeconds { get; set; } = 10;
+    public int AutoContinueSeconds { get; set; } = 15;
 
     public bool ServerEnabled { get; set; }
+
+    /// <summary>Look for a newer release on GitHub (at most once a day) and offer to install it.</summary>
+    public bool CheckUpdates { get; set; } = true;
+
+    /// <summary>When the last look for a newer release was made (UTC).</summary>
+    public DateTime? UpdateChecked { get; set; }
+
+    /// <summary>A version the user said "no" to: not offered again (a later one is).</summary>
+    public string? SkipVersion { get; set; }
 
     public UiTheme Theme { get; set; } = UiTheme.Light;
 
@@ -100,7 +109,7 @@ public sealed class AppSettings
         if (Dpi < 50 || Dpi > 4800)
             Dpi = 300;
         if (AutoContinueSeconds < 0 || AutoContinueSeconds > 120)
-            AutoContinueSeconds = 10;
+            AutoContinueSeconds = 15;
         if (JpegQuality < MinJpegQuality || JpegQuality > 100)
             JpegQuality = DefaultJpegQuality;
         if (string.IsNullOrWhiteSpace(RootFolder) || !Path.IsPathFullyQualified(RootFolder))

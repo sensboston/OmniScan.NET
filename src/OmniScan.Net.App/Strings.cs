@@ -116,6 +116,11 @@ public static class Strings
     public static string AssistKey => T();
     public static string AssistClearKey => T();
     public static string ServerNoScanner => T();
+    public static string CheckUpdates => T();
+    public static string UpdateAvailableFormat => T();
+    public static string UpdateDownloadingFormat => T();
+    public static string UpdateFailed => T();
+    public static string UpdatePostponed => T();
     public static string AssistCheck => T();
     public static string AssistChecking => T();
     public static string AssistConnected => T();

@@ -7,6 +7,15 @@
   the photo's properties (Explorer, Windows Search) and the PDF's title. What is sent, and what each
   service may do with it: [Online services](https://sensboston.github.io/OmniScan.NET/ASSIST.html).
   Off by default; nothing leaves your computer without a key.
+- **Stickers**: with PNG, the new **Stickers** checkbox cuts each picture along its outline with a
+  white border, on a transparent background (photos and cards stay rectangles). When several stickers
+  lie on the glass, OmniScan offers it by itself, and the preview shows their outlines.
+- **Updates**: OmniScan looks for a new version on GitHub once a day and offers to install it
+  (Yes/No); it downloads, checks and restarts by itself. Can be turned off in **Settings → General**.
+  This works from 1.1.0 on: from 1.0.x, download 1.1.0 by hand once.
+- **A shared scanner in use**: while someone scans at the computer the scanner is attached to, a scan
+  from another computer is refused at once instead of taking what lies on the glass; the scanner list
+  shows a green or red dot, and the other computer can ask for the scanner.
 - **"Looks like a document"**: when a JPEG or PNG scan is a sheet of text, a card offers to make it a
   PDF instead, right away and without scanning again.
 - **Built-in viewer**: click a result to see it over the whole window (wheel zooms, arrows go through
@@ -17,6 +26,7 @@
 - **Sparse pages** (a test with room for the answers) stay one page instead of being cut into pieces.
 - **PDF pages turned upright** also when only reading them tells which way is up (tables, figures);
   done on your computer by the text recognition built into Windows.
+- **PDF**: the countdown to the next page is 15 seconds by default (was 10).
 - **One counter for all formats**: `scan_001.png`, `scan_002.jpg`, `scan_003.pdf`.
 - **Settings in tabs**, and the scanner's "top of the page" chosen from two pictures.
 - The settings panel is locked while a scan is running; an older copy of OmniScan no longer wipes out

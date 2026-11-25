@@ -15,6 +15,15 @@ public static class AppInfo
     public static string BuildTime { get; } = Self.GetCustomAttributes<AssemblyMetadataAttribute>()
         .FirstOrDefault(a => a.Key == "BuildTime")?.Value ?? "";
 
+    /// <summary>The release file this program was published as (an update downloads the same one).</summary>
+#if LITE
+    public const string ReleaseFile = "OmniScan-lite.exe";
+#else
+    public const string ReleaseFile = "OmniScan.exe";
+#endif
+
+    public static System.Version CurrentVersion { get; } = Self.GetName().Version ?? new System.Version(0, 0, 0);
+
     /// <summary>"OmniScan 0.9.0 — 2026-11-24 01:52".</summary>
     public static string Title { get; } = BuildTime.Length == 0 ? $"OmniScan {Version}" : $"OmniScan {Version} \u2014 {BuildTime}";
 }

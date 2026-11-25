@@ -48,6 +48,7 @@ public partial class App : Application
     {
         base.OnStartup(e);
         bool serverStart = e.Args.Contains(Autostart.ServerArgument, StringComparer.OrdinalIgnoreCase);
+        WaitForUpdatedProcess(e.Args);
 
         _instance = new Mutex(initiallyOwned: true, InstanceName, out bool first);
         if (!first)
@@ -106,6 +107,137 @@ public partial class App : Application
         base.OnExit(e);
     }
 
+    /// <summary>
+    /// Started by an update: the old process still holds the single-instance lock for a moment, so wait
+    /// for it to end, then remove its file.
+    /// </summary>
+    private static void WaitForUpdatedProcess(string[] args)
+    {
+        int at = Array.FindIndex(args, a => string.Equals(a, Updates.AfterUpdateArgument, StringComparison.OrdinalIgnoreCase));
+        if (at >= 0 && at + 1 < args.Length && int.TryParse(args[at + 1], out int pid))
+        {
+            try
+            {
+                using System.Diagnostics.Process old = System.Diagnostics.Process.GetProcessById(pid);
+                old.WaitForExit(TimeSpan.FromSeconds(20));
+            }
+            catch (ArgumentException)
+            {
+                // Already gone.
+            }
+        }
+
+        if (Environment.ProcessPath is { } exe)
+            Updates.CleanUp(exe);
+    }
+
+    /// <summary>
+    /// Once a day at most, when the window is open: a newer release on GitHub is offered (Yes/No; "No"
+    /// is remembered for that version). "Yes" downloads it with progress in the status line, swaps the
+    /// program file and starts the new one. Never in the middle of work: unsaved PDF pages or a running
+    /// scan put it off to the next start.
+    /// </summary>
+    private async Task CheckForUpdateAsync(MainViewModel model)
+    {
+#if DEBUG
+        // A development build is not replaced by a release, unless a test feed is set.
+        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable(Updates.FeedVariable)))
+            return;
+#endif
+        if (!_settings.CheckUpdates || Environment.ProcessPath is not { } exe
+            || (_settings.UpdateChecked is { } last && DateTime.UtcNow - last < TimeSpan.FromDays(1)))
+            return;
+
+        using System.Net.Http.HttpClient http = Updates.CreateClient();
+        UpdateInfo? update;
+        try
+        {
+            update = await Updates.CheckAsync(http, AppInfo.ReleaseFile, AppInfo.CurrentVersion);
+        }
+        catch (Exception e) when (e is System.Net.Http.HttpRequestException or TaskCanceledException or System.Text.Json.JsonException)
+        {
+            return;   // offline or GitHub busy: next start
+        }
+
+        _settings.UpdateChecked = DateTime.UtcNow;
+        SaveSettings();
+        string version = update?.Version.ToString(3) ?? "";
+        if (update is null || version == _settings.SkipVersion)
+            return;
+
+        // Right after the start the scanner is still being asked about: wait for it (a scan is not cut short).
+        for (int i = 0; i < 120 && model.IsBusy; i++)
+            await Task.Delay(500);
+        if (_window is null || model.IsBusy || model.Session.HasPages)
+            return;
+
+        MessageBoxResult answer = MessageBox.Show(_window, string.Format(Strings.UpdateAvailableFormat, version, AppInfo.Version),
+            Strings.AppTitle, MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (answer != MessageBoxResult.Yes)
+        {
+            _settings.SkipVersion = version;
+            SaveSettings();
+            return;
+        }
+
+        // A copy in a folder without write access (Program Files): the release page instead.
+        if (!Updates.CanWriteNextTo(exe))
+        {
+            OpenPage(update.Page);
+            return;
+        }
+
+        try
+        {
+            Progress<int> progress = new(p => model.Status = string.Format(Strings.UpdateDownloadingFormat, p));
+            string downloaded = await Updates.DownloadAsync(http, update, exe, progress);
+            if (model.IsBusy || model.Session.HasPages)
+            {
+                Updates.CleanUp(exe);
+                _settings.UpdateChecked = null;
+                SaveSettings();
+                model.Status = Strings.UpdatePostponed;
+                return;
+            }
+
+            Updates.Swap(exe, downloaded);
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(exe)
+            {
+                ArgumentList = { Updates.AfterUpdateArgument, Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture) },
+                UseShellExecute = false,
+            });
+            Shutdown();
+        }
+        catch (Exception e) when (e is System.Net.Http.HttpRequestException or TaskCanceledException or IOException
+                                      or UnauthorizedAccessException or InvalidDataException or System.ComponentModel.Win32Exception)
+        {
+            Updates.CleanUp(exe);
+            model.Status = Strings.UpdateFailed + " " + e.Message;
+        }
+    }
+
+    private void SaveSettings()
+    {
+        try
+        {
+            _store.Save(_settings);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+        }
+    }
+
+    private static void OpenPage(Uri page)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(page.AbsoluteUri) { UseShellExecute = true });
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+        }
+    }
+
     public void ShowMainWindow()
     {
         if (_window is not null)
@@ -129,7 +261,13 @@ public partial class App : Application
     {
         MainWindow window = new(model);
         if (refreshDevices)
-            window.ContentRendered += async (_, _) => await model.RefreshDevicesAsync();
+        {
+            window.ContentRendered += async (_, _) =>
+            {
+                await model.RefreshDevicesAsync();
+                await CheckForUpdateAsync(model);
+            };
+        }
         // In use while it is open and not minimized (closed or minimized: nobody is scanning here).
         void Track()
         {

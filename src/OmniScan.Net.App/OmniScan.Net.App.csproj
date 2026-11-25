@@ -27,6 +27,8 @@
   <!-- -p:Lite=true: a small OmniScan.exe that uses the installed .NET 10 Desktop Runtime. -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)' != '' And '$(Lite)' == 'true'">
     <SelfContained>false</SelfContained>
+    <!-- Updates download the same kind of file: OmniScan-lite.exe. -->
+    <DefineConstants>$(DefineConstants);LITE</DefineConstants>
   </PropertyGroup>
 
   <!-- Build time for the window title (local time of the machine that builds). -->

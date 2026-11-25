@@ -90,6 +90,18 @@ that scan becomes page 1 instead of the image file.
 Photos standing apart on the glass never count as a document, and an unclear case gets no hint.
 The hint is shown at most once per run.
 
+**Stickers** (PNG only, a checkbox that is off at every start). Each picture that is not a rectangle
+is cut along its outline with a white border, onto a transparent background. A sticker's own white
+border can hardly be told from the white lid (a few levels apart, and the lid is shaded along the
+sticker's edge), while the colored picture stands out clearly; so the outline is found around the
+picture (light neutral gray, the cut edge of the sticker's border, does not count) and a plain white
+border of a fixed width (about 1.5 mm) is drawn anew around it. Photos and cards stay rectangles:
+they fill their frame, or run along its sides, or lift the lid (a gray lid around them). Pictures
+the layout keeps together as one sheet are taken one by one when each of them is solid. When two or
+more stickers lie on the glass in an image format, a hint like the document hint offers the mode;
+the preview then shows each sticker's outline instead of its frame. Stickers are not sent to the
+online services: they are kept as they lie.
+
 The pipeline always runs on the machine where the user sits (the client), including for
 remote scanners: the server only acquires and returns the raw frame (lossless).
 This keeps a single place for processing settings and keeps the server trivial.
@@ -206,6 +218,27 @@ OmniScan.Net.slnx
 └── tests/
     └── OmniScan.Net.Tests/      # naming/auto-increment, pipeline on sample scans, protocol round-trip
 ```
+
+---
+
+## 8a. Updates
+
+A checkbox in the general settings, on by default: at most once a day, after the window is shown,
+OmniScan asks GitHub for the latest release (`/repos/sensboston/OmniScan.NET/releases/latest`;
+drafts and pre-releases are never offered). A newer version is offered in a Yes/No dialog; "No" is
+remembered for that version in `OmniScan.ini` (`[App] SkipVersion`), a later one is offered again.
+
+"Yes" downloads the file of the same kind as the running one (`OmniScan.exe` or `OmniScan-lite.exe`,
+fixed at build time) next to it, as `OmniScan.exe.new`, and checks its size and the SHA-256 digest
+GitHub gives for it. Windows does not let a running program be overwritten, but it does let it be
+renamed: the running file becomes `OmniScan.exe.old`, the new one takes its name and is started with
+`--after-update <pid>`; it waits for the old process to end (the single-instance lock), then removes
+the `.old` file. The path stays the same, so the autostart entry of a shared scanner keeps working.
+Unsaved PDF pages or a running scan put the update off to the next start. A copy in a folder without
+write access gets the release page opened instead. For trying an update before publishing it, the
+environment variable `OMNISCAN_UPDATE_FEED` points the check to another "latest release" address.
+
+Releases therefore keep their tag format (`vX.Y.Z`) and the two file names.
 
 ---
 

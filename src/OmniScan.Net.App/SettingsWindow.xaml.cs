@@ -21,6 +21,7 @@ public sealed class SettingsModel
         _originalFlip = Flip;
         Language = settings.Language ?? "";
         ServerEnabled = settings.ServerEnabled;
+        CheckUpdates = settings.CheckUpdates;
         AutoContinueSeconds = settings.AutoContinueSeconds;
         Theme = settings.Theme;
         JpegQuality = settings.JpegQuality;
@@ -60,6 +61,8 @@ public sealed class SettingsModel
     /// <summary>Recognize the text of PDF pages (on this computer).</summary>
     public string Language { get; set; }
     public bool ServerEnabled { get; set; }
+
+    public bool CheckUpdates { get; set; }
 
     /// <summary>There is a scanner here to share (or sharing is on and may be turned off).</summary>
     public bool CanShare { get; }
@@ -107,6 +110,7 @@ public sealed class SettingsModel
         bool serverChanged = ServerEnabled != settings.ServerEnabled;
         settings.Language = language;
         settings.ServerEnabled = ServerEnabled;
+        settings.CheckUpdates = CheckUpdates;
         settings.AutoContinueSeconds = AutoContinueSeconds;
         settings.Theme = Theme;
         settings.JpegQuality = JpegQuality;
