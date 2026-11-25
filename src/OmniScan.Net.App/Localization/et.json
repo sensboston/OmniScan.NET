@@ -77,6 +77,7 @@
   "PdfText": "Tuvasta PDF-ides tekst",
   "PdfTextHint": "Teksti saab siis otsida ja kopeerida. Windows loeb selle sellel arvutil, midagi ei saadeta kuhugi.",
   "ReadingText": "Loen teksti…",
+  "ViewerHint": "Ratas: suum · lohistamine: nihuta · ← →: eelmine, järgmine · topeltklõps või Enter: ava teises programmis · Esc: sulge",
   "ScannerTop": "Lehe ülaserv selle skanneri puhul",
   "TopWord": "ÜLES",
   "TopLeft": "Vasakul (enamikul)",

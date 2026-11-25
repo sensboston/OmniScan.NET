@@ -875,11 +875,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 if (Results.Count == 1)
                     PreviewImage = full;
                 Status = it.FileName + " ✓";
+                Viewer.Changed(it);
             };
+            item.ViewRequested += it => _ = Viewer.ShowAsync(it);
             item.Failed += (_, message) => Status = Strings.SaveFailed + " " + message;
             item.Deleted += it =>
             {
+                int index = Results.IndexOf(it);
                 Results.Remove(it);
+                Viewer.Removed(it, index);
                 OnPropertyChanged(nameof(HasResults));
                 Status = it.FileName + " ✕";
             };
@@ -910,8 +914,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
             _texts.Known(turned, read.Words);
     }
 
+    /// <summary>The built-in viewer of the files of the last scan.</summary>
+    public PhotoViewer Viewer => _viewer ??= new PhotoViewer(Results);
+
+    private PhotoViewer? _viewer;
+
     private void ClearResults()
     {
+        _viewer?.Close();
         Results.Clear();
         OnPropertyChanged(nameof(HasResults));
     }

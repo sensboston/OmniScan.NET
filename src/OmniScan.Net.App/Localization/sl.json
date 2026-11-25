@@ -77,6 +77,7 @@
   "PdfText": "Prepoznavaj besedilo v PDF",
   "PdfTextHint": "Besedilo bo mogoče iskati in kopirati. Prebere ga Windows na tem računalniku, nič se ne pošilja nikamor.",
   "ReadingText": "Branje besedila…",
+  "ViewerHint": "Kolesce: povečava · vlečenje: premik · ← →: prejšnja, naslednja · dvoklik ali Enter: odpri v drugem programu · Esc: zapri",
   "ScannerTop": "Vrh strani pri tem optičnem čitalniku",
   "TopWord": "VRH",
   "TopLeft": "Levo (pri večini)",

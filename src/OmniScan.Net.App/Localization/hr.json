@@ -77,6 +77,7 @@
   "PdfText": "Prepoznaj tekst u PDF-u",
   "PdfTextHint": "Tekst će se moći pretraživati i kopirati. Čita ga sam Windows na ovom računalu, ništa se nikamo ne šalje.",
   "ReadingText": "Čitam tekst…",
+  "ViewerHint": "Kotačić: zumiranje · povlačenje: pomak · ← →: prethodna, sljedeća · dvostruki klik ili Enter: otvori u drugom programu · Esc: zatvori",
   "ScannerTop": "Vrh stranice na ovom skeneru",
   "TopWord": "VRH",
   "TopLeft": "Lijevo (kod većine)",

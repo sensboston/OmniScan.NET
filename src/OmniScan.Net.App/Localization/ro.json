@@ -77,6 +77,7 @@
   "PdfText": "Recunoaște textul din PDF",
   "PdfTextHint": "Textul va putea fi căutat și copiat. Îl citește Windows pe acest computer; nu se trimite nimic nicăieri.",
   "ReadingText": "Se citește textul…",
+  "ViewerHint": "Rotiță: zoom · tragere: mutare · ← →: anterior, următor · dublu clic sau Enter: deschide în alt program · Esc: închide",
   "ScannerTop": "Partea de sus a paginii la acest scaner",
   "TopWord": "SUS",
   "TopLeft": "În stânga (la majoritatea)",

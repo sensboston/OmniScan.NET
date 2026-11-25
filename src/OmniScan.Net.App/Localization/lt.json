@@ -77,6 +77,7 @@
   "PdfText": "Atpažinti tekstą PDF failuose",
   "PdfTextHint": "Tekstą bus galima ieškoti ir kopijuoti. Jį nuskaito pati Windows šiame kompiuteryje, niekas niekur nesiunčiama.",
   "ReadingText": "Skaitomas tekstas…",
+  "ViewerHint": "Ratukas: mastelis · tempimas: perkelti · ← →: ankstesnis, kitas · dukart spustelėkite arba Enter: atidaryti kita programa · Esc: uždaryti",
   "ScannerTop": "Puslapio viršus šiame skeneryje",
   "TopWord": "VIRŠUS",
   "TopLeft": "Kairėje (daugumoje)",

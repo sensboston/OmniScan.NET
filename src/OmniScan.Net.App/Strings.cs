@@ -112,6 +112,7 @@ public static class Strings
     public static string PdfText => T();
     public static string PdfTextHint => T();
     public static string ReadingText => T();
+    public static string ViewerHint => T();
     public static string ScannerTop => T();
     public static string TopWord => T();
     public static string TopLeft => T();

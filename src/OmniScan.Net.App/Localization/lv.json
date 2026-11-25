@@ -77,6 +77,7 @@
   "PdfText": "Atpazīt tekstu PDF failos",
   "PdfTextHint": "Tekstu varēs meklēt un kopēt. To nolasa pati Windows šajā datorā, nekas netiek nekur sūtīts.",
   "ReadingText": "Nolasu tekstu…",
+  "ViewerHint": "Ritenis: tālummaiņa · vilkšana: pārvietot · ← →: iepriekšējais, nākamais · dubultklikšķis vai Enter: atvērt citā programmā · Esc: aizvērt",
   "ScannerTop": "Lapas augšmala šim skenerim",
   "TopWord": "AUGŠA",
   "TopLeft": "Pa kreisi (lielākajai daļai)",
