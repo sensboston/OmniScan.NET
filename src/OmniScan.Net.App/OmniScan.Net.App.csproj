@@ -2,9 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <!-- The Windows SDK version brings the text recognition of Windows (Windows.Media.Ocr); runs on 1809 and later. -->
-    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
-    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <AssemblyName>OmniScan</AssemblyName>
     <RootNamespace>OmniScan.Net.App</RootNamespace>

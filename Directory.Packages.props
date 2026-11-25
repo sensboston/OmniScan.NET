@@ -7,6 +7,7 @@
   <ItemGroup>
     <PackageVersion Include="H.NotifyIcon.Wpf" Version="2.4.1" />
     <PackageVersion Include="Leptonica.Managed" Version="1.0.1" />
+    <PackageVersion Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>

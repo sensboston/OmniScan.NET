@@ -15,7 +15,7 @@ One portable file: nothing to install, no runtime to download. Put it in any fol
 
 Already have the [.NET 10 Desktop Runtime](https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe) installed? Take the
 [lite build](https://github.com/sensboston/OmniScan.NET/releases/latest/download/OmniScan-lite.exe)
-instead: the same program, about 35 MB instead of 74 MB.
+instead: the same program, about 10 MB instead of 68 MB.
 
 ### What it does
 

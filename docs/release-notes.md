@@ -28,8 +28,8 @@ Two downloads below — the same program, pick one:
 
 | File | Size | Needs |
 |---|---|---|
-| **`OmniScan.exe`** | ~74 MB | nothing — the .NET runtime is inside. If unsure, take this one. |
-| **`OmniScan-lite.exe`** | ~35 MB | the [.NET 10 Desktop Runtime (x64)](https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe) installed once. Starts a bit faster. |
+| **`OmniScan.exe`** | ~68 MB | nothing — the .NET runtime is inside. If unsure, take this one. |
+| **`OmniScan-lite.exe`** | ~10 MB | the [.NET 10 Desktop Runtime (x64)](https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe) installed once. Starts a bit faster. |
 
 Both are single portable files: nothing to install, put the file in any folder and run it.
 Settings are kept in `OmniScan.ini` next to it. If the runtime is missing, `OmniScan-lite.exe`

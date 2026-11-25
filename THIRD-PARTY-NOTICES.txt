@@ -5,6 +5,8 @@ packages themselves (NuGet) and at the project addresses below.
   https://github.com/sensboston/Leptonica.Managed
 - H.NotifyIcon.Wpf: MIT
   https://github.com/HavenDV/H.NotifyIcon
+- C#/WinRT (Microsoft.Windows.CsWinRT, WinRT.Runtime): MIT
+  https://github.com/microsoft/CsWinRT
 
 The application icon (art/omniscan-icon.svg) and the alternative icon (art/omniscan-scanner-a3.svg)
 are part of OmniScan.

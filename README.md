@@ -9,11 +9,11 @@ A small, fast Windows app for scanning documents and photos — and for sharing 
 with the other PCs on your home network.
 
 **[Download OmniScan.exe](https://github.com/sensboston/OmniScan.NET/releases/latest/download/OmniScan.exe)**
-(~74 MB) — one portable file, nothing to install, no .NET runtime needed. Windows 10 (1809+) or 11, 64-bit.
+(~68 MB) — one portable file, nothing to install, no .NET runtime needed. Windows 10 (1809+) or 11, 64-bit.
 
 Already have the [.NET 10 Desktop Runtime](https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe)? Then the
 **[lite build](https://github.com/sensboston/OmniScan.NET/releases/latest/download/OmniScan-lite.exe)**
-(~35 MB) is the same program without the runtime inside.
+(~10 MB) is the same program without the runtime inside.
 
 <!-- Screenshots go here. -->
 

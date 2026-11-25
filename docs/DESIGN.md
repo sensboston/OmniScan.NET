@@ -186,7 +186,9 @@ OmniScan.Net.slnx
 ├── src/
 │   ├── OmniScan.Net.Core/       # settings (INI), naming/folders, IScannerBackend
 │   ├── OmniScan.Net.Imaging/    # bed analysis, photo splitting, deskew, orientation, encoding, PDF writer (Leptonica.Managed)
-│   ├── OmniScan.Net.Ocr/        # page text with the recognition built into Windows (Windows.Media.Ocr)
+│   ├── OmniScan.Net.Ocr/        # page text with the recognition built into Windows (Windows.Media.Ocr,
+│   │                            #   through a C#/WinRT projection of only the types it needs: the whole
+│   │                            #   Windows SDK projection would add 25 MB to the program)
 │   ├── OmniScan.Net.Assist/     # online services: key → service, model choice, photo turn and captions
 │   ├── OmniScan.Net.Scanning/   # WIA backend
 │   ├── OmniScan.Net.Remote/     # discovery, HTTP server, remote backend (client side)

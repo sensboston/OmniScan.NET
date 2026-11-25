@@ -2,14 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using Leptonica;
 using OmniScan.Net.Imaging;
+using Windows.Foundation;
 using Windows.Globalization;
 using Windows.Graphics.Imaging;
 using Windows.Media.Ocr;
+using WinRT;
 
 namespace OmniScan.Net.Ocr;
 
@@ -123,19 +124,27 @@ public static class PageReader
     {
         IReadOnlyList<TextWord> asIs = await ReadAsync(page, languageCode, cancellationToken).ConfigureAwait(false);
         int score = CommonWordCount(asIs);
-        if (score >= SureCommonWords)
+        // Garbage read from an upside-down page has a few short "words" by chance (8 of 369 on a real
+        // page, against 159 of 442 upright): sure only with many of them, and a good share.
+        if (score >= SureCommonWords && score * 10 >= asIs.Count)
             return (0, asIs);
 
         (int Turn, IReadOnlyList<TextWord> Words, int Score) best = (0, asIs, score);
-        foreach (int turn in new[] { 180, 90, 270 })
+        async Task TryAsync(int turn)
         {
-            // Sideways only when neither way up reads like text at all.
-            if (turn != 180 && Math.Max(score, best.Score) >= MinCommonWords)
-                break;
             IReadOnlyList<TextWord> words = await ReadAsync(FrameCodec.Rotate(page, turn), languageCode, cancellationToken).ConfigureAwait(false);
             int s = CommonWordCount(words);
             if (s > best.Score)
                 best = (turn, words, s);
+        }
+
+        await TryAsync(180).ConfigureAwait(false);
+        // Both sideways turns when neither way up reads like text: the better of them wins, not the
+        // first that has a few chance words.
+        if (best.Score < MinCommonWords || best.Score * 10 < best.Words.Count)
+        {
+            await TryAsync(90).ConfigureAwait(false);
+            await TryAsync(270).ConfigureAwait(false);
         }
 
         return best.Turn != 0 && best.Score >= MinCommonWords && best.Score >= 2 * score + 1
@@ -143,7 +152,7 @@ public static class PageReader
             : (0, asIs);
     }
 
-    /// <summary>Common words that make a reading certain at once: the page is not checked turned.</summary>
+    /// <summary>Common words that make a reading certain at once (with a tenth of all the words): the page is not checked turned.</summary>
     internal const int SureCommonWords = 8;
 
     /// <summary>Common words another turn needs (and twice as many as the page as it is, plus one).</summary>
@@ -318,16 +327,31 @@ public static class PageReader
 
         int w = gray.Width, h = gray.Height, wpl = gray.Wpl;
         uint[] data = gray.Data;
-        byte[] bytes = new byte[w * h];
+        byte[] row = new byte[w];
+        SoftwareBitmap bitmap = new(BitmapPixelFormat.Gray8, w, h);
+
+        // The pixels are written straight into the bitmap's memory, a row at a time.
+        using BitmapBuffer buffer = bitmap.LockBuffer(BitmapBufferAccessMode.Write);
+        using IMemoryBufferReference reference = buffer.CreateReference();
+        reference.As<IMemoryBufferByteAccess>().GetBuffer(out IntPtr memory, out _);
+        BitmapPlaneDescription plane = buffer.GetPlaneDescription(0);
         for (int y = 0; y < h; y++)
         {
-            int row = y * wpl, o = y * w;
+            int line = y * wpl;
             for (int x = 0; x < w; x++)
-                bytes[o + x] = (byte)(data[row + (x >> 2)] >> (24 - 8 * (x & 3)));
+                row[x] = (byte)(data[line + (x >> 2)] >> (24 - 8 * (x & 3)));
+            Marshal.Copy(row, 0, memory + plane.StartIndex + y * plane.Stride, w);
         }
 
-        SoftwareBitmap bitmap = new(BitmapPixelFormat.Gray8, w, h);
-        bitmap.CopyFromBuffer(bytes.AsBuffer());
         return bitmap;
+    }
+
+    /// <summary>Access to the bytes of a WinRT memory buffer (a COM interface of Windows, not projected).</summary>
+    [ComImport]
+    [Guid("5B0D3235-4DBA-4D44-865E-8F1D0E4FD04D")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IMemoryBufferByteAccess
+    {
+        void GetBuffer(out IntPtr buffer, out uint capacity);
     }
 }
