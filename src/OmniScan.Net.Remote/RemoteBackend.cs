@@ -73,7 +73,9 @@ public sealed class RemoteBackend : IScannerBackend, IDisposable
                 {
                     string id = MakeId(host, d.Id);
                     _rotations[id] = d.Rotation;
-                    devices.Add(new ScannerDevice(id, $"{d.Name} — {host}", BackendName));
+                    ScannerDevice device = new(id, $"{d.Name} — {host}", BackendName);
+                    device.State.InUse = d.InUse;
+                    devices.Add(device);
                 }
             }
             catch (Exception e) when (e is HttpRequestException or OperationCanceledException or JsonException)
@@ -109,6 +111,41 @@ public sealed class RemoteBackend : IScannerBackend, IDisposable
         string mediaType = response.Content.Headers.ContentType?.MediaType ?? "image/bmp";
         return new ScannedFrame(data, mediaType, dpi, rotation);
     }
+
+    /// <summary>
+    /// Whether a shared scanner is in use on its computer now, from a fresh listing of that server;
+    /// null when the server does not answer.
+    /// </summary>
+    public async Task<bool?> IsInUseAsync(string deviceId, CancellationToken cancellationToken = default)
+    {
+        (string host, string id) = ParseId(deviceId);
+        if (!_servers.TryGetValue(host, out Uri? server))
+            return null;
+        try
+        {
+            using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(5));
+            ServerInfo? info = await _http.GetFromJsonAsync(new Uri(server, Protocol.InfoPath), ProtocolJson.Default.ServerInfo, timeout.Token);
+            return info?.Devices.FirstOrDefault(d => d.Id == id)?.InUse;
+        }
+        catch (Exception e) when (e is HttpRequestException or OperationCanceledException or JsonException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Asks the person at the scanner's computer to let it go (a card with a countdown there).</summary>
+    public async Task AskToReleaseAsync(string deviceId, CancellationToken cancellationToken = default)
+    {
+        (Uri server, _) = await ResolveAsync(deviceId, cancellationToken);
+        using HttpResponseMessage response = await Send(() =>
+            _http.PostAsync(new Uri(server, Protocol.ReleasePath),
+                JsonBody(new RemoteRelease(Environment.MachineName), ProtocolJson.Default.RemoteRelease), cancellationToken));
+        await ThrowIfError(response, cancellationToken);
+    }
+
+    /// <summary>The computer a shared scanner is attached to.</summary>
+    public static string HostOf(string deviceId) => ParseId(deviceId).Host;
 
     /// <summary>The "turn scans upside down" rotation the server reported for its scanner at the last device listing.</summary>
     public int? KnownRotation(string deviceId) => _rotations.TryGetValue(deviceId, out int r) ? r : null;

@@ -43,12 +43,21 @@ public sealed class RemoteTests
 
     private static int _nextPort = 28600;
 
-    private static async Task<(ScanServer Server, RemoteBackend Client, FakeScanner Scanner)> StartAsync(int rotation = 180)
+    /// <summary>What the server's own computer reports: in use there, and the requests to let the scanner go.</summary>
+    private sealed class Here
+    {
+        public volatile bool InUse;
+        public readonly List<string> Asked = [];
+    }
+
+    private static async Task<(ScanServer Server, RemoteBackend Client, FakeScanner Scanner)> StartAsync(int rotation = 180, Here? here = null)
     {
         FakeScanner scanner = new();
         int http = Interlocked.Add(ref _nextPort, 2), udp = http + 1;
         Dictionary<string, int> rotations = new() { ["wia:1"] = rotation };
-        ScanServer server = new(scanner, id => rotations.GetValueOrDefault(id), (id, r) => rotations[id] = r);
+        ScanServer server = new(scanner, id => rotations.GetValueOrDefault(id), (id, r) => rotations[id] = r,
+            here is null ? null : () => here.InUse,
+            here is null ? null : from => { lock (here.Asked) here.Asked.Add(from); });
         await server.StartAsync(http, udp);
         RemoteBackend client = new(TimeSpan.FromMilliseconds(500), udp, ignoreOwnServer: false);
         return (server, client, scanner);
@@ -109,6 +118,56 @@ public sealed class RemoteTests
             await client.GetDevicesAsync();
             Assert.Equal(0, client.KnownRotation(device.Id));
         }
+    }
+
+    [Fact]
+    public async Task InUseThere_RefusesAtOnce_AndIsShownInTheList()
+    {
+        Here here = new() { InUse = true };
+        (ScanServer server, RemoteBackend client, FakeScanner scanner) = await StartAsync(here: here);
+        await using (server)
+        using (client)
+        {
+            ScannerDevice device = (await client.GetDevicesAsync()).Single();
+            Assert.True(device.State.IsInUse);
+
+            ScannerException e = await Assert.ThrowsAsync<ScannerException>(
+                () => client.ScanAsync(device.Id, new ScanRequest(75, ColorMode.Color, ScanSource.Flatbed)));
+            Assert.Equal(ScannerError.InUse, e.Error);
+            Assert.Equal(0, scanner.Scans);
+
+            here.InUse = false;
+            Assert.False(await client.IsInUseAsync(device.Id));
+            await client.ScanAsync(device.Id, new ScanRequest(75, ColorMode.Color, ScanSource.Flatbed));
+            Assert.Equal(1, scanner.Scans);
+        }
+    }
+
+    [Fact]
+    public async Task AskToRelease_ReachesTheServersComputer()
+    {
+        Here here = new() { InUse = true };
+        (ScanServer server, RemoteBackend client, _) = await StartAsync(here: here);
+        await using (server)
+        using (client)
+        {
+            ScannerDevice device = (await client.GetDevicesAsync()).Single();
+
+            await client.AskToReleaseAsync(device.Id);
+
+            Assert.Equal([Environment.MachineName], here.Asked);
+        }
+    }
+
+    [Fact]
+    public void DeviceState_IsNotPartOfTheDevicesIdentity()
+    {
+        ScannerDevice a = new("remote:X|wia:1", "Scanner — X", RemoteBackend.BackendName);
+        ScannerDevice b = new("remote:X|wia:1", "Scanner — X", RemoteBackend.BackendName);
+        a.State.InUse = true;
+
+        Assert.Equal(a, b);
+        Assert.Equal(a.GetHashCode(), b.GetHashCode());
     }
 
     [Fact]

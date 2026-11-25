@@ -10,7 +10,41 @@ namespace OmniScan.Net.Core;
 /// <see cref="Attached"/>: connected to this computer itself (USB), as opposed to a network
 /// device reached through a vendor driver; only attached scanners are shared with other computers.
 /// </summary>
-public sealed record ScannerDevice(string Id, string Name, string Backend, bool Attached = true);
+public sealed record ScannerDevice(string Id, string Name, string Backend, bool Attached = true)
+{
+    /// <summary>What is known now about a shared scanner (in use on its computer); not part of its identity.</summary>
+    public DeviceState State { get; } = new();
+
+    public bool Equals(ScannerDevice? other) =>
+        other is not null && Id == other.Id && Name == other.Name && Backend == other.Backend && Attached == other.Attached;
+
+    public override int GetHashCode() => HashCode.Combine(Id, Name, Backend, Attached);
+}
+
+/// <summary>Whether a shared scanner is in use on its computer: null when not known (or not shared).</summary>
+public sealed class DeviceState : System.ComponentModel.INotifyPropertyChanged
+{
+    private bool? _inUse;
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+
+    public bool? InUse
+    {
+        get => _inUse;
+        set
+        {
+            if (_inUse == value)
+                return;
+            _inUse = value;
+            foreach (string name in new[] { nameof(InUse), nameof(IsInUse), nameof(IsFree) })
+                PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
+        }
+    }
+
+    public bool IsInUse => _inUse == true;
+
+    public bool IsFree => _inUse == false;
+}
 
 /// <summary>What a device can do; the UI offers only these values.</summary>
 public sealed record ScanCapabilities(
@@ -54,6 +88,12 @@ public enum ScannerError
     NotFound,
     Offline,
     Busy,
+
+    /// <summary>
+    /// A shared scanner someone is using at its computer: OmniScan is open there and was used lately.
+    /// Unlike <see cref="Busy"/> (another program holds the device), the person there can be asked.
+    /// </summary>
+    InUse,
     WarmingUp,
     CoverOpen,
     PaperEmpty,

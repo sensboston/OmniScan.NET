@@ -27,6 +27,7 @@ public static class Protocol
     public const string CapabilitiesPath = "/api/v1/capabilities";
     public const string ScanPath = "/api/v1/scan";
     public const string RotationPath = "/api/v1/rotation";
+    public const string ReleasePath = "/api/v1/release";
 
     /// <summary>Identifies this process, so a machine that is client and server ignores its own answer.</summary>
     public static Guid InstanceId { get; } = Guid.NewGuid();
@@ -69,7 +70,11 @@ public sealed record ServerInfo(Guid InstanceId, string Host, int Port, IReadOnl
 /// A scanner attached to a server; <see cref="Id"/> is the server's local device id,
 /// <see cref="Rotation"/> its "turn scans upside down" rotation setting there (0 or 180).
 /// </summary>
-public sealed record RemoteDevice(string Id, string Name, int Rotation = 0);
+/// <param name="InUse">Someone is using the scanner at that computer now (see <see cref="ScannerError.InUse"/>).</param>
+public sealed record RemoteDevice(string Id, string Name, int Rotation = 0, bool InUse = false);
+
+/// <summary>Asks the person at the scanner's computer to let it go; <see cref="From"/> is the asking computer.</summary>
+public sealed record RemoteRelease(string From);
 
 /// <summary>Changes the "turn scans upside down" rotation of a shared scanner from another computer.</summary>
 public sealed record RemoteRotation(string DeviceId, int Rotation);
@@ -86,6 +91,7 @@ public sealed record RemoteError(ScannerError Error, string Message);
 [JsonSerializable(typeof(RemoteScanRequest))]
 [JsonSerializable(typeof(RemoteError))]
 [JsonSerializable(typeof(RemoteRotation))]
+[JsonSerializable(typeof(RemoteRelease))]
 internal sealed partial class ProtocolJson : JsonSerializerContext
 {
 }

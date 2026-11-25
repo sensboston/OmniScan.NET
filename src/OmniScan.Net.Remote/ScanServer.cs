@@ -34,6 +34,8 @@ public sealed class ScanServer : IAsyncDisposable
     private readonly IScannerBackend _backend;
     private readonly Func<string, int> _rotationOf;
     private readonly Action<string, int>? _setRotation;
+    private readonly Func<bool> _inUseHere;
+    private readonly Action<string>? _askToRelease;
     private readonly string _host = Environment.MachineName;
     private TcpListener? _listener;
     private UdpClient? _udp;
@@ -44,11 +46,19 @@ public sealed class ScanServer : IAsyncDisposable
     /// <param name="backend">The local scanners to share.</param>
     /// <param name="rotationOf">Fixed rotation configured on this machine for a device id.</param>
     /// <param name="setRotation">Stores a rotation changed from another computer; null makes it read-only.</param>
-    public ScanServer(IScannerBackend backend, Func<string, int> rotationOf, Action<string, int>? setRotation = null)
+    /// <param name="inUseHere">
+    /// Someone is using the scanners at this computer now: scans from other computers are refused at once
+    /// (never queued: the queued scan would take whatever sheet lies on the glass). Called on server threads.
+    /// </param>
+    /// <param name="askToRelease">Passes on a request of another computer (its name) to let the scanner go.</param>
+    public ScanServer(IScannerBackend backend, Func<string, int> rotationOf, Action<string, int>? setRotation = null,
+        Func<bool>? inUseHere = null, Action<string>? askToRelease = null)
     {
         _backend = backend;
         _rotationOf = rotationOf;
         _setRotation = setRotation;
+        _inUseHere = inUseHere ?? (() => false);
+        _askToRelease = askToRelease;
     }
 
     /// <summary>The HTTP port actually in use, once started.</summary>
@@ -193,11 +203,22 @@ public sealed class ScanServer : IAsyncDisposable
                     return Response.Status(204, "No Content");
                 }
 
+                case ("POST", Protocol.ReleasePath):
+                {
+                    RemoteRelease? release = JsonSerializer.Deserialize(r.Body, ProtocolJson.Default.RemoteRelease);
+                    if (release is null || string.IsNullOrWhiteSpace(release.From) || release.From.Length > 64)
+                        return Response.Status(400, "Bad Request");
+                    _askToRelease?.Invoke(release.From.Trim());
+                    return Response.Status(204, "No Content");
+                }
+
                 case ("POST", Protocol.ScanPath):
                 {
                     RemoteScanRequest? scan = JsonSerializer.Deserialize(r.Body, ProtocolJson.Default.RemoteScanRequest);
                     if (scan is null)
                         return Response.Status(400, "Bad Request");
+                    if (_inUseHere())
+                        throw new ScannerException(ScannerError.InUse, $"The scanner is in use on {_host}.");
                     ScannedFrame frame = await _backend.ScanAsync(scan.DeviceId,
                         new ScanRequest(scan.Dpi, scan.ColorMode, scan.Source), ct);
 
@@ -222,7 +243,7 @@ public sealed class ScanServer : IAsyncDisposable
         }
         catch (ScannerException e)
         {
-            int code = e.Error == ScannerError.Busy ? 409 : 503;
+            int code = e.Error is ScannerError.Busy or ScannerError.InUse ? 409 : 503;
             return Response.Json(new RemoteError(e.Error, e.Message), ProtocolJson.Default.RemoteError, code,
                 code == 409 ? "Conflict" : "Service Unavailable");
         }
@@ -248,7 +269,7 @@ public sealed class ScanServer : IAsyncDisposable
         // Network devices behind a vendor driver are reachable from the other computers directly (or not
         // reliably at all); share only what is plugged into this one.
         return new ServerInfo(Protocol.InstanceId, _host, Port,
-            devices.Where(d => d.Attached).Select(d => new RemoteDevice(d.Id, d.Name, _rotationOf(d.Id))).ToList());
+            devices.Where(d => d.Attached).Select(d => new RemoteDevice(d.Id, d.Name, _rotationOf(d.Id), _inUseHere())).ToList());
     }
 
     private async Task AnswerProbesAsync(UdpClient udp, CancellationToken ct)

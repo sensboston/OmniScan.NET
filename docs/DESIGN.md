@@ -173,6 +173,16 @@ host name, HTTP port and their device list.
 | `GET /api/v1/capabilities?deviceId=` | resolutions, color modes, sources, bed size |
 | `POST /api/v1/scan` | scan parameters (JSON) → raw lossless frame, gzip-compressed |
 | `POST /api/v1/rotation` | set the per-scanner "upside down" option on the server |
+| `POST /api/v1/release` | ask the person at the server to let the scanner go |
+
+**One glass, two people.** The person at the scanner's computer always comes first: they can see
+what lies on the glass, a remote user cannot. The scanner counts as *in use* there while a scan runs,
+or while the main window is open (not minimized) and was opened or used to scan within the last
+3 minutes. A remote scan is then refused at once — never queued, since a queued scan would take
+whatever sheet lies on the glass when its turn comes. The device list shows a dot next to shared
+scanners (green: free, red: in use), refreshed every 20 s. A refused client offers to ask for the
+scanner: the server's window shows a card with OK (closes the window; sharing goes on from the tray)
+and Refuse. Without an answer it closes by itself after 15 s, unless unsaved PDF pages would be lost.
 
 No authentication: the server answers only clients from the local network.
 Windows asks once to allow the app through the firewall.

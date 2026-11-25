@@ -14,6 +14,7 @@ using System.Windows.Threading;
 using OmniScan.Net.Assist;
 using OmniScan.Net.Core;
 using OmniScan.Net.Imaging;
+using OmniScan.Net.Remote;
 
 namespace OmniScan.Net.App;
 
@@ -95,6 +96,16 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _saveTimer.Tick += (_, _) => SaveNow();
         _busyTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
         _busyTimer.Tick += (_, _) => UpdateBusyStatus();
+        _releaseTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _releaseTimer.Tick += (_, _) => CountDownRelease();
+        // Shared scanners: whether someone is using them at their computer, shown in the list.
+        _inUseTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(20) };
+        _inUseTimer.Tick += (_, _) => _ = RefreshInUseAsync();
+        _inUseTimer.Start();
+        AskReleaseCommand = new RelayCommand(() => _ = AskReleaseAsync());
+        CloseInUseCardCommand = new RelayCommand(() => SetInUseCard(null));
+        GiveScannerCommand = new RelayCommand(GiveScanner);
+        RefuseReleaseCommand = new RelayCommand(() => SetReleaseRequest(null, 0));
 
         BrowseFolderCommand = new RelayCommand(BrowseFolder);
         FramesEditedCommand = new RelayCommand(() => _framesEdited = true);
@@ -584,7 +595,17 @@ public sealed class MainViewModel : INotifyPropertyChanged
         BeginBusy(preview ? Strings.Previewing : Strings.Scanning);
         try
         {
-            ScannedFrame frame = await BackendOf(device).ScanAsync(device.Id, request);
+            ScannedFrame frame;
+            BeginScanHere(device);
+            try
+            {
+                frame = await BackendOf(device).ScanAsync(device.Id, request);
+            }
+            finally
+            {
+                EndScanHere(device);
+            }
+
             BeginBusy(Strings.ProcessingBusy);
 
             // A frame from another computer comes with the rotation configured there for its scanner.
@@ -632,6 +653,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         catch (ScannerException e)
         {
             Status = ErrorText(e);
+            if (e.Error == ScannerError.InUse)
+                SetInUseCard(device);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
@@ -660,7 +683,17 @@ public sealed class MainViewModel : INotifyPropertyChanged
         Session.IsBusy = true;
         try
         {
-            ScannedFrame frame = await BackendOf(device).ScanAsync(device.Id, new ScanRequest(Dpi, ColorMode, Source));
+            ScannedFrame frame;
+            BeginScanHere(device);
+            try
+            {
+                frame = await BackendOf(device).ScanAsync(device.Id, new ScanRequest(Dpi, ColorMode, Source));
+            }
+            finally
+            {
+                EndScanHere(device);
+            }
+
             BeginBusy(Strings.ProcessingBusy);
             int rotation = frame.DeviceRotation ?? Rotation;
             PdfPage? previous = automatic && !Session.HasReplaceTarget ? Session.LastPage : null;
@@ -704,6 +737,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         catch (ScannerException e)
         {
             Status = ErrorText(e);
+            if (e.Error == ScannerError.InUse)
+                SetInUseCard(device);
         }
         finally
         {
@@ -1056,6 +1091,151 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private PhotoViewer? _viewer;
 
+    // ------------------------------------------------------------ a shared scanner in use at its computer
+
+    private readonly DispatcherTimer _inUseTimer;
+    private readonly DispatcherTimer _releaseTimer;
+    private ScannerDevice? _inUseDevice;
+    private string? _releaseFrom;
+    private int _releaseSeconds;
+    private volatile bool _scanningHere;
+
+    /// <summary>A scan or preview of a scanner attached here is running (read on server threads).</summary>
+    public bool ScanningHere => _scanningHere;
+
+    /// <summary>A scanner attached here was used (scan or preview started or done).</summary>
+    public event Action? LocalScan;
+
+    /// <summary>The person here let the scanner go to the computer that asked: the window is to close.</summary>
+    public event Action? ReleaseAccepted;
+
+    public RelayCommand AskReleaseCommand { get; }
+    public RelayCommand CloseInUseCardCommand { get; }
+    public RelayCommand GiveScannerCommand { get; }
+    public RelayCommand RefuseReleaseCommand { get; }
+
+    /// <summary>The card "the scanner is in use at its computer" is shown.</summary>
+    public bool HasInUseCard => _inUseDevice is not null;
+
+    public string InUseCardText => _inUseDevice is null ? "" : string.Format(Strings.InUseTextFormat, RemoteBackend.HostOf(_inUseDevice.Id));
+
+    /// <summary>The card "another computer asks for the scanner" is shown (on the scanner's computer).</summary>
+    public bool HasReleaseRequest => _releaseFrom is not null;
+
+    public string ReleaseTitle => _releaseFrom is null ? "" : string.Format(Strings.ReleaseTitleFormat, _releaseFrom);
+
+    public string ReleaseCountdown => _releaseSeconds > 0 ? string.Format(Strings.ReleaseCountdownFormat, _releaseSeconds) : "";
+
+    private bool IsHere(ScannerDevice device) => device.Backend != RemoteBackend.BackendName;
+
+    private void BeginScanHere(ScannerDevice device)
+    {
+        if (!IsHere(device))
+            return;
+        _scanningHere = true;
+        LocalScan?.Invoke();
+    }
+
+    private void EndScanHere(ScannerDevice device)
+    {
+        if (!IsHere(device))
+            return;
+        _scanningHere = false;
+        LocalScan?.Invoke();
+    }
+
+    /// <summary>A scan was refused because someone uses the shared scanner at its computer: offer to ask them.</summary>
+    private void SetInUseCard(ScannerDevice? device)
+    {
+        _inUseDevice = device;
+        if (device is not null)
+            device.State.InUse = true;
+        OnPropertyChanged(nameof(HasInUseCard));
+        OnPropertyChanged(nameof(InUseCardText));
+    }
+
+    /// <summary>
+    /// Asks the scanner's computer to let it go, then looks every few seconds whether it is free, for
+    /// about the time the person there has to answer.
+    /// </summary>
+    private async Task AskReleaseAsync()
+    {
+        ScannerDevice? device = _inUseDevice;
+        SetInUseCard(null);
+        if (device is null || BackendOf(device) is not RemoteBackend remote)
+            return;
+        string host = RemoteBackend.HostOf(device.Id);
+        try
+        {
+            await remote.AskToReleaseAsync(device.Id);
+        }
+        catch (ScannerException e)
+        {
+            Status = ErrorText(e);
+            return;
+        }
+
+        Status = string.Format(Strings.ReleaseSentFormat, host);
+        for (int i = 0; i < 12; i++)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(3));
+            bool? inUse = await remote.IsInUseAsync(device.Id);
+            device.State.InUse = inUse;
+            if (inUse == false)
+            {
+                Status = string.Format(Strings.ScannerFreeFormat, host);
+                return;
+            }
+        }
+
+        Status = string.Format(Strings.StillInUseFormat, host);
+    }
+
+    private async Task RefreshInUseAsync()
+    {
+        foreach (ScannerDevice device in Devices.ToArray())
+        {
+            if (BackendOf(device) is RemoteBackend remote)
+                device.State.InUse = await remote.IsInUseAsync(device.Id);
+        }
+    }
+
+    /// <summary>
+    /// Another computer asks for the scanner. With <paramref name="autoAccept"/> it is let go by itself
+    /// after a few seconds without an answer (nobody is at this computer after all).
+    /// </summary>
+    public void ShowReleaseRequest(string from, bool autoAccept) => SetReleaseRequest(from, autoAccept ? 15 : 0);
+
+    private void SetReleaseRequest(string? from, int seconds)
+    {
+        _releaseFrom = from;
+        _releaseSeconds = from is null ? 0 : seconds;
+        if (_releaseSeconds > 0)
+            _releaseTimer.Start();
+        else
+            _releaseTimer.Stop();
+        OnPropertyChanged(nameof(HasReleaseRequest));
+        OnPropertyChanged(nameof(ReleaseTitle));
+        OnPropertyChanged(nameof(ReleaseCountdown));
+    }
+
+    private void CountDownRelease()
+    {
+        if (--_releaseSeconds <= 0)
+        {
+            GiveScanner();
+            return;
+        }
+
+        OnPropertyChanged(nameof(ReleaseCountdown));
+    }
+
+    private void GiveScanner()
+    {
+        SetReleaseRequest(null, 0);
+        ReleaseAccepted?.Invoke();
+    }
+
     private void ClearResults()
     {
         _assistRun?.Cancel();
@@ -1092,6 +1272,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private static string ErrorText(ScannerException e) => e.Error switch
     {
         ScannerError.Busy => Strings.ErrorBusy,
+        ScannerError.InUse => Strings.InUseTitle,
         ScannerError.Offline => Strings.ErrorOffline,
         ScannerError.NotFound => Strings.ErrorNotFound,
         ScannerError.CoverOpen => Strings.ErrorCoverOpen,

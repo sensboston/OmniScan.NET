@@ -33,6 +33,16 @@ public partial class App : Application
     private ScanServer? _server;
     private TaskbarIcon? _tray;
     private MainWindow? _window;
+    private MainViewModel? _model;
+
+    /// <summary>
+    /// The scanners here count as in use for this long after the window was opened or brought back,
+    /// or after the last scan or preview here. Then a scan from another computer may take them.
+    /// </summary>
+    private static readonly TimeSpan InUseFor = TimeSpan.FromMinutes(3);
+
+    private long _lastLocalUse = DateTime.UtcNow.Ticks;
+    private volatile bool _windowShown;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -107,6 +117,9 @@ public partial class App : Application
         }
 
         MainViewModel model = new(_store, _settings, [_wia!, _remote!]);
+        _model = model;
+        model.LocalScan += NoteLocalUse;
+        model.ReleaseAccepted += () => _window?.Close();
         model.SettingsRequested += OnSettingsRequested;
         OpenWindow(model, refreshDevices: true);
     }
@@ -117,8 +130,20 @@ public partial class App : Application
         MainWindow window = new(model);
         if (refreshDevices)
             window.ContentRendered += async (_, _) => await model.RefreshDevicesAsync();
+        // In use while it is open and not minimized (closed or minimized: nobody is scanning here).
+        void Track()
+        {
+            bool shown = window.IsVisible && window.WindowState != WindowState.Minimized;
+            if (shown && !_windowShown)
+                NoteLocalUse();
+            _windowShown = shown;
+        }
+
+        window.IsVisibleChanged += (_, _) => Track();
+        window.StateChanged += (_, _) => Track();
         window.Closed += (_, _) =>
         {
+            _windowShown = false;
             if (ReferenceEquals(_window, window))
                 _window = null;
             if (_window is null && _tray is null)
@@ -206,6 +231,26 @@ public partial class App : Application
         }
     }
 
+    private void NoteLocalUse() => Interlocked.Exchange(ref _lastLocalUse, DateTime.UtcNow.Ticks);
+
+    /// <summary>
+    /// Someone is using the scanners at this computer: a scan is running here, or the window is open and
+    /// was opened, or used to scan, within <see cref="InUseFor"/>. Called on server threads.
+    /// </summary>
+    private bool InUseHere() =>
+        (_model?.ScanningHere ?? false)
+        || (_windowShown && DateTime.UtcNow.Ticks - Interlocked.Read(ref _lastLocalUse) < InUseFor.Ticks);
+
+    /// <summary>Another computer asks for the scanner: the person here answers on a card (or it goes by itself).</summary>
+    private void OnReleaseRequested(string from)
+    {
+        if (_window is null || _model is null || !_windowShown)
+            return;
+        // Unsaved PDF pages would be lost by closing the window on its own: then only the person decides.
+        _model.ShowReleaseRequest(from, autoAccept: !_model.Session.HasPages);
+        _window.Activate();
+    }
+
     private async Task StartServerAsync()
     {
         if (_server is not null || _wia is null)
@@ -229,7 +274,9 @@ public partial class App : Application
                     {
                     }
                 });
-            });
+            },
+            InUseHere,
+            from => Dispatcher.BeginInvoke(() => OnReleaseRequested(from)));
         try
         {
             await server.StartAsync();
