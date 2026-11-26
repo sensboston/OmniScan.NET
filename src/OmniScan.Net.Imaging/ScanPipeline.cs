@@ -10,7 +10,11 @@ namespace OmniScan.Net.Imaging;
 /// Pictures that are not rectangles are cut along their outline with a white border, onto a transparent
 /// background (see <see cref="Cutout"/>); photos and cards stay rectangles.
 /// </param>
-public sealed record PipelineOptions(bool AutoCrop, bool SplitPhotos, bool Deskew, bool AutoOrient, bool Stickers = false)
+/// <param name="WhitePaper">
+/// Sheets and pages printed on colored paper get a white background (photos and stickers keep their colors).
+/// </param>
+public sealed record PipelineOptions(bool AutoCrop, bool SplitPhotos, bool Deskew, bool AutoOrient, bool Stickers = false,
+    bool WhitePaper = false)
 {
     public static readonly PipelineOptions None = new(false, false, false, false);
     public static readonly PipelineOptions All = new(true, true, true, true);
@@ -103,15 +107,18 @@ public static class ScanPipeline
     {
         if (frames.Count == 0)
         {
-            Pix whole = page;
+            Pix whole = options.WhitePaper ? PageTools.WhitenPaper(page) : page;
             if (options.Deskew)
                 whole = PageTools.RotateSmall(whole, PageTools.FindSkew(whole));
             if (options.AutoOrient && PageTools.FindTextRotation(whole) is int turn and not 0)
                 whole = FrameCodec.Rotate(whole, turn);
-            return new PipelineResult(options == PipelineOptions.None ? PageKind.Document : PageKind.Empty, [whole], []);
+            return new PipelineResult(options with { WhitePaper = false } == PipelineOptions.None ? PageKind.Document : PageKind.Empty, [whole], []);
         }
 
-        List<Pix> images = frames.Select(f => f.Kind == ItemKind.Photo ? CutPhoto(page, f, options) : CutSheet(page, f, options)).ToList();
+        // Stickers are looked for on a copy without the dark band along the edges of the glass, which
+        // would otherwise join a sticker lying close to it.
+        Pix shapes = options.Stickers ? WithoutGlassEdge(page) : page;
+        List<Pix> images = frames.Select(f => f.Kind == ItemKind.Photo ? CutPhoto(page, shapes, f, options) : CutSheet(page, f, options)).ToList();
         PageKind kind = frames.Count > 1 ? PageKind.Photos : frames[0].Kind == ItemKind.Photo ? PageKind.Photo : PageKind.Document;
         return new PipelineResult(kind, images, frames);
     }
@@ -126,7 +133,7 @@ public static class ScanPipeline
             return null;
         int dpi = page.XRes > 0 ? page.XRes : 300;
         RotatedRect around = frame.Rect.Shrink(-Cutout.SearchMargin * dpi);
-        Pix region = PageTools.Extract(page, around, options.Deskew);
+        Pix region = PageTools.Extract(WithoutGlassEdge(page), around, options.Deskew);
         if (Cutout.Outline(region, dpi, (int)(Cutout.SearchMargin * dpi)) is not { } outline)
             return null;
 
@@ -164,6 +171,7 @@ public static class ScanPipeline
         }
 
         PipelineOptions options = new(true, true, true, false, Stickers: true);
+        page = WithoutGlassEdge(page);
         IReadOnlyList<BedItem> items = Separate(BedLayout.Group(ContentGuess.MarkText(page, BedAnalyzer.Analyze(page))), dpi);
         int found = 0;
         foreach (BedItem item in items.Where(i => i.Kind == ItemKind.Photo))
@@ -224,10 +232,16 @@ public static class ScanPipeline
         return new CutFrame(new RotatedRect(c.X + c.Width / 2.0, c.Y + c.Height / 2.0, c.Width, c.Height, 0), ItemKind.Document);
     }
 
-    private static Pix CutPhoto(Pix page, CutFrame frame, PipelineOptions options)
+    /// <summary>Width of the dark band along the edges of the glass, inches (up to about 0.13 on the HP).</summary>
+    private const double GlassEdge = 0.15;
+
+    private static Pix WithoutGlassEdge(Pix page) => PageTools.WhitenBorder(page, GlassEdge);
+
+    /// <param name="shapes">The page as stickers are looked for on it (see <see cref="WithoutGlassEdge"/>).</param>
+    private static Pix CutPhoto(Pix page, Pix shapes, CutFrame frame, PipelineOptions options)
     {
         int dpi = page.XRes > 0 ? page.XRes : 300;
-        if (TryCutout(page, frame.Rect.Shrink(-Cutout.SearchMargin * dpi), (int)(Cutout.SearchMargin * dpi), frame, options) is Pix shape)
+        if (TryCutout(shapes, frame.Rect.Shrink(-Cutout.SearchMargin * dpi), (int)(Cutout.SearchMargin * dpi), frame, options) is Pix shape)
             return shape;
 
         // A manual frame is straightened along the drawn rectangle whatever the Deskew option says:
@@ -261,6 +275,8 @@ public static class ScanPipeline
     private static Pix CutSheet(Pix page, CutFrame frame, PipelineOptions options)
     {
         Pix sheet = PageTools.Extract(page, frame.Rect);
+        if (options.WhitePaper)
+            sheet = PageTools.WhitenPaper(sheet);
         if (options.Deskew)
             sheet = PageTools.RotateSmall(sheet, PageTools.FindSkew(sheet));
         if (options.AutoOrient && PageTools.FindTextRotation(sheet) is int turn and not 0)

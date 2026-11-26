@@ -59,14 +59,14 @@ public static class PdfPages
     /// straightened and turned upright by its text if enabled. Never cropped, so all pages have the bed's size.
     /// </summary>
     public static (PdfPage? Page, PageCheck Check) Make(ScannedFrame frame, int rotation, bool deskew, bool autoOrient,
-        PdfPage? previous, bool allowBlank = false)
+        PdfPage? previous, bool allowBlank = false, bool whitePaper = false)
     {
         Pix page = ScanSaver.Prepare(frame, rotation);
         if (!allowBlank && BedAnalyzer.Analyze(page).Objects.Count == 0)
             return (null, PageCheck.Empty);
 
         page = PageTools.WhitenBorder(page, EdgeBand);
-        PipelineResult result = ScanPipeline.Cut(page, [], new PipelineOptions(false, false, deskew, autoOrient));
+        PipelineResult result = ScanPipeline.Cut(page, [], new PipelineOptions(false, false, deskew, autoOrient, WhitePaper: whitePaper));
         Pix done = result.Images[0];
 
         double[] signature = Signature(done);

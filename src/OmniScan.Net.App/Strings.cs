@@ -43,6 +43,9 @@ public static class Strings
     public static string SplitPhotos => T();
     public static string AutoCrop => T();
     public static string Stickers => T();
+    public static string WhitePaper => T();
+    public static string WhitePaperHint => T();
+    public static string SavePdfNow => T();
     public static string StickersHint => T();
     public static string Deskew => T();
 

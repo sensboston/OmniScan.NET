@@ -115,6 +115,7 @@
                   IsEnabled="{Binding IsImageFormat}" />
         <CheckBox Content="{x:Static local:Strings.AutoCrop}" IsChecked="{Binding AutoCrop}" IsEnabled="{Binding IsImageFormat}" />
         <CheckBox Content="{x:Static local:Strings.Deskew}" IsChecked="{Binding Deskew}" />
+        <CheckBox Content="{x:Static local:Strings.WhitePaper}" IsChecked="{Binding WhitePaper}" ToolTip="{x:Static local:Strings.WhitePaperHint}" />
         <CheckBox Content="{x:Static local:Strings.Stickers}" IsChecked="{Binding Stickers}" ToolTip="{x:Static local:Strings.StickersHint}"
                   Visibility="{Binding IsPng, Converter={StaticResource Bool}}" />
 
@@ -324,7 +325,7 @@
                  RenderOptions.BitmapScalingMode="HighQuality" />
           <StackPanel Margin="0,16,0,0" Visibility="{Binding Session.IsCardCountdown, Converter={StaticResource Bool}}">
             <ProgressBar Height="10" Minimum="0" Maximum="1" Value="{Binding Session.CountdownFraction, Mode=OneWay}" />
-            <TextBlock Margin="0,6,0,0" Text="{Binding Session.CountdownText}" Opacity="0.8" />
+            <TextBlock Margin="0,6,0,0" Text="{Binding Session.CountdownText}" Opacity="0.8" TextWrapping="Wrap" />
           </StackPanel>
           <Grid Margin="0,18,0,0">
             <Grid.ColumnDefinitions>
@@ -354,7 +355,7 @@
             </StackPanel>
             <StackPanel Grid.Column="2">
               <Button HorizontalAlignment="Stretch" Padding="8,8" Command="{Binding SavePdfCommand}">
-                <TextBlock TextWrapping="Wrap" TextAlignment="Center" Text="{x:Static local:Strings.SavePdf}" />
+                <TextBlock TextWrapping="Wrap" TextAlignment="Center" Text="{x:Static local:Strings.SavePdfNow}" />
               </Button>
               <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" Opacity="0.55" FontSize="11" Text="Ctrl+S" />
             </StackPanel>

@@ -10,6 +10,8 @@
 - **Stickers**: with PNG, the new **Stickers** checkbox cuts each picture along its outline with a
   white border, on a transparent background (photos and cards stay rectangles). When several stickers
   lie on the glass, OmniScan offers it by itself, and the preview shows their outlines.
+- **Colored paper**: the new **Remove paper color** checkbox gives sheets and PDF pages printed on
+  colored paper a white background (photos keep their colors).
 - **Updates**: OmniScan looks for a new version on GitHub once a day and offers to install it
   (Yes/No); it downloads, checks and restarts by itself. Can be turned off in **Settings → General**.
   This works from 1.1.0 on: from 1.0.x, download 1.1.0 by hand once.
@@ -26,7 +28,8 @@
 - **Sparse pages** (a test with room for the answers) stay one page instead of being cut into pieces.
 - **PDF pages turned upright** also when only reading them tells which way is up (tables, figures);
   done on your computer by the text recognition built into Windows.
-- **PDF**: the countdown to the next page is 15 seconds by default (was 10).
+- **PDF**: the card after each page says what to do ("Put the next page on the glass: it is scanned in
+  15 s"), and the countdown is 15 seconds by default (was 10).
 - **One counter for all formats**: `scan_001.png`, `scan_002.jpg`, `scan_003.pdf`.
 - **Settings in tabs**, and the scanner's "top of the page" chosen from two pictures.
 - The settings panel is locked while a scan is running; an older copy of OmniScan no longer wipes out

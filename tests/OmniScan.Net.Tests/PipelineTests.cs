@@ -545,4 +545,122 @@ public sealed class PipelineTests
         Assert.False(ScanPipeline.LooksLikeStickers(photos));
         Assert.False(ScanPipeline.LooksLikeStickers(sheet));
     }
+
+    [Fact]
+    public void Stickers_LightGrayPartsOfAPicture_AreNotPaintedWhite()
+    {
+        // A photo with a silvery strip along its edge, a sticker over its corner: one shape, not a rectangle.
+        Pix bed = Bed(254, 254);
+        Photo(bed, 4.0, 4.0, 4.0, 3.0, 0);
+        uint[] data = bed.Data;
+        int wpl = bed.Wpl;
+        int x0 = (int)(2.0 * Dpi), strip = (int)(0.1 * Dpi);
+        for (int y = (int)(2.5 * Dpi); y < (int)(5.5 * Dpi); y++)
+        {
+            for (int x = x0; x < x0 + strip; x++)
+                data[y * wpl + x] = 0xC8C8C800u;
+        }
+
+        Sticker(bed, 6.0, 5.5, 0.7);
+        Sticker(bed, 2.0, 9.0, 0.8, seed: 3);
+
+        PipelineResult result = ScanPipeline.Process(bed, PipelineOptions.All with { Stickers = true });
+
+        Pix shape = result.Images.OrderByDescending(i => i.Width * i.Height).First();
+        Assert.Equal(4, shape.Spp);
+        int gray = 0;
+        for (int y = 0; y < shape.Height; y++)
+        {
+            for (int x = 0; x < shape.Width; x++)
+            {
+                uint p = shape.Data[y * shape.Wpl + x];
+                gray += (p & 0xff) == 255 && (p >> 8) == 0xC8C8C8u ? 1 : 0;
+            }
+        }
+
+        // The strip is kept as it is, not painted over with the white border.
+        Assert.True(gray > strip * 3.0 * Dpi * 0.7, $"{gray} gray pixels kept");
+    }
+
+    [Fact]
+    public void Stickers_TheDarkEdgeOfTheGlass_IsNotPartOfASticker()
+    {
+        Pix bed = Bed(254, 254);
+        uint[] data = bed.Data;
+        int wpl = bed.Wpl;
+        int band = (int)(0.12 * Dpi);
+        for (int y = bed.Height - band; y < bed.Height; y++)
+        {
+            for (int x = 0; x < bed.Width; x++)
+                data[y * wpl + x] = 0x78787800u;
+        }
+
+        double r = 0.8, cy = 11.7 - 0.12 - 0.02 - r;
+        Sticker(bed, 3.0, cy, r);
+        Sticker(bed, 3.0, 3.0, r, seed: 3);
+
+        PipelineResult result = ScanPipeline.Process(bed, PipelineOptions.All with { Stickers = true });
+
+        Assert.Equal(2, result.Images.Count);
+        Assert.All(result.Images, i =>
+        {
+            Assert.Equal(4, i.Spp);
+            int band = 0;
+            for (int y = 0; y < i.Height; y++)
+            {
+                for (int x = 0; x < i.Width; x++)
+                {
+                    uint p = i.Data[y * i.Wpl + x];
+                    band += (p & 0xff) != 0 && (p >> 8) == 0x787878u ? 1 : 0;
+                }
+            }
+
+            Assert.Equal(0, band);
+        });
+    }
+
+    private static (uint R, uint G, uint B) Rgb(Pix pix, int x, int y)
+    {
+        uint p = pix.Data[y * pix.Wpl + x];
+        return (p >> 24, (p >> 16) & 0xff, (p >> 8) & 0xff);
+    }
+
+    [Fact]
+    public void WhitePaper_MakesColoredPaperWhite_AndKeepsThePrint()
+    {
+        // A whole yellow page with lines of text: kept as one page (no frames), as a PDF page is.
+        Pix bed = Bed(254, 254);
+        uint[] data = bed.Data;
+        int wpl = bed.Wpl;
+        for (int y = 0; y < bed.Height; y++)
+        {
+            for (int x = 0; x < bed.Width; x++)
+                data[y * wpl + x] = 0xF5DC3C00u;   // yellow paper
+        }
+
+        TextBlock(bed, 1.0, 1.0, 6.5, 8.0);
+        PipelineOptions options = new(false, false, false, false, WhitePaper: true);
+
+        Pix page = ScanPipeline.Cut(bed, [], options).Images[0];
+
+        (uint r, uint g, uint b) = Rgb(page, (int)(0.5 * Dpi), (int)(0.5 * Dpi));
+        Assert.True(r > 235 && g > 235 && b > 235, $"paper {r},{g},{b}");
+        (r, g, b) = Rgb(page, (int)(1.0 * Dpi) + 10, (int)(1.0 * Dpi) + 4);
+        Assert.True(r < 100 && g < 100 && b < 100, $"print {r},{g},{b}");
+    }
+
+    [Fact]
+    public void WhitePaper_LeavesPhotosAsTheyAre()
+    {
+        Pix bed = Bed(254, 254);
+        Photo(bed, 4.2, 2.5, 6.0, 4.0, 0);
+        Photo(bed, 4.2, 7.5, 6.0, 4.0, 0, seed: 2);
+
+        PipelineResult plain = ScanPipeline.Process(bed, PipelineOptions.All);
+        PipelineResult white = ScanPipeline.Process(bed, PipelineOptions.All with { WhitePaper = true });
+
+        Assert.Equal(plain.Images.Count, white.Images.Count);
+        for (int i = 0; i < plain.Images.Count; i++)
+            Assert.Equal(plain.Images[i].Data, white.Images[i].Data);
+    }
 }

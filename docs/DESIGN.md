@@ -90,12 +90,20 @@ that scan becomes page 1 instead of the image file.
 Photos standing apart on the glass never count as a document, and an unclear case gets no hint.
 The hint is shown at most once per run.
 
+**Colored paper** (a checkbox that is off at every start): sheets and PDF pages printed on colored
+paper get a white background by Leptonica's background normalization (`pixCleanBackgroundToWhite`):
+the paper color is estimated piece by piece and stretched to white, the print stays dark. It changes
+the colors of pictures, so photos and stickers are left alone, and left on it would wash out the
+colored panels of a bill, hence off at every start.
+
 **Stickers** (PNG only, a checkbox that is off at every start). Each picture that is not a rectangle
 is cut along its outline with a white border, onto a transparent background. A sticker's own white
 border can hardly be told from the white lid (a few levels apart, and the lid is shaded along the
 sticker's edge), while the colored picture stands out clearly; so the outline is found around the
-picture (light neutral gray, the cut edge of the sticker's border, does not count) and a plain white
-border of a fixed width (about 1.5 mm) is drawn anew around it. Photos and cards stay rectangles:
+picture (thin light neutral gray, the cut edge of the sticker's border, does not count; wider light
+gray areas, such as a silvery object on a photo, do) and a plain white
+border of a fixed width (about 1.5 mm) is drawn anew around it. The dark band along the edges of the
+glass is whitened before looking, so a sticker lying close to it does not take it in. Photos and cards stay rectangles:
 they fill their frame, or run along its sides, or lift the lid (a gray lid around them). Pictures
 the layout keeps together as one sheet are taken one by one when each of them is solid. When two or
 more stickers lie on the glass in an image format, a hint like the document hint offers the mode;

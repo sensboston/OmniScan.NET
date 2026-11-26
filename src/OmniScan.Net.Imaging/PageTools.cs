@@ -147,6 +147,20 @@ public static class PageTools
     }
 
     /// <summary>Paints a band of <paramref name="inches"/> along every edge white (the dark strips at the glass edges).</summary>
+    /// <summary>
+    /// Paper of any color made white, and the print on it kept dark: the background is estimated over
+    /// the sheet piece by piece and stretched to white (Leptonica's background normalization). Pictures
+    /// change their colors under it, so it is for sheets of text only. Black &amp; white stays as it is.
+    /// </summary>
+    public static Pix WhitenPaper(Pix sheet)
+    {
+        if (sheet.Depth is not (8 or 32) || sheet.Colormap is not null || sheet.Width < 64 || sheet.Height < 64)
+            return sheet;
+        Pix white = sheet.CleanBackgroundToWhite(null, null, 1.0f, 70, 190);
+        white.SetResolution(sheet.XRes, sheet.YRes);
+        return white;
+    }
+
     public static Pix WhitenBorder(Pix page, double inches)
     {
         int dpi = page.XRes > 0 ? page.XRes : 300;

@@ -379,10 +379,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
         BeginBusy(Strings.ProcessingBusy);
         try
         {
-            bool deskew = Deskew, orient = Deskew;
+            bool deskew = Deskew, orient = Deskew, white = WhitePaper;
             (PdfPage page, BitmapSource thumb, BitmapSource full) = await Task.Run(() =>
             {
-                PdfPage p = PdfPages.Make(frame, rotation, deskew, orient, null, allowBlank: true).Page!;
+                PdfPage p = PdfPages.Make(frame, rotation, deskew, orient, null, allowBlank: true, whitePaper: white).Page!;
                 return (p, LoadBitmap(p.ThumbnailBmp), LoadBitmap(PdfPages.PreviewBmp(p)));
             });
 
@@ -497,6 +497,22 @@ public sealed class MainViewModel : INotifyPropertyChanged
         set
         {
             if (SetSetting(_settings.SplitPhotos, value, v => _settings.SplitPhotos = v))
+                _ = RedrawPreviewAsync();
+        }
+    }
+
+    private bool _whitePaper;
+
+    /// <summary>
+    /// Paper of any color made white on sheets and PDF pages. Off at every start: left on, it would wash
+    /// out the colored panels of the next bill.
+    /// </summary>
+    public bool WhitePaper
+    {
+        get => _whitePaper;
+        set
+        {
+            if (Set(ref _whitePaper, value))
                 _ = RedrawPreviewAsync();
         }
     }
@@ -771,8 +787,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     /// <summary>The processing switches as they apply to the chosen format: a PDF is never split or cropped.</summary>
     private PipelineOptions EffectiveProcessing() =>
-        IsPdf ? new PipelineOptions(false, false, Deskew, Deskew)
-        : new PipelineOptions(AutoCrop, SplitPhotos, Deskew, Deskew, Stickers: Stickers && IsPng);
+        IsPdf ? new PipelineOptions(false, false, Deskew, Deskew, WhitePaper: WhitePaper)
+        : new PipelineOptions(AutoCrop, SplitPhotos, Deskew, Deskew, Stickers: Stickers && IsPng, WhitePaper: WhitePaper);
 
     /// <summary>
     /// Scans one PDF page (or the replacement of a page). An automatic scan that finds the same sheet as
@@ -799,10 +815,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
             BeginBusy(Strings.ProcessingBusy);
             int rotation = frame.DeviceRotation ?? Rotation;
             PdfPage? previous = automatic && !Session.HasReplaceTarget ? Session.LastPage : null;
-            bool deskew = Deskew, orient = Deskew;
+            bool deskew = Deskew, orient = Deskew, white = WhitePaper;
             (PdfPage? page, PageCheck check, BitmapSource? thumb, BitmapSource? full) = await Task.Run(() =>
             {
-                (PdfPage? p, PageCheck c) = PdfPages.Make(frame, rotation, deskew, orient, previous);
+                (PdfPage? p, PageCheck c) = PdfPages.Make(frame, rotation, deskew, orient, previous, whitePaper: white);
                 return p is null
                     ? (p, c, (BitmapSource?)null, (BitmapSource?)null)
                     : (p, c, LoadBitmap(p.ThumbnailBmp), LoadBitmap(PdfPages.PreviewBmp(p)));
@@ -927,10 +943,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (options is null)
             {
-                bool deskew = Deskew, orient = Deskew;
+                bool deskew = Deskew, orient = Deskew, white = WhitePaper;
                 (PdfPage page, BitmapSource thumb, BitmapSource full) = await Task.Run(() =>
                 {
-                    PdfPage p = PdfPages.Make(frame, rotation, deskew, orient, null, allowBlank: true).Page!;
+                    PdfPage p = PdfPages.Make(frame, rotation, deskew, orient, null, allowBlank: true, whitePaper: white).Page!;
                     return (p, LoadBitmap(p.ThumbnailBmp), LoadBitmap(PdfPages.PreviewBmp(p)));
                 });
                 Session.Put(page, thumb);

@@ -39,6 +39,12 @@ public static class Cutout
     /// <summary>Neutral gray lighter than this is the cut edge of a sticker's border, not a line of its picture.</summary>
     private const int EdgeGray = 150;
 
+    /// <summary>
+    /// Half the width (pixels at 300 dpi) a light gray part must have to be picture: the shaded cut edge
+    /// of a sticker's border is up to about 12 pixels wide.
+    /// </summary>
+    private const int GrayArea = 8;
+
     /// <summary>The lid around a sticker is white: a thin sticker does not lift it.</summary>
     private const int MinLid = 240;
 
@@ -178,11 +184,22 @@ public static class Cutout
             sat[i] = saturation[i];
         sat = BoxMean(sat, w, h, Radius(2, k));
 
-        // Light neutral gray is the cut edge of the sticker's own border (its shadow), not the picture:
-        // the lines of a picture are dark or colored.
+        // A thin light neutral gray line is the cut edge of the sticker's own border (its shadow), not the
+        // picture: the lines of a picture are dark or colored. Light gray areas of some width (a silvery
+        // spacecraft on a photo under a sticker) are picture.
         bool[] mask = new bool[w * h];
+        bool[] lightGray = new bool[w * h];
         for (int i = 0; i < mask.Length; i++)
-            mask[i] = mean[i] <= lid - BelowLid && !(mean[i] > EdgeGray && sat[i] < GrayLine);
+        {
+            bool ink = mean[i] <= lid - BelowLid;
+            bool gray = mean[i] > EdgeGray && sat[i] < GrayLine;
+            mask[i] = ink && !gray;
+            lightGray[i] = ink && gray;
+        }
+
+        bool[] grayAreas = Dilate(Erode(lightGray, w, h, Radius(GrayArea, k)), w, h, Radius(GrayArea, k));
+        for (int i = 0; i < mask.Length; i++)
+            mask[i] |= grayAreas[i];
 
         // Thin lines go: the cut edge of the sticker's own border closes around the picture and would
         // bring that border in when the inside is filled. On the shaded side it is thicker; a thin gray
