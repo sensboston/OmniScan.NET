@@ -17,21 +17,14 @@ Already have the [.NET 10 Desktop Runtime](https://aka.ms/dotnet/10.0/windowsdes
 
 ## Screenshots
 
-<img width="1078" height="808" alt="omniscan04" src="https://github.com/user-attachments/assets/242e2d19-7d2a-4ca6-94b5-b199fa467894" />
-<img width="1078" height="808" alt="omniscan03" src="https://github.com/user-attachments/assets/1450b850-7575-490f-9924-60aed87455c1" />
-<img width="1078" height="808" alt="omniscan02" src="https://github.com/user-attachments/assets/23c3d83b-6f6c-4e53-a8c1-f11ee70fd6bd" />
-<img width="1078" height="808" alt="omniscan01" src="https://github.com/user-attachments/assets/7db07fd7-f8ed-47ca-8ff1-8ae0528eee87" />
-
-
-_Coming soon._
-
-<!-- Three in a row, each opens the full picture:
 <p align="center">
-  <a href="SCREENSHOT_1"><img src="SCREENSHOT_1" width="32%" alt="Photos found on the glass"></a>
-  <a href="SCREENSHOT_2"><img src="SCREENSHOT_2" width="32%" alt="Stickers outlined on the preview"></a>
-  <a href="SCREENSHOT_3"><img src="SCREENSHOT_3" width="32%" alt="The results"></a>
+  <a href="https://github.com/user-attachments/assets/7db07fd7-f8ed-47ca-8ff1-8ae0528eee87"><img src="https://github.com/user-attachments/assets/7db07fd7-f8ed-47ca-8ff1-8ae0528eee87" width="49%" alt="Photos found on the glass, cut out and saved"></a>
+  <a href="https://github.com/user-attachments/assets/23c3d83b-6f6c-4e53-a8c1-f11ee70fd6bd"><img src="https://github.com/user-attachments/assets/23c3d83b-6f6c-4e53-a8c1-f11ee70fd6bd" width="49%" alt="Stickers outlined on the preview"></a>
 </p>
--->
+<p align="center">
+  <a href="https://github.com/user-attachments/assets/1450b850-7575-490f-9924-60aed87455c1"><img src="https://github.com/user-attachments/assets/1450b850-7575-490f-9924-60aed87455c1" width="49%" alt="A scan that looks like a document offers PDF"></a>
+  <a href="https://github.com/user-attachments/assets/242e2d19-7d2a-4ca6-94b5-b199fa467894"><img src="https://github.com/user-attachments/assets/242e2d19-7d2a-4ca6-94b5-b199fa467894" width="49%" alt="A PDF page, with its description for search"></a>
+</p>
 
 ## What makes it different
 
