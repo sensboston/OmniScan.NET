@@ -53,23 +53,27 @@ The service is recognized from the key. Tested in November 2026:
 
 | Service | Key starts with | Model chosen | Notes |
 |---|---|---|---|
-| [OpenAI](https://platform.openai.com/api-keys) | `sk-` | `gpt-6-luna` | Fast (about a second per photo), costs a fraction of a cent per photo. |
-| [Google AI Studio](https://aistudio.google.com/apikey) | `AIza…` or `AQ.` | `gemini-3.5-flash-lite` | The most accurate in our tests, and there is a free tier. Slower (1–13 s per photo). |
+| [OpenAI](https://platform.openai.com/api-keys) | `sk-` | `gpt-6-luna` | Costs a fraction of a cent per photo; 2–10 s per photo. Leaves more hard photos as they were (see below). |
+| [Google AI Studio](https://aistudio.google.com/apikey) | `AIza…` or `AQ.` | `gemini-3.5-flash-lite` | **The most accurate in our tests**, and there is a free tier (mind the privacy note below). 1–8 s per photo. |
 | [DeepSeek](https://platform.deepseek.com/api_keys) | `sk-` (32 hex digits) | `deepseek-flash` | Accurate descriptions; once turned a photo the wrong way in our tests. |
 | Anthropic, xAI, OpenRouter | `sk-ant-`, `xai-`, `sk-or-` | chosen from the key's model list | Supported, not tested yet. |
 
-How the tested models did on our set of scans (24 turned photos, and one hard case: a spacecraft
-lying on its side where only an upside-down sign shows which way is up):
+How the tested models did on our set of scans: 24 turned photos, and two hard cases where hardly
+anything shows which way is up — a spacecraft lying on its side with only an upside-down sign, and a
+museum photo of a space capsule taken from below (each asked several times):
 
-| Model | Photos turned right (of 24) | The hard case (of 4) |
-|---|---|---|
-| gemini-3.5-flash-lite | 24 | 4 |
-| deepseek-flash | 23 | 0–2, once a wrong turn |
-| gpt-6-luna | 23 | 1 (otherwise "not sure": left as it was) |
-| gpt-6.1-terra | 24 | 4 |
+| Model | Photos turned right (of 24) | Hard case 1 (of 4) | Hard case 2 (of 16) |
+|---|---|---|---|
+| gemini-3.5-flash-lite | 24 | 4 | 16 |
+| deepseek-flash | 23 | 0–2, once a wrong turn | — |
+| gpt-6-luna | 23 | 1 (otherwise "not sure") | 12 (3 "not sure", 1 wrong) |
+| gpt-6.1-terra | 24 | 4 | — |
+
+"Not sure" leaves the photo as it was; you can still turn it with the buttons under its thumbnail.
+**For turning photos, Gemini is the best choice** — if its free tier's terms suit you (see below).
 
 A photo is turned only when two answers with the copies in a different order agree; otherwise it
-is left as it was.
+is left as it was. Stickers (cut out along their outline) are never sent: they are kept as they lie.
 
 ### Privacy: what each service may do with what you send
 
