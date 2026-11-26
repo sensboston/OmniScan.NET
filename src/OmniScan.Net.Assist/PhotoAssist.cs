@@ -32,6 +32,15 @@ public static class PhotoAssist
     /// <summary>The order of the copies for the confirming question.</summary>
     private static readonly int[] ConfirmTurns = [180, 270, 0, 90];
 
+    /// <summary>
+    /// Answer budget for looking at a photo. It includes the thinking of a reasoning model: with too little,
+    /// a hard photo (no clear "up") is now and then answered with nothing at all.
+    /// </summary>
+    private const int LookTokens = 1200;
+
+    /// <summary>The budget when the first answer came back empty.</summary>
+    private const int LookTokensAgain = 3000;
+
     public static async Task<PhotoReport> LookAsync(AssistClient client, Pix photo, bool orient, bool describe,
         string? languageCode, CancellationToken cancellationToken = default, int imageSide = ImageSide)
     {
@@ -41,9 +50,9 @@ public static class PhotoAssist
         Pix small = Shrink(photo, imageSide);
         string prompt = Prompt(orient, describe, LanguageName(languageCode));
         List<byte[]> images = orient ? Copies(small, Turns) : [Jpeg(small)];
-        string? answer = await client.AskAsync(prompt, images, 400, cancellationToken).ConfigureAwait(false);
+        string? answer = await client.AskAsync(prompt, images, LookTokens, cancellationToken).ConfigureAwait(false);
         if (string.IsNullOrWhiteSpace(answer))   // a model that spent the answer thinking: once more
-            answer = await client.AskAsync(prompt, images, 800, cancellationToken).ConfigureAwait(false);
+            answer = await client.AskAsync(prompt, images, LookTokensAgain, cancellationToken).ConfigureAwait(false);
         PhotoReport report = Parse(answer, orient, describe, Turns);
         if (report.Rotation is not (int turn and not 0))
             return report;
