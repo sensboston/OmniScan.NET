@@ -17,6 +17,12 @@ Already have the [.NET 10 Desktop Runtime](https://aka.ms/dotnet/10.0/windowsdes
 
 ## Screenshots
 
+<img width="1078" height="808" alt="omniscan04" src="https://github.com/user-attachments/assets/242e2d19-7d2a-4ca6-94b5-b199fa467894" />
+<img width="1078" height="808" alt="omniscan03" src="https://github.com/user-attachments/assets/1450b850-7575-490f-9924-60aed87455c1" />
+<img width="1078" height="808" alt="omniscan02" src="https://github.com/user-attachments/assets/23c3d83b-6f6c-4e53-a8c1-f11ee70fd6bd" />
+<img width="1078" height="808" alt="omniscan01" src="https://github.com/user-attachments/assets/7db07fd7-f8ed-47ca-8ff1-8ae0528eee87" />
+
+
 _Coming soon._
 
 <!-- Three in a row, each opens the full picture:
