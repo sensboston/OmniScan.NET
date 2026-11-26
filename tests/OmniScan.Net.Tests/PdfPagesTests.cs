@@ -111,4 +111,51 @@ public sealed class PdfPagesTests
         Assert.Equal(2, PdfIo.GetPageCount(path));
         Assert.Single(Directory.GetFiles(Path.GetDirectoryName(path)!));
     }
+
+    /// <summary>The same sheet printed on yellow paper.</summary>
+    private static ScannedFrame YellowSheet()
+    {
+        Pix pix = Pix.ReadMem(Sheet(3).Data);
+        uint[] data = pix.Data;
+        for (int i = 0; i < data.Length; i++)
+        {
+            if (data[i] >> 24 == 250)
+                data[i] = 0xF5DC3C00u;
+        }
+
+        return new ScannedFrame(Pix.WriteMemBmp(pix), "image/bmp", Dpi);
+    }
+
+    [Fact]
+    public void WhitePaper_IsSwitchedOnAndOff_WithoutScanningAgain()
+    {
+        PdfPage plain = PdfPages.Make(YellowSheet(), 0, false, false, null).Page!;
+        PdfPage white = PdfPages.Make(YellowSheet(), 0, false, false, null, whitePaper: true).Page!;
+
+        Assert.False(plain.IsWhitePaper);
+        Assert.True(white.IsWhitePaper);
+        Assert.Equal(8, PdfPages.Decode(white).Depth);   // colored paper: gray, like a photocopy
+
+        PdfPage back = PdfPages.WithWhitePaper(white, false);
+        Assert.False(back.IsWhitePaper);
+        Assert.Equal(plain.Png, back.Png);
+
+        PdfPage again = PdfPages.WithWhitePaper(back, true);
+        Assert.True(again.IsWhitePaper);
+        Assert.Same(again, PdfPages.WithWhitePaper(again, true));
+    }
+
+    [Fact]
+    public void WhitePaper_IsKept_WhenThePageIsTurned()
+    {
+        PdfPage white = PdfPages.Make(YellowSheet(), 0, false, false, null, whitePaper: true).Page!;
+
+        PdfPage turned = PdfPages.Rotate(white, 90);
+        PdfPage back = PdfPages.WithWhitePaper(turned, false);
+
+        Assert.True(turned.IsWhitePaper);
+        Pix plain = PdfPages.Decode(back);
+        Assert.Equal(PdfPages.Decode(white).Height, plain.Width);
+        Assert.Equal(32, plain.Depth);
+    }
 }

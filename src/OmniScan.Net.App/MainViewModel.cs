@@ -512,8 +512,61 @@ public sealed class MainViewModel : INotifyPropertyChanged
         get => _whitePaper;
         set
         {
-            if (Set(ref _whitePaper, value))
-                _ = RedrawPreviewAsync();
+            if (!Set(ref _whitePaper, value))
+                return;
+            _ = RedrawPreviewAsync();
+            _ = ApplyWhitePaperAsync(value);
+        }
+    }
+
+    /// <summary>The last scan saved as image files, kept to redo them when "remove paper color" is switched.</summary>
+    private (ScannedFrame Frame, SaveOptions Options)? _lastScan;
+
+    /// <summary>
+    /// "Remove paper color" works on what is on screen right away: the PDF pages scanned so far, or the
+    /// files of the last scan (made again from that scan, without scanning again).
+    /// </summary>
+    private async Task ApplyWhitePaperAsync(bool whitePaper)
+    {
+        if (IsBusy)
+            return;
+        if (Session.HasPages)
+        {
+            await Session.SetWhitePaperAsync(whitePaper);
+            return;
+        }
+
+        if (_lastScan is not { } last || Results.Count == 0)
+            return;
+        string[] saved = Results.Select(r => r.Path).ToArray();
+        BeginBusy(Strings.ProcessingBusy);
+        try
+        {
+            foreach (string path in saved)
+            {
+                File.Delete(path);
+                Descriptions.Set(path, null);
+            }
+
+            if (saved.Contains(_lastSavedFile))
+                _lastSavedFile = null;
+            ClearResults();
+            SaveOptions options = last.Options with
+            {
+                Date = DateTime.Now,
+                Processing = last.Options.Processing with { WhitePaper = whitePaper },
+                GuessContent = false,
+                GuessStickers = false,
+            };
+            await SaveScanAsync(last.Frame, options);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            Status = Strings.SaveFailed + " " + e.Message;
+        }
+        finally
+        {
+            EndBusy();
         }
     }
 
@@ -761,6 +814,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private async Task SaveScanAsync(ScannedFrame frame, SaveOptions options)
     {
         SaveResult result = await Task.Run(() => ScanSaver.Save(frame, options));
+        _lastScan = result.Files.Count > 0 ? (frame, options) : null;
         PreviewImage = await Task.Run(() => LoadBitmap(result.PreviewBmp));
         if (result.Files.Count == 0)
         {

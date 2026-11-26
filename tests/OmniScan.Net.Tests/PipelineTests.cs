@@ -619,11 +619,7 @@ public sealed class PipelineTests
         });
     }
 
-    private static (uint R, uint G, uint B) Rgb(Pix pix, int x, int y)
-    {
-        uint p = pix.Data[y * pix.Wpl + x];
-        return (p >> 24, (p >> 16) & 0xff, (p >> 8) & 0xff);
-    }
+    private static uint Gray(Pix pix, int x, int y) => (pix.Data[y * pix.Wpl + (x >> 2)] >> (24 - 8 * (x & 3))) & 0xff;
 
     [Fact]
     public void WhitePaper_MakesColoredPaperWhite_AndKeepsThePrint()
@@ -643,10 +639,12 @@ public sealed class PipelineTests
 
         Pix page = ScanPipeline.Cut(bed, [], options).Images[0];
 
-        (uint r, uint g, uint b) = Rgb(page, (int)(0.5 * Dpi), (int)(0.5 * Dpi));
-        Assert.True(r > 235 && g > 235 && b > 235, $"paper {r},{g},{b}");
-        (r, g, b) = Rgb(page, (int)(1.0 * Dpi) + 10, (int)(1.0 * Dpi) + 4);
-        Assert.True(r < 100 && g < 100 && b < 100, $"print {r},{g},{b}");
+        // Clearly colored paper: gray like a photocopy (the colors of the print cannot be told under it).
+        Assert.Equal(8, page.Depth);
+        uint paper = Gray(page, (int)(0.5 * Dpi), (int)(0.5 * Dpi));
+        Assert.True(paper > 235, $"paper {paper}");
+        uint print = Gray(page, (int)(1.0 * Dpi) + 10, (int)(1.0 * Dpi) + 4);
+        Assert.True(print < 100, $"print {print}");
     }
 
     [Fact]

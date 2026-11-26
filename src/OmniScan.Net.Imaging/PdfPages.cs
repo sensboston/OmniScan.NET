@@ -25,6 +25,12 @@ public sealed class PdfPage
     public int Dpi { get; }
     public byte[] ThumbnailBmp { get; }
     internal double[] Signature { get; }
+
+    /// <summary>The page as scanned, while <see cref="Png"/> has the paper made white; null otherwise.</summary>
+    internal byte[]? PlainPng { get; init; }
+
+    /// <summary>The paper of this page is made white (it can be undone: the page as scanned is kept).</summary>
+    public bool IsWhitePaper => PlainPng is not null;
 }
 
 /// <summary>What came off the glass for a PDF page.</summary>
@@ -66,7 +72,7 @@ public static class PdfPages
             return (null, PageCheck.Empty);
 
         page = PageTools.WhitenBorder(page, EdgeBand);
-        PipelineResult result = ScanPipeline.Cut(page, [], new PipelineOptions(false, false, deskew, autoOrient, WhitePaper: whitePaper));
+        PipelineResult result = ScanPipeline.Cut(page, [], new PipelineOptions(false, false, deskew, autoOrient));
         Pix done = result.Images[0];
 
         double[] signature = Signature(done);
@@ -74,15 +80,40 @@ public static class PdfPages
             return (null, PageCheck.Unchanged);
 
         int dpi = done.XRes > 0 ? done.XRes : frame.Dpi;
-        return (new PdfPage(Pix.WriteMemPng(done, 0), dpi, FrameCodec.PreviewBmp(done, ThumbnailSide), signature), PageCheck.Page);
+        return (Create(done, dpi, signature, whitePaper), PageCheck.Page);
     }
 
-    /// <summary>The page turned by a multiple of 90 degrees (lossless).</summary>
+    /// <summary>A page from the image as scanned (and straightened), with its paper made white if asked.</summary>
+    private static PdfPage Create(Pix plain, int dpi, double[] signature, bool whitePaper)
+    {
+        byte[] plainPng = Pix.WriteMemPng(plain, 0);
+        if (!whitePaper)
+            return new PdfPage(plainPng, dpi, FrameCodec.PreviewBmp(plain, ThumbnailSide), signature);
+        Pix white = PageTools.WhitenPaper(plain);
+        return new PdfPage(Pix.WriteMemPng(white, 0), dpi, FrameCodec.PreviewBmp(white, ThumbnailSide), signature) { PlainPng = plainPng };
+    }
+
+    /// <summary>The page with its paper made white, or back as scanned (the same page when it is so already).</summary>
+    public static PdfPage WithWhitePaper(PdfPage page, bool whitePaper)
+    {
+        if (page.IsWhitePaper == whitePaper)
+            return page;
+        if (whitePaper)
+            return Create(Decode(page), page.Dpi, page.Signature, true);
+        Pix plain = Pix.ReadMemPng(page.PlainPng!);
+        return new PdfPage(page.PlainPng!, page.Dpi, FrameCodec.PreviewBmp(plain, ThumbnailSide), page.Signature);
+    }
+
+    /// <summary>The page turned by a multiple of 90 degrees (lossless); a page with white paper keeps it.</summary>
     public static PdfPage Rotate(PdfPage page, int degrees)
     {
-        Pix pix = Decode(page);
-        Pix turned = FrameCodec.Rotate(pix, ((degrees % 360) + 360) % 360);
-        return new PdfPage(Pix.WriteMemPng(turned, 0), page.Dpi, FrameCodec.PreviewBmp(turned, ThumbnailSide), Signature(turned));
+        int turn = ((degrees % 360) + 360) % 360;
+        Pix turned = FrameCodec.Rotate(Decode(page), turn);
+        byte[]? plain = page.PlainPng is { } p ? Pix.WriteMemPng(FrameCodec.Rotate(Pix.ReadMemPng(p), turn), 0) : null;
+        return new PdfPage(Pix.WriteMemPng(turned, 0), page.Dpi, FrameCodec.PreviewBmp(turned, ThumbnailSide), Signature(turned))
+        {
+            PlainPng = plain,
+        };
     }
 
     /// <summary>A larger view of a page for the preview pane.</summary>

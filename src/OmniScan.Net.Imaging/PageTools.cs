@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Leptonica;
 
 namespace OmniScan.Net.Imaging;
@@ -147,10 +149,16 @@ public static class PageTools
     }
 
     /// <summary>Paints a band of <paramref name="inches"/> along every edge white (the dark strips at the glass edges).</summary>
+    /// <summary>Paper this colorful (max - min of its RGB) gives a gray result: see <see cref="WhitenPaper"/>.</summary>
+    private const int ColoredPaper = 40;
+
     /// <summary>
     /// Paper of any color made white, and the print on it kept dark: the background is estimated over
     /// the sheet piece by piece and stretched to white (Leptonica's background normalization). Pictures
     /// change their colors under it, so it is for sheets of text only. Black &amp; white stays as it is.
+    /// On clearly colored paper the result is gray, like a photocopy: the colors of the print cannot be
+    /// told under it (yellow paper takes the blue away from everything, and "restored" colors come out
+    /// made up), so the channels are mixed in the measure the paper reflects them.
     /// </summary>
     public static Pix WhitenPaper(Pix sheet)
     {
@@ -158,7 +166,88 @@ public static class PageTools
             return sheet;
         Pix white = sheet.CleanBackgroundToWhite(null, null, 1.0f, 70, 190);
         white.SetResolution(sheet.XRes, sheet.YRes);
-        return white;
+        if (white.Depth != 32 || PaperColor(sheet) is not { } paper
+            || Math.Max(paper.R, Math.Max(paper.G, paper.B)) - Math.Min(paper.R, Math.Min(paper.G, paper.B)) < ColoredPaper)
+            return white;
+
+        double sum = Math.Max(1, paper.R + paper.G + paper.B);
+        double wr = paper.R / sum, wg = paper.G / sum, wb = paper.B / sum;
+        int w = white.Width, h = white.Height, swpl = white.Wpl;
+        Pix gray = Pix.Create(w, h, 8);
+        gray.SetResolution(sheet.XRes, sheet.YRes);
+        uint[] src = white.Data, dst = gray.Data;
+        int dwpl = gray.Wpl;
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                uint p = src[y * swpl + x];
+                int v = (int)Math.Round((p >> 24) * wr + ((p >> 16) & 0xff) * wg + ((p >> 8) & 0xff) * wb);
+                int word = y * dwpl + (x >> 2), shift = 24 - 8 * (x & 3);
+                dst[word] |= (uint)Math.Clamp(v, 0, 255) << shift;
+            }
+        }
+
+        return gray;
+    }
+
+    /// <summary>Share of a sheet that is its paper, at least (a photo is rarely so much of one even color).</summary>
+    private const double PaperShare = 0.5;
+
+    /// <summary>Most of the image is one even, light color: a sheet of paper (of any color), not a photo.</summary>
+    public static bool LooksLikePaper(Pix image)
+    {
+        if (PaperColor(image) is not { } paper)
+            return image.Depth == 8;
+        uint[] data = image.Data;
+        int w = image.Width, h = image.Height, wpl = image.Wpl, near = 0, all = 0;
+        for (int y = 0; y < h; y += 4)
+        {
+            for (int x = 0; x < w; x += 4)
+            {
+                uint p = data[y * wpl + x];
+                int d = Math.Abs((int)(p >> 24) - paper.R) + Math.Abs((int)((p >> 16) & 0xff) - paper.G) + Math.Abs((int)((p >> 8) & 0xff) - paper.B);
+                near += d < 60 ? 1 : 0;
+                all++;
+            }
+        }
+
+        return near >= PaperShare * all;
+    }
+
+    /// <summary>The color of the paper: the middle of the lighter half of the sheet; null for a gray image.</summary>
+    private static (int R, int G, int B)? PaperColor(Pix sheet)
+    {
+        if (sheet.Depth != 32)
+            return null;
+        uint[] data = sheet.Data;
+        int w = sheet.Width, h = sheet.Height, wpl = sheet.Wpl;
+        List<int> sums = [];
+        List<(int R, int G, int B)> samples = [];
+        for (int y = 0; y < h; y += 4)
+        {
+            for (int x = 0; x < w; x += 4)
+            {
+                uint p = data[y * wpl + x];
+                (int r, int g, int b) = ((int)(p >> 24), (int)((p >> 16) & 0xff), (int)((p >> 8) & 0xff));
+                samples.Add((r, g, b));
+                sums.Add(r + g + b);
+            }
+        }
+
+        if (samples.Count == 0)
+            return null;
+        double mean = sums.Average();
+        List<(int R, int G, int B)> light = samples.Where(s => s.R + s.G + s.B > mean).ToList();
+        if (light.Count == 0)
+            return null;
+        int Median(Func<(int R, int G, int B), int> channel)
+        {
+            int[] values = light.Select(channel).Order().ToArray();
+            return values[values.Length / 2];
+        }
+
+        return (Median(s => s.R), Median(s => s.G), Median(s => s.B));
     }
 
     public static Pix WhitenBorder(Pix page, double inches)

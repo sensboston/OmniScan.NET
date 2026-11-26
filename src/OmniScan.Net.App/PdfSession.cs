@@ -313,6 +313,36 @@ public sealed class PdfSession : INotifyPropertyChanged
         OnPropertyChanged(nameof(IsCountingDown));
     }
 
+    /// <summary>Makes the paper of every page white, or puts the pages back as scanned; shows the last page.</summary>
+    internal async Task SetWhitePaperAsync(bool whitePaper)
+    {
+        IsBusy = true;
+        try
+        {
+            BitmapSource? full = null;
+            foreach (PdfPageItem item in Pages.ToArray())
+            {
+                PdfPage source = item.Page;
+                bool last = ReferenceEquals(item, Pages[^1]);
+                (PdfPage changed, BitmapSource thumb, BitmapSource? view) = await Task.Run(() =>
+                {
+                    PdfPage c = PdfPages.WithWhitePaper(source, whitePaper);
+                    return (c, ResultItem.LoadBitmap(c.ThumbnailBmp), last ? ResultItem.LoadBitmap(PdfPages.PreviewBmp(c)) : null);
+                });
+                item.Page = changed;
+                item.Thumbnail = thumb;
+                full = view ?? full;
+            }
+
+            if (full is not null)
+                ShowRequested?.Invoke(full);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
     internal async Task RotateAsync(PdfPageItem item, int degrees)
     {
         IsBusy = true;

@@ -247,6 +247,11 @@ public static class ScanPipeline
         // A manual frame is straightened along the drawn rectangle whatever the Deskew option says:
         // the user rotated it on purpose.
         Pix image = PageTools.Extract(page, frame.Rect, options.Deskew || frame.Manual);
+
+        // A whole sheet of colored paper looks solid, like a photo, to the layout: mostly one even color
+        // (the paper), it is a sheet after all.
+        if (options.WhitePaper && PageTools.LooksLikePaper(image))
+            image = PageTools.WhitenPaper(image);
         if (options.AutoCrop && !frame.Manual)
             image = PageTools.TrimFringe(PageTools.TrimLightBorder(image), page.XRes > 0 ? page.XRes : 300);
         if (options.AutoOrient && PageTools.FindTextRotation(image, PhotoTextConfidence) is int turn and not 0)

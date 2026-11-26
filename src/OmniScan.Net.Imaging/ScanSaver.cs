@@ -117,7 +117,9 @@ public static class ScanSaver
             frames = frames.Select(f => f with { Outline = ScanPipeline.OutlineOf(page, f, processing) }).ToList();
         ContentKind content = guessContent ? ContentGuess.Classify(page) : ContentKind.Unknown;
         bool stickers = guessStickers && content != ContentKind.Document && ScanPipeline.LooksLikeStickers(page);
-        return new PreviewResult(PreviewWithOutlines(page, []), frames.Select(f => f.Normalize(page.Width)).ToList(), content, stickers);
+        // The preview shows white paper when that is asked for (the frames are found on the scan as it is).
+        Pix shown = processing.WhitePaper ? PageTools.WhitenPaper(page) : page;
+        return new PreviewResult(PreviewWithOutlines(shown, []), frames.Select(f => f.Normalize(page.Width)).ToList(), content, stickers);
     }
 
     internal static byte[] PreviewWithOutlines(Pix page, IReadOnlyList<RotatedRect> outlines)
