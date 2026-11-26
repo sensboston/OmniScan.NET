@@ -99,7 +99,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _releaseTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _releaseTimer.Tick += (_, _) => CountDownRelease();
         // Shared scanners: whether someone is using them at their computer, shown in the list.
-        _inUseTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(20) };
+        _inUseTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
         _inUseTimer.Tick += (_, _) => _ = RefreshInUseAsync();
         _inUseTimer.Start();
         AskReleaseCommand = new RelayCommand(() => _ = AskReleaseAsync());

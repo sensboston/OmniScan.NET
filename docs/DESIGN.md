@@ -192,7 +192,7 @@ what lies on the glass, a remote user cannot. The scanner counts as *in use* the
 or while the main window is open (not minimized) and was opened or used to scan within the last
 3 minutes. A remote scan is then refused at once — never queued, since a queued scan would take
 whatever sheet lies on the glass when its turn comes. The device list shows a dot next to shared
-scanners (green: free, red: in use), refreshed every 20 s. A refused client offers to ask for the
+scanners (green: free, red: in use), refreshed every 5 s (the server lists its scanners at most every 30 s; in use or not is always fresh). A refused client offers to ask for the
 scanner: the server's window shows a card with OK (closes the window; sharing goes on from the tray)
 and Refuse. Without an answer it closes by itself after 15 s, unless unsaved PDF pages would be lost.
 

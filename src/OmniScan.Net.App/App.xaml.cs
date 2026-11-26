@@ -75,6 +75,9 @@ public partial class App : Application
 
         if (_settings.ServerEnabled)
         {
+            // The autostart entry follows the program: written also when sharing was turned on in the
+            // settings file by hand, or the program has moved to another folder since.
+            TryAutostart(true);
             ShowTray();
             _ = StartServerAsync();
         }

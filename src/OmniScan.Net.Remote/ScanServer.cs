@@ -253,17 +253,31 @@ public sealed class ScanServer : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// The scanners are listed again at most this often: clients ask every few seconds whether the scanner
+    /// is in use, and listing goes through the same queue as the scans. In use or not is always fresh.
+    /// </summary>
+    private static readonly TimeSpan DeviceListAge = TimeSpan.FromSeconds(30);
+
+    private IReadOnlyList<ScannerDevice>? _devices;
+    private long _devicesAt;
+
     private async Task<ServerInfo> InfoAsync(CancellationToken ct)
     {
-        IReadOnlyList<ScannerDevice> devices;
-        try
+        IReadOnlyList<ScannerDevice>? devices = _devices;
+        if (devices is null || Environment.TickCount64 - Interlocked.Read(ref _devicesAt) > DeviceListAge.TotalMilliseconds)
         {
-            // A stuck driver must not hang every client's device list.
-            devices = await _backend.GetDevicesAsync(ct).WaitAsync(TimeSpan.FromSeconds(10), ct);
-        }
-        catch (Exception e) when (e is ScannerException or TimeoutException)
-        {
-            devices = [];
+            try
+            {
+                // A stuck driver must not hang every client's device list.
+                devices = await _backend.GetDevicesAsync(ct).WaitAsync(TimeSpan.FromSeconds(10), ct);
+                _devices = devices;
+                Interlocked.Exchange(ref _devicesAt, Environment.TickCount64);
+            }
+            catch (Exception e) when (e is ScannerException or TimeoutException)
+            {
+                devices = devices ?? [];
+            }
         }
 
         // Network devices behind a vendor driver are reachable from the other computers directly (or not
