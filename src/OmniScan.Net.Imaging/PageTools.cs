@@ -148,47 +148,114 @@ public static class PageTools
         return Clip(image, left, top, w - left - right, h - top - bottom);
     }
 
-    /// <summary>Paints a band of <paramref name="inches"/> along every edge white (the dark strips at the glass edges).</summary>
     /// <summary>Paper this colorful (max - min of its RGB) gives a gray result: see <see cref="WhitenPaper"/>.</summary>
     private const int ColoredPaper = 40;
 
+    /// <summary>From this share of the paper's brightness on, a pixel is white (paper grain, show-through).</summary>
+    private const double PaperWhite = 0.88;
+
+    /// <summary>Up to this share of the paper's brightness, a pixel is black.</summary>
+    private const double InkBlack = 0.08;
+
+    /// <summary>A little more weight to the middle grays, so that tinted panels and drawings stay readable.</summary>
+    private const double MidGray = 1.15;
+
     /// <summary>
-    /// Paper of any color made white, and the print on it kept dark: the background is estimated over
-    /// the sheet piece by piece and stretched to white (Leptonica's background normalization). Pictures
-    /// change their colors under it, so it is for sheets of text only. Black &amp; white stays as it is.
-    /// On clearly colored paper the result is gray, like a photocopy: the colors of the print cannot be
-    /// told under it (yellow paper takes the blue away from everything, and "restored" colors come out
-    /// made up), so the channels are mixed in the measure the paper reflects them.
+    /// Paper of any color made white, the print on it kept. A flatbed lights the sheet evenly, so the
+    /// paper has one color all over: it is found once (the most common color of the sheet) and every
+    /// pixel is taken relative to it, then set like a copier does (near the paper: white; the rest
+    /// stretched). Unlike a background estimated piece by piece, this keeps large tinted panels (a
+    /// heading on a dark band) as they are. On clearly colored paper the result is gray, like a
+    /// photocopy: the colors of the print cannot be told under it (yellow paper takes the blue away
+    /// from everything, so blue and black look the same), and the channels are mixed in the measure the
+    /// paper reflects them. On paper that is only tinted the colors are kept.
     /// </summary>
     public static Pix WhitenPaper(Pix sheet)
     {
-        if (sheet.Depth is not (8 or 32) || sheet.Colormap is not null || sheet.Width < 64 || sheet.Height < 64)
+        if (sheet.Depth is not (8 or 32) || sheet.Colormap is not null || sheet.Width < 64 || sheet.Height < 64
+            || PaperColor(sheet) is not { } paper)
             return sheet;
-        Pix white = sheet.CleanBackgroundToWhite(null, null, 1.0f, 70, 190);
-        white.SetResolution(sheet.XRes, sheet.YRes);
-        if (white.Depth != 32 || PaperColor(sheet) is not { } paper
-            || Math.Max(paper.R, Math.Max(paper.G, paper.B)) - Math.Min(paper.R, Math.Min(paper.G, paper.B)) < ColoredPaper)
-            return white;
 
-        double sum = Math.Max(1, paper.R + paper.G + paper.B);
-        double wr = paper.R / sum, wg = paper.G / sum, wb = paper.B / sum;
-        int w = white.Width, h = white.Height, swpl = white.Wpl;
+        int w = sheet.Width, h = sheet.Height, swpl = sheet.Wpl;
+        uint[] src = sheet.Data;
+        bool colored = Math.Max(paper.R, Math.Max(paper.G, paper.B)) - Math.Min(paper.R, Math.Min(paper.G, paper.B)) >= ColoredPaper;
+        if (sheet.Depth == 32 && !colored)
+        {
+            byte[] lr = Levels(paper.R), lg = Levels(paper.G), lb = Levels(paper.B);
+            Pix color = Pix.Create(w, h, 32);
+            color.SetResolution(sheet.XRes, sheet.YRes);
+            uint[] dst = color.Data;
+            int cwpl = color.Wpl;
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    uint p = src[y * swpl + x];
+                    dst[y * cwpl + x] = ((uint)lr[p >> 24] << 24) | ((uint)lg[(p >> 16) & 0xff] << 16) | ((uint)lb[(p >> 8) & 0xff] << 8);
+                }
+            }
+
+            return color;
+        }
+
         Pix gray = Pix.Create(w, h, 8);
         gray.SetResolution(sheet.XRes, sheet.YRes);
-        uint[] src = white.Data, dst = gray.Data;
-        int dwpl = gray.Wpl;
+        uint[] g = gray.Data;
+        int gwpl = gray.Wpl;
+        if (sheet.Depth == 8)
+        {
+            byte[] lut = Levels(paper.R);
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    int shift = 24 - 8 * (x & 3);
+                    uint v = (src[y * swpl + (x >> 2)] >> shift) & 0xff;
+                    g[y * gwpl + (x >> 2)] |= (uint)lut[v] << shift;
+                }
+            }
+
+            return gray;
+        }
+
+        // Each channel counts as much as the paper reflects it; relative to the paper, then set.
+        double sum = Math.Max(1, paper.R + paper.G + paper.B);
+        double[] rr = Relative(paper.R, paper.R / sum), rg = Relative(paper.G, paper.G / sum), rb = Relative(paper.B, paper.B / sum);
         for (int y = 0; y < h; y++)
         {
             for (int x = 0; x < w; x++)
             {
                 uint p = src[y * swpl + x];
-                int v = (int)Math.Round((p >> 24) * wr + ((p >> 16) & 0xff) * wg + ((p >> 8) & 0xff) * wb);
-                int word = y * dwpl + (x >> 2), shift = 24 - 8 * (x & 3);
-                dst[word] |= (uint)Math.Clamp(v, 0, 255) << shift;
+                double rel = rr[p >> 24] + rg[(p >> 16) & 0xff] + rb[(p >> 8) & 0xff];
+                g[y * gwpl + (x >> 2)] |= (uint)Level(rel) << (24 - 8 * (x & 3));
             }
         }
 
         return gray;
+    }
+
+    /// <summary>A channel value as a share of the paper's, weighted.</summary>
+    private static double[] Relative(int paper, double weight)
+    {
+        double[] t = new double[256];
+        for (int v = 0; v < 256; v++)
+            t[v] = weight * v / Math.Max(1, paper);
+        return t;
+    }
+
+    private static byte[] Levels(int paper)
+    {
+        byte[] t = new byte[256];
+        for (int v = 0; v < 256; v++)
+            t[v] = Level((double)v / Math.Max(1, paper));
+        return t;
+    }
+
+    /// <summary>Brightness relative to the paper (1 = paper) to an output level, as a copier sets it.</summary>
+    private static byte Level(double relative)
+    {
+        double t = Math.Clamp((relative - InkBlack) / (PaperWhite - InkBlack), 0, 1);
+        return (byte)Math.Round(Math.Pow(t, MidGray) * 255);
     }
 
     /// <summary>Share of a sheet that is its paper, at least (a photo is rarely so much of one even color).</summary>
@@ -198,58 +265,72 @@ public static class PageTools
     public static bool LooksLikePaper(Pix image)
     {
         if (PaperColor(image) is not { } paper)
-            return image.Depth == 8;
-        uint[] data = image.Data;
-        int w = image.Width, h = image.Height, wpl = image.Wpl, near = 0, all = 0;
-        for (int y = 0; y < h; y += 4)
+            return false;
+        int near = 0, all = 0;
+        foreach ((int r, int g, int b) in Samples(image))
         {
-            for (int x = 0; x < w; x += 4)
-            {
-                uint p = data[y * wpl + x];
-                int d = Math.Abs((int)(p >> 24) - paper.R) + Math.Abs((int)((p >> 16) & 0xff) - paper.G) + Math.Abs((int)((p >> 8) & 0xff) - paper.B);
-                near += d < 60 ? 1 : 0;
-                all++;
-            }
+            near += Math.Abs(r - paper.R) + Math.Abs(g - paper.G) + Math.Abs(b - paper.B) < 60 ? 1 : 0;
+            all++;
         }
 
-        return near >= PaperShare * all;
+        return all > 0 && near >= PaperShare * all;
     }
 
-    /// <summary>The color of the paper: the middle of the lighter half of the sheet; null for a gray image.</summary>
+    /// <summary>
+    /// The color of the paper: the most common light color of the sheet (the paper, not the lid around
+    /// a smaller sheet or the print); null when nothing light is found.
+    /// </summary>
     private static (int R, int G, int B)? PaperColor(Pix sheet)
     {
-        if (sheet.Depth != 32)
-            return null;
-        uint[] data = sheet.Data;
-        int w = sheet.Width, h = sheet.Height, wpl = sheet.Wpl;
-        List<int> sums = [];
-        List<(int R, int G, int B)> samples = [];
-        for (int y = 0; y < h; y += 4)
+        Dictionary<int, List<(int R, int G, int B)>> bins = [];
+        foreach ((int R, int G, int B) s in Samples(sheet))
         {
-            for (int x = 0; x < w; x += 4)
-            {
-                uint p = data[y * wpl + x];
-                (int r, int g, int b) = ((int)(p >> 24), (int)((p >> 16) & 0xff), (int)((p >> 8) & 0xff));
-                samples.Add((r, g, b));
-                sums.Add(r + g + b);
-            }
+            if (Math.Max(s.R, Math.Max(s.G, s.B)) < 100)
+                continue;
+            int key = ((s.R >> 4) << 8) | ((s.G >> 4) << 4) | (s.B >> 4);
+            if (!bins.TryGetValue(key, out List<(int R, int G, int B)>? list))
+                bins[key] = list = [];
+            list.Add(s);
         }
 
-        if (samples.Count == 0)
+        if (bins.Count == 0)
             return null;
-        double mean = sums.Average();
-        List<(int R, int G, int B)> light = samples.Where(s => s.R + s.G + s.B > mean).ToList();
-        if (light.Count == 0)
-            return null;
+        List<(int R, int G, int B)> common = bins.Values.MaxBy(l => l.Count)!;
         int Median(Func<(int R, int G, int B), int> channel)
         {
-            int[] values = light.Select(channel).Order().ToArray();
+            int[] values = common.Select(channel).Order().ToArray();
             return values[values.Length / 2];
         }
 
-        return (Median(s => s.R), Median(s => s.G), Median(s => s.B));
+        return (Median(c => c.R), Median(c => c.G), Median(c => c.B));
     }
 
+    /// <summary>Every fourth pixel in both directions, as R, G, B (gray images: the same value three times).</summary>
+    private static IEnumerable<(int R, int G, int B)> Samples(Pix image)
+    {
+        if (image.Depth is not (8 or 32) || image.Colormap is not null)
+            yield break;
+        uint[] data = image.Data;
+        int w = image.Width, h = image.Height, wpl = image.Wpl;
+        for (int y = 0; y < h; y += 4)
+        {
+            for (int x = 0; x < w; x += 4)
+            {
+                if (image.Depth == 32)
+                {
+                    uint p = data[y * wpl + x];
+                    yield return ((int)(p >> 24), (int)((p >> 16) & 0xff), (int)((p >> 8) & 0xff));
+                }
+                else
+                {
+                    int v = (int)((data[y * wpl + (x >> 2)] >> (24 - 8 * (x & 3))) & 0xff);
+                    yield return (v, v, v);
+                }
+            }
+        }
+    }
+
+    /// <summary>Paints a band of <paramref name="inches"/> along every edge white (the dark strips at the glass edges).</summary>
     public static Pix WhitenBorder(Pix page, double inches)
     {
         int dpi = page.XRes > 0 ? page.XRes : 300;

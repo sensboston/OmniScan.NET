@@ -90,11 +90,17 @@ that scan becomes page 1 instead of the image file.
 Photos standing apart on the glass never count as a document, and an unclear case gets no hint.
 The hint is shown at most once per run.
 
-**Colored paper** (a checkbox that is off at every start): sheets and PDF pages printed on colored
-paper get a white background by Leptonica's background normalization (`pixCleanBackgroundToWhite`):
-the paper color is estimated piece by piece and stretched to white, the print stays dark. It changes
-the colors of pictures, so photos and stickers are left alone, and left on it would wash out the
-colored panels of a bill, hence off at every start.
+**Colored paper** (a checkbox that is off at every start, disabled for black & white): sheets and PDF
+pages printed on colored paper get a white background. A flatbed lights the sheet evenly, so the paper
+has one color all over: it is found once (the most common light color of the sheet) and every pixel is
+taken relative to it, then set like a copier does (near the paper: white, the rest stretched). Unlike a
+background estimated piece by piece, this keeps large tinted panels (a heading on a dark band). On
+clearly colored paper the result is gray: under yellow paper blue and black print look the same, so
+its colors cannot be told, and the channels are mixed in the measure the paper reflects them; paper
+that is only tinted keeps the colors of the print. A whole colored sheet that the layout takes for a
+photo is recognized by its paper (half of it or more one even color). Photos and stickers are left
+alone. The switch works on what is on screen right away: the preview, the PDF pages (each keeps the
+page as scanned), and the files of the last scan (made again from it, kept in memory).
 
 **Stickers** (PNG only, a checkbox that is off at every start). Each picture that is not a rectangle
 is cut along its outline with a white border, onto a transparent background. A sticker's own white

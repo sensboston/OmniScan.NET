@@ -634,6 +634,13 @@ public sealed class PipelineTests
                 data[y * wpl + x] = 0xF5DC3C00u;   // yellow paper
         }
 
+        // A heading on a darker band, as wide as a sheet: a panel, not paper.
+        for (int y = (int)(9.5 * Dpi); y < (int)(10.3 * Dpi); y++)
+        {
+            for (int x = (int)(1.0 * Dpi); x < (int)(7.5 * Dpi); x++)
+                data[y * wpl + x] = 0xAA962800u;
+        }
+
         TextBlock(bed, 1.0, 1.0, 6.5, 8.0);
         PipelineOptions options = new(false, false, false, false, WhitePaper: true);
 
@@ -645,6 +652,8 @@ public sealed class PipelineTests
         Assert.True(paper > 235, $"paper {paper}");
         uint print = Gray(page, (int)(1.0 * Dpi) + 10, (int)(1.0 * Dpi) + 4);
         Assert.True(print < 100, $"print {print}");
+        uint panel = Gray(page, (int)(4.0 * Dpi), (int)(9.9 * Dpi));
+        Assert.InRange(panel, 60u, 200u);   // the band stays a gray band
     }
 
     [Fact]

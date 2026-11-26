@@ -266,8 +266,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ColorMode ColorMode
     {
         get => _settings.ColorMode;
-        set => SetSetting(_settings.ColorMode, value, v => _settings.ColorMode = v);
+        set
+        {
+            if (SetSetting(_settings.ColorMode, value, v => _settings.ColorMode = v))
+                OnPropertyChanged(nameof(CanWhitePaper));
+        }
     }
+
+    /// <summary>Black &amp; white has no paper color to remove.</summary>
+    public bool CanWhitePaper => ColorMode != ColorMode.BlackWhite;
 
     public OutputFormat Format
     {
@@ -379,7 +386,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         BeginBusy(Strings.ProcessingBusy);
         try
         {
-            bool deskew = Deskew, orient = Deskew, white = WhitePaper;
+            bool deskew = Deskew, orient = Deskew, white = WhitePaper && CanWhitePaper;
             (PdfPage page, BitmapSource thumb, BitmapSource full) = await Task.Run(() =>
             {
                 PdfPage p = PdfPages.Make(frame, rotation, deskew, orient, null, allowBlank: true, whitePaper: white).Page!;
@@ -841,8 +848,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     /// <summary>The processing switches as they apply to the chosen format: a PDF is never split or cropped.</summary>
     private PipelineOptions EffectiveProcessing() =>
-        IsPdf ? new PipelineOptions(false, false, Deskew, Deskew, WhitePaper: WhitePaper)
-        : new PipelineOptions(AutoCrop, SplitPhotos, Deskew, Deskew, Stickers: Stickers && IsPng, WhitePaper: WhitePaper);
+        IsPdf ? new PipelineOptions(false, false, Deskew, Deskew, WhitePaper: WhitePaper && CanWhitePaper)
+        : new PipelineOptions(AutoCrop, SplitPhotos, Deskew, Deskew, Stickers: Stickers && IsPng, WhitePaper: WhitePaper && CanWhitePaper);
 
     /// <summary>
     /// Scans one PDF page (or the replacement of a page). An automatic scan that finds the same sheet as
@@ -869,7 +876,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             BeginBusy(Strings.ProcessingBusy);
             int rotation = frame.DeviceRotation ?? Rotation;
             PdfPage? previous = automatic && !Session.HasReplaceTarget ? Session.LastPage : null;
-            bool deskew = Deskew, orient = Deskew, white = WhitePaper;
+            bool deskew = Deskew, orient = Deskew, white = WhitePaper && CanWhitePaper;
             (PdfPage? page, PageCheck check, BitmapSource? thumb, BitmapSource? full) = await Task.Run(() =>
             {
                 (PdfPage? p, PageCheck c) = PdfPages.Make(frame, rotation, deskew, orient, previous, whitePaper: white);
@@ -997,7 +1004,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (options is null)
             {
-                bool deskew = Deskew, orient = Deskew, white = WhitePaper;
+                bool deskew = Deskew, orient = Deskew, white = WhitePaper && CanWhitePaper;
                 (PdfPage page, BitmapSource thumb, BitmapSource full) = await Task.Run(() =>
                 {
                     PdfPage p = PdfPages.Make(frame, rotation, deskew, orient, null, allowBlank: true, whitePaper: white).Page!;

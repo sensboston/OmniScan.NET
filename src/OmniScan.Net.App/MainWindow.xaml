@@ -115,7 +115,8 @@
                   IsEnabled="{Binding IsImageFormat}" />
         <CheckBox Content="{x:Static local:Strings.AutoCrop}" IsChecked="{Binding AutoCrop}" IsEnabled="{Binding IsImageFormat}" />
         <CheckBox Content="{x:Static local:Strings.Deskew}" IsChecked="{Binding Deskew}" />
-        <CheckBox Content="{x:Static local:Strings.WhitePaper}" IsChecked="{Binding WhitePaper}" ToolTip="{x:Static local:Strings.WhitePaperHint}" />
+        <CheckBox Content="{x:Static local:Strings.WhitePaper}" IsChecked="{Binding WhitePaper}" ToolTip="{x:Static local:Strings.WhitePaperHint}"
+                  IsEnabled="{Binding CanWhitePaper}" />
         <CheckBox Content="{x:Static local:Strings.Stickers}" IsChecked="{Binding Stickers}" ToolTip="{x:Static local:Strings.StickersHint}"
                   Visibility="{Binding IsPng, Converter={StaticResource Bool}}" />
 
