@@ -15,7 +15,11 @@ Already have the [.NET 10 Desktop Runtime](https://aka.ms/dotnet/10.0/windowsdes
 **[lite build](https://github.com/sensboston/OmniScan.NET/releases/latest/download/OmniScan-lite.exe)**
 (~10 MB) is the same program without the runtime inside.
 
-<!-- Screenshots: three in a row, each opens the full picture.
+## Screenshots
+
+_Coming soon._
+
+<!-- Three in a row, each opens the full picture:
 <p align="center">
   <a href="SCREENSHOT_1"><img src="SCREENSHOT_1" width="32%" alt="Photos found on the glass"></a>
   <a href="SCREENSHOT_2"><img src="SCREENSHOT_2" width="32%" alt="Stickers outlined on the preview"></a>

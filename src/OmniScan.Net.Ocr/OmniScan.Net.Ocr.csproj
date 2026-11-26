@@ -10,7 +10,8 @@
     needs, made by C#/WinRT at build time: the whole Windows SDK projection would add 25 MB to the program.
   -->
   <PropertyGroup>
-    <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
+    <!-- An SDK that the build servers have (the API itself is in Windows 10 since 10240). -->
+    <CsWinRTWindowsMetadata>10.0.26100.0</CsWinRTWindowsMetadata>
     <CsWinRTIncludes>Windows.Media.Ocr;Windows.Globalization.Language;Windows.Globalization.ILanguage;Windows.Globalization.LanguageLayoutDirection;Windows.Graphics.Imaging.SoftwareBitmap;Windows.Graphics.Imaging.ISoftwareBitmap;Windows.Graphics.Imaging.BitmapPixelFormat;Windows.Graphics.Imaging.BitmapAlphaMode;Windows.Graphics.Imaging.BitmapBuffer;Windows.Graphics.Imaging.IBitmapBuffer;Windows.Graphics.Imaging.BitmapBufferAccessMode;Windows.Graphics.Imaging.BitmapPlaneDescription;Windows.Graphics.Imaging.BitmapBounds;Windows.Graphics.DirectX;Windows.Foundation;Windows.Storage.Streams.IBuffer;Windows.Storage.Streams.Buffer</CsWinRTIncludes>
     <CsWinRTExcludes>Windows.Foundation.Diagnostics</CsWinRTExcludes>
     <!-- Generated code does not follow our nullability rules. -->
