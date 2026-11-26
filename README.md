@@ -1,5 +1,7 @@
 # OmniScan
 
+**English** · [Русский](README.ru.md) · [Українська](README.uk.md)
+
 [![build](https://github.com/sensboston/OmniScan.NET/actions/workflows/build.yml/badge.svg)](https://github.com/sensboston/OmniScan.NET/actions/workflows/build.yml)
 [![release](https://img.shields.io/github/v/release/sensboston/OmniScan.NET)](https://github.com/sensboston/OmniScan.NET/releases/latest)
 [![license](https://img.shields.io/github/license/sensboston/OmniScan.NET)](LICENSE)
@@ -18,12 +20,12 @@ Already have the [.NET 10 Desktop Runtime](https://aka.ms/dotnet/10.0/windowsdes
 ## Screenshots
 
 <p align="center">
-  <a href="https://github.com/user-attachments/assets/7db07fd7-f8ed-47ca-8ff1-8ae0528eee87"><img src="https://github.com/user-attachments/assets/7db07fd7-f8ed-47ca-8ff1-8ae0528eee87" width="49%" alt="Photos found on the glass, cut out and saved"></a>
-  <a href="https://github.com/user-attachments/assets/23c3d83b-6f6c-4e53-a8c1-f11ee70fd6bd"><img src="https://github.com/user-attachments/assets/23c3d83b-6f6c-4e53-a8c1-f11ee70fd6bd" width="49%" alt="Stickers outlined on the preview"></a>
+  <a href="https://github.com/user-attachments/assets/7db07fd7-f8ed-47ca-8ff1-8ae0528eee87"><img src="https://github.com/user-attachments/assets/7db07fd7-f8ed-47ca-8ff1-8ae0528eee87" width="45%" alt="Photos found on the glass, cut out and saved"></a>
+  <a href="https://github.com/user-attachments/assets/23c3d83b-6f6c-4e53-a8c1-f11ee70fd6bd"><img src="https://github.com/user-attachments/assets/23c3d83b-6f6c-4e53-a8c1-f11ee70fd6bd" width="45%" alt="Stickers outlined on the preview"></a>
 </p>
 <p align="center">
-  <a href="https://github.com/user-attachments/assets/1450b850-7575-490f-9924-60aed87455c1"><img src="https://github.com/user-attachments/assets/1450b850-7575-490f-9924-60aed87455c1" width="49%" alt="A scan that looks like a document offers PDF"></a>
-  <a href="https://github.com/user-attachments/assets/242e2d19-7d2a-4ca6-94b5-b199fa467894"><img src="https://github.com/user-attachments/assets/242e2d19-7d2a-4ca6-94b5-b199fa467894" width="49%" alt="A PDF page, with its description for search"></a>
+  <a href="https://github.com/user-attachments/assets/1450b850-7575-490f-9924-60aed87455c1"><img src="https://github.com/user-attachments/assets/1450b850-7575-490f-9924-60aed87455c1" width="45%" alt="A scan that looks like a document offers PDF"></a>
+  <a href="https://github.com/user-attachments/assets/242e2d19-7d2a-4ca6-94b5-b199fa467894"><img src="https://github.com/user-attachments/assets/242e2d19-7d2a-4ca6-94b5-b199fa467894" width="45%" alt="A PDF page, with its description for search"></a>
 </p>
 
 ## What makes it different

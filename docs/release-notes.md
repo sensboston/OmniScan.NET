@@ -53,3 +53,5 @@ The executables are not code-signed yet, so on first start Windows SmartScreen m
 "Windows protected your PC": click **More info** → **Run anyway**.
 
 Requires Windows 10 (version 1809 or later) or Windows 11, 64-bit.
+
+OmniScan is free and stays free. If you like it, see [Support](https://github.com/sensboston/OmniScan.NET#support) — donations go to a code-signing certificate.
