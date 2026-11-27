@@ -3,6 +3,8 @@ layout: default
 title: Online services
 ---
 
+**English** · [Русский](ASSIST.ru.html) · [Українська](ASSIST.uk.html)
+
 # Online services: turning photos upright and describing scans
 
 OmniScan works fully offline. With an API key of an online AI service it can also:
