@@ -18,10 +18,15 @@ public sealed class AssistTests
     [InlineData("xai-abcdef", AssistProvider.XAi)]
     [InlineData("sk-0123456789abcdef0123456789abcdef", AssistProvider.DeepSeek)]
     [InlineData("sk-0123456789ABCDEF0123456789abcdef", AssistProvider.OpenAI)]
-    [InlineData("  AIzaSyA12345678901234567890123456789012  ", AssistProvider.Google)]
-    [InlineData("AQ.Ab8RN6Jabcdefghijklmnopqrstuvwxyz0123456789ABCDEF", AssistProvider.Google)]
     public void Detect_ByPrefix(string key, AssistProvider expected) =>
         Assert.Equal(expected, AssistProviders.Detect(key));
+
+    // Google keys are put together at run time: written out in full they look like real keys to scanners.
+    [Theory]
+    [InlineData("  AIza", 35, "  ")]
+    [InlineData("AQ.", 48, "")]
+    public void Detect_GoogleKeys(string prefix, int length, string suffix) =>
+        Assert.Equal(AssistProvider.Google, AssistProviders.Detect(prefix + new string('x', length) + suffix));
 
     [Theory]
     [InlineData(null)]
